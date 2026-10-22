@@ -35,11 +35,10 @@ const CARTES: Carte[] = [
 	},
 	{
 		titre: "Captures et vidéos",
-		texte: "Captures de tes démos et vidéos en motion design pour chaque post. Bientôt.",
+		texte: "Captures floutées de tes démos et vidéos en motion design, exportées en MP4 depuis ton navigateur.",
 		icone: (
 			<path d="M3 8a2 2 0 0 1 2-2h3l1.5-2h5L16 6h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 9a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7z" />
 		),
-		bientot: true,
 	},
 ];
 

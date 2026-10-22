@@ -87,3 +87,27 @@
 		display: none;
 	}
 }
+
+/* Mobile : la navigation passe sous le logo et defile horizontalement */
+@media (max-width: 900px) {
+	.barre {
+		flex-wrap: wrap;
+		row-gap: 10px;
+	}
+	.nav {
+		order: 3;
+		flex: 1 0 100%;
+		min-width: 0;
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+	.nav::-webkit-scrollbar {
+		display: none;
+	}
+	.nav a {
+		white-space: nowrap;
+	}
+	.profil span {
+		display: none;
+	}
+}

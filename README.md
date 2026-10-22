@@ -11,6 +11,16 @@ Weekli lit ton activité GitHub et en tire tes meilleurs posts LinkedIn, rédig�
 | Comment | Connecteur MCP | Interface React |
 | Clé API | Aucune | La tienne, qui ne quitte jamais ton navigateur |
 
+## Fonctionnalités
+
+| | Dans Claude | Sur le site |
+|---|---|---|
+| Lire l'activité GitHub de la semaine | ✅ | ✅ |
+| Rédiger des posts dans ton style | ✅ | ✅ (en direct) |
+| Historique des brouillons (chiffré) | ✅ | ✅ |
+| Captures de tes sites, données sensibles floutées | ✅ | ✅ |
+| Vidéos en motion design, export MP4 | | ✅ |
+
 > Statut : **bêta**. Voir la [feuille de route](docs/roadmap.md).
 
 ## Vue d'ensemble
@@ -89,14 +99,16 @@ Création de l'app OAuth GitHub et déploiement : [docs/installation.md](docs/in
 
 - GitHub en lecture seule (`read:user`), repos publics uniquement.
 - Mode 1 : OAuth 2.1 avec PKCE, protection CSRF, token GitHub chiffré dans le token MCP.
-- Mode 2 : session dans un cookie `HttpOnly` et `SameSite=Lax`, état OAuth lié au navigateur, clé API conservée dans le navigateur uniquement.
+- Mode 2 : session chiffrée, cookie `HttpOnly` et `SameSite=Lax`, PKCE vers GitHub, clé API conservée dans le navigateur uniquement.
+- Limitation de débit, vérification d'origine, CSP stricte, captures limitées aux domaines vérifiés.
+- Garde-fou anti-secrets à chaque commit et en CI, `npm audit` bloquant, Dependabot.
 - Aucune publication automatique.
 
 Détails et modèle de menace : [docs/securite.md](docs/securite.md).
 
 ## Stack
 
-TypeScript · React 19 et Vite · CSS Modules · Cloudflare Workers, Durable Objects, KV · Agents SDK (`McpAgent`) · Hono · Octokit · SDK Anthropic · Vitest · Docker.
+TypeScript · React 19 et Vite · CSS Modules · Cloudflare Workers, Durable Objects, KV, Browser Run · Agents SDK (`McpAgent`) · Hono · Octokit · SDK Anthropic · WebCodecs (mediabunny) · Vitest · Docker.
 
 ## Licence
 

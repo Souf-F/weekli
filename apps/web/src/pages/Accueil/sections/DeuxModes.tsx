@@ -15,7 +15,7 @@ const MODES = [
 		nom: "Sur le site",
 		badge: "Clé API",
 		resume: "Tu choisis tes commits dans un tableau de bord, Claude rédige en direct sous tes yeux.",
-		points: ["Ta clé reste dans ton navigateur", "Éditeur et aperçu LinkedIn", "Choix du ton et du modèle"],
+		points: ["Ta clé reste dans ton navigateur", "Historique, captures et studio vidéo", "Choix du ton et du modèle"],
 		action: { libelle: "Ouvrir l'app", vers: "/app" },
 	},
 ];

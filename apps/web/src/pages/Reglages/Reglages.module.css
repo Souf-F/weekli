@@ -21,3 +21,9 @@
 		grid-template-columns: 1fr;
 	}
 }
+
+.colonne {
+	display: grid;
+	gap: 16px;
+	min-width: 0;
+}
