@@ -1,8 +1,8 @@
-# PostForge
+# Weekli
 
 **Ton code de la semaine devient tes posts LinkedIn.**
 
-PostForge est un **connecteur MCP** (Model Context Protocol) qui relie ton GitHub à ton compte Claude. Tu demandes *« fais mes posts LinkedIn de la semaine »*, Claude lit tes commits grâce aux outils de PostForge et rédige les posts, avec ton propre abonnement, sans clé API.
+Weekli est un **connecteur MCP** (Model Context Protocol) qui relie ton GitHub à ton compte Claude. Tu demandes *« fais mes posts LinkedIn de la semaine »*, Claude lit tes commits grâce aux outils de Weekli et rédige les posts, avec ton propre abonnement, sans clé API.
 
 > Statut : **bêta en développement**. Voir la [feuille de route](docs/roadmap.md).
 
@@ -10,9 +10,9 @@ PostForge est un **connecteur MCP** (Model Context Protocol) qui relie ton GitHu
 
 ## Pourquoi
 
-Les développeurs construisent beaucoup et montrent peu. Écrire un post prend du temps, et on oublie vite ce qu'on a fait il y a trois jours. PostForge transforme le travail déjà fait (les commits) en matière première pour des posts authentiques.
+Les développeurs construisent beaucoup et montrent peu. Écrire un post prend du temps, et on oublie vite ce qu'on a fait il y a trois jours. Weekli transforme le travail déjà fait (les commits) en matière première pour des posts authentiques.
 
-**Le choix d'architecture clé** : PostForge n'appelle aucune IA lui-même. C'est le Claude de l'utilisateur qui pilote les outils. Conséquences :
+**Le choix d'architecture clé** : Weekli n'appelle aucune IA lui-même. C'est le Claude de l'utilisateur qui pilote les outils. Conséquences :
 
 - aucune clé API à fournir, aucun coût d'IA côté serveur ;
 - l'utilisateur garde le contrôle de la conversation et relit avant de publier ;
@@ -24,7 +24,7 @@ Les développeurs construisent beaucoup et montrent peu. Écrire un post prend d
 sequenceDiagram
     actor U as Utilisateur
     participant C as Claude
-    participant P as PostForge (Worker)
+    participant P as Weekli (Worker)
     participant G as API GitHub
 
     U->>C: « Fais mes posts de la semaine »
@@ -48,7 +48,7 @@ flowchart LR
 
     subgraph CF[Cloudflare Workers]
         O[OAuth Provider<br/>/authorize /token /register]
-        M[PostForgeMCP<br/>Durable Object]
+        M[WeekliMCP<br/>Durable Object]
         S[Site statique<br/>public/]
         KV[(KV<br/>sessions OAuth)]
     end
@@ -97,7 +97,7 @@ npm run dev
 ## Structure du projet
 
 ```
-postforge/
+weekli/
 ├── public/                 site vitrine (HTML, CSS, JS vanilla)
 ├── src/
 │   ├── index.ts            serveur MCP + déclaration des outils

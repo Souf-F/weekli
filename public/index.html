@@ -3,17 +3,17 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>PostForge</title>
+	<title>Weekli</title>
 	<meta name="description" content="Connecteur MCP qui transforme ton activite GitHub en posts LinkedIn, rediges par ton propre Claude.">
 	<link rel="stylesheet" href="/styles.css">
 </head>
 <body>
 	<header class="nav">
-		<a class="logo" href="/">Post<span>Forge</span></a>
+		<a class="logo" href="/">Week<span>li</span></a>
 		<nav>
 			<a href="#fonctionnement">Fonctionnement</a>
 			<a href="#securite">Sécurité</a>
-			<a href="https://github.com/Souf-F/postforge" rel="noopener">GitHub</a>
+			<a href="https://github.com/Souf-F/weekli" rel="noopener">GitHub</a>
 		</nav>
 	</header>
 
@@ -22,7 +22,7 @@
 			<p class="badge">Connecteur MCP · Bêta</p>
 			<h1>Ton code de la semaine devient<br>tes posts LinkedIn.</h1>
 			<p class="sous-titre">
-				PostForge connecte ton GitHub à ton compte Claude. Tu demandes
+				Weekli connecte ton GitHub à ton compte Claude. Tu demandes
 				« fais mes posts de la semaine », Claude lit tes commits et rédige,
 				avec ton abonnement, sans clé API.
 			</p>
@@ -34,7 +34,7 @@
 			<ol class="etapes">
 				<li>
 					<h3>Connecte</h3>
-					<p>Ajoute PostForge comme connecteur dans Claude et autorise la lecture de ton profil GitHub public.</p>
+					<p>Ajoute Weekli comme connecteur dans Claude et autorise la lecture de ton profil GitHub public.</p>
 				</li>
 				<li>
 					<h3>Demande</h3>
@@ -61,20 +61,20 @@
 			<h2>Sécurité</h2>
 			<ul class="liste">
 				<li><strong>Lecture seule</strong> : scope GitHub <code>read:user</code>, uniquement tes repos publics.</li>
-				<li><strong>Aucune clé IA stockée</strong> : c'est ton Claude qui rédige, PostForge ne fournit que les données.</li>
+				<li><strong>Aucune clé IA stockée</strong> : c'est ton Claude qui rédige, Weekli ne fournit que les données.</li>
 				<li><strong>OAuth 2.1 + PKCE</strong> avec protection CSRF et consentement explicite.</li>
 				<li><strong>Rien n'est publié automatiquement</strong> : tu gardes toujours la main.</li>
 			</ul>
 		</section>
 
 		<section id="installer">
-			<h2>Ajouter PostForge à Claude</h2>
+			<h2>Ajouter Weekli à Claude</h2>
 			<ol class="liste">
 				<li>Dans Claude, ouvre <em>Paramètres → Connecteurs → Ajouter un connecteur personnalisé</em>.</li>
 				<li>Colle cette URL :</li>
 			</ol>
 			<div class="url">
-				<code id="url-mcp">https://postforge.example/mcp</code>
+				<code id="url-mcp">https://weekli.example/mcp</code>
 				<button id="copier" type="button">Copier</button>
 			</div>
 			<p class="note">Connecte-toi avec GitHub quand Claude te le demande, c'est prêt.</p>
@@ -82,7 +82,7 @@
 	</main>
 
 	<footer>
-		<p>PostForge · projet open source · <a href="https://github.com/Souf-F/postforge">code source</a></p>
+		<p>Weekli · projet open source · <a href="https://github.com/Souf-F/weekli">code source</a></p>
 	</footer>
 
 	<script src="/app.js"></script>

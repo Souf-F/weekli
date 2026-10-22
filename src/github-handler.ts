@@ -39,8 +39,8 @@ app.get("/authorize", async (c) => {
 		client: await c.env.OAUTH_PROVIDER.lookupClient(clientId),
 		csrfToken,
 		server: {
-			description: "PostForge lit ton activite GitHub publique pour aider Claude a ecrire tes posts LinkedIn.",
-			name: "PostForge",
+			description: "Weekli lit ton activite GitHub publique pour aider Claude a ecrire tes posts LinkedIn.",
+			name: "Weekli",
 		},
 		setCookie,
 		state: { oauthReqInfo },

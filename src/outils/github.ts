@@ -54,7 +54,7 @@ export async function detailsRepo(octokit: Octokit, login: string, repo: string)
 			.catch(() => ""),
 	]);
 
-	if (infos.private) throw new Error("Ce repo est prive : PostForge ne lit que les repos publics.");
+	if (infos.private) throw new Error("Ce repo est prive : Weekli ne lit que les repos publics.");
 
 	return {
 		repo: infos.name,

@@ -12,8 +12,8 @@ Sur GitHub : *Settings → Developer settings → OAuth Apps → New OAuth App*.
 
 | Champ | Local | Production |
 |---|---|---|
-| Homepage URL | `http://localhost:8788` | `https://postforge.<ton-sous-domaine>.workers.dev` |
-| Authorization callback URL | `http://localhost:8788/callback` | `https://postforge.<ton-sous-domaine>.workers.dev/callback` |
+| Homepage URL | `http://localhost:8788` | `https://weekli.<ton-sous-domaine>.workers.dev` |
+| Authorization callback URL | `http://localhost:8788/callback` | `https://weekli.<ton-sous-domaine>.workers.dev/callback` |
 
 Crée une app pour le local et une pour la production. Note le Client ID et génère un Client Secret.
 
@@ -58,4 +58,4 @@ npm run deploy
 
 ## 5. Ajouter à Claude
 
-*Paramètres → Connecteurs → Ajouter un connecteur personnalisé*, puis l'URL `https://postforge.<ton-sous-domaine>.workers.dev/mcp`.
+*Paramètres → Connecteurs → Ajouter un connecteur personnalisé*, puis l'URL `https://weekli.<ton-sous-domaine>.workers.dev/mcp`.

@@ -17,8 +17,8 @@ function erreur(err: unknown) {
 	return { content: [{ type: "text" as const, text: `Erreur : ${message}` }], isError: true };
 }
 
-export class PostForgeMCP extends McpAgent<Env, Record<string, never>, Props> {
-	server = new McpServer({ name: "PostForge", version: "0.1.0" });
+export class WeekliMCP extends McpAgent<Env, Record<string, never>, Props> {
+	server = new McpServer({ name: "Weekli", version: "0.1.0" });
 
 	get octokit() {
 		return new Octokit({ auth: this.props!.accessToken });
@@ -85,7 +85,7 @@ export class PostForgeMCP extends McpAgent<Env, Record<string, never>, Props> {
 }
 
 export default new OAuthProvider({
-	apiHandler: PostForgeMCP.serve("/mcp"),
+	apiHandler: WeekliMCP.serve("/mcp"),
 	apiRoute: "/mcp",
 	authorizeEndpoint: "/authorize",
 	clientRegistrationEndpoint: "/register",

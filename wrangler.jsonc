@@ -4,7 +4,7 @@
  */
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "postforge",
+  "name": "weekli",
   "main": "src/index.ts",
   "compatibility_date": "2025-03-10",
   "compatibility_flags": ["nodejs_compat"],
@@ -19,14 +19,14 @@
 	 */
   "migrations": [
     {
-      "new_sqlite_classes": ["PostForgeMCP"],
+      "new_sqlite_classes": ["WeekliMCP"],
       "tag": "v1"
     }
   ],
   "durable_objects": {
     "bindings": [
       {
-        "class_name": "PostForgeMCP",
+        "class_name": "WeekliMCP",
         "name": "MCP_OBJECT"
       }
     ]

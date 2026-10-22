@@ -2,10 +2,10 @@
 
 ## Vue d'ensemble
 
-PostForge est un seul **Cloudflare Worker** qui joue trois rôles :
+Weekli est un seul **Cloudflare Worker** qui joue trois rôles :
 
 1. **Serveur d'autorisation OAuth** pour les clients MCP (Claude), via `@cloudflare/workers-oauth-provider`.
-2. **Serveur MCP** sur `/mcp`, une instance de `PostForgeMCP` (un Durable Object par session).
+2. **Serveur MCP** sur `/mcp`, une instance de `WeekliMCP` (un Durable Object par session).
 3. **Site vitrine** statique servi depuis `public/`.
 
 ```mermaid
@@ -14,19 +14,19 @@ flowchart TB
     A -- fichier de public/ --> S[Site statique]
     A -- /mcp --> T{Token MCP valide ?}
     T -- non --> E[401 + métadonnées OAuth]
-    T -- oui --> D[Durable Object PostForgeMCP<br/>this.props = login + token GitHub]
+    T -- oui --> D[Durable Object WeekliMCP<br/>this.props = login + token GitHub]
     A -- /authorize /callback --> H[GitHubHandler<br/>Hono]
     A -- /token /register --> P[OAuthProvider]
 ```
 
 ## Le double OAuth
 
-PostForge est à la fois **serveur** OAuth (face à Claude) et **client** OAuth (face à GitHub). Claude ne voit jamais le token GitHub : il reçoit un token PostForge, qui contient le token GitHub chiffré dans ses `props`.
+Weekli est à la fois **serveur** OAuth (face à Claude) et **client** OAuth (face à GitHub). Claude ne voit jamais le token GitHub : il reçoit un token Weekli, qui contient le token GitHub chiffré dans ses `props`.
 
 ```mermaid
 sequenceDiagram
     participant C as Claude
-    participant P as PostForge
+    participant P as Weekli
     participant U as Navigateur
     participant G as GitHub
 
@@ -42,7 +42,7 @@ sequenceDiagram
     P->>P: vérifie state (KV + cookie)
     P->>G: échange code contre access token
     P->>P: completeAuthorization(props chiffrées)
-    P-->>U: redirection vers Claude avec code PostForge
+    P-->>U: redirection vers Claude avec code Weekli
     C->>P: POST /token (code + code_verifier)
     P-->>C: token d'accès MCP
 ```
@@ -51,7 +51,7 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    C[Claude] -->|tools/call activite_github| M[PostForgeMCP]
+    C[Claude] -->|tools/call activite_github| M[WeekliMCP]
     M -->|Octokit| L[repos publics]
     L --> F[filtre.ts<br/>bruit, doublons, plafonds]
     F -->|JSON| C

@@ -11,7 +11,7 @@
 
 ```mermaid
 flowchart LR
-    A1[Attaquant] -. CSRF sur le flux OAuth .-> P[PostForge]
+    A1[Attaquant] -. CSRF sur le flux OAuth .-> P[Weekli]
     A2[Client MCP malveillant] -. vol de code d'autorisation .-> P
     A3[Contenu de repo piégé] -. injection de prompt .-> C[Claude]
     A4[Utilisateur] -. lecture du repo d'un autre .-> P
@@ -40,4 +40,4 @@ En production : `npx wrangler secret put <NOM>`. En local : fichier `.dev.vars`,
 
 ## À venir : captures de sites
 
-L'outil `capturer_site` ne capturera que des domaines dont l'utilisateur a **prouvé la propriété** (enregistrement DNS TXT ou fichier `/.well-known/postforge.txt`), avec floutage automatique des emails, tokens et IP détectés.
+L'outil `capturer_site` ne capturera que des domaines dont l'utilisateur a **prouvé la propriété** (enregistrement DNS TXT ou fichier `/.well-known/weekli.txt`), avec floutage automatique des emails, tokens et IP détectés.
