@@ -61,3 +61,9 @@ export type Post = {
 	source: string;
 	texte: string;
 };
+
+export type Brouillon = Post & {
+	id: string;
+	cree: string;
+	publie: boolean;
+};

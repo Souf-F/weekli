@@ -1,6 +1,6 @@
 # Référence des outils MCP
 
-Tous les outils sont en **lecture seule** (`readOnlyHint: true`) et ne portent que sur les repos **publics** de l'utilisateur connecté.
+Les outils GitHub sont en **lecture seule** (`readOnlyHint: true`) et ne portent que sur les repos **publics** de l'utilisateur connecté.
 
 ## `activite_github`
 
@@ -48,6 +48,22 @@ Renvoie la description, le site, les sujets, les langages, le nombre d'étoiles 
 
 Renvoie le message complet, les statistiques et jusqu'à 15 fichiers modifiés avec un extrait du diff (1500 caractères par fichier). Utile pour raconter un problème résolu.
 
+## `sauver_brouillons`
+
+Enregistre 1 à 5 posts dans l'historique Weekli de l'utilisateur, pour les retrouver sur le site (page Historique).
+
+| Paramètre | Type | Description |
+|---|---|---|
+| `posts` | tableau de `{ titre, format, source, texte }` | Textes limités (titre 200, texte 6000 caractères), caractères de contrôle retirés |
+
+Seul outil qui écrit : il n'agit que sur l'historique de l'utilisateur connecté, jamais sur GitHub ni LinkedIn.
+
+## `lister_brouillons`
+
+| Paramètre | Type | Défaut | Description |
+|---|---|---|---|
+| `nonPublies` | booléen | `true` | Seulement les brouillons pas encore publiés |
+
 ## Prompt `posts_semaine`
 
 | Argument | Description |
@@ -67,5 +83,11 @@ Routes JSON servies par le Worker, toutes protégées par la session (cookie `Ht
 | GET | `/api/activite?jours=7` | Même format que `activite_github` (1 à 30 jours) |
 | GET | `/api/repos/:repo` | Même format que `details_repo` |
 | GET | `/api/repos/:repo/commits/:sha` | Même format que `details_commit` (SHA validé : 7 à 40 caractères hexadécimaux) |
+| GET | `/api/brouillons` | Historique, du plus récent au plus ancien (100 au maximum) |
+| POST | `/api/brouillons` | Corps `{ posts: Post[] }` (5 au maximum, 64 Ko) ; renvoie les brouillons créés |
+| PATCH | `/api/brouillons/:id` | Corps `{ texte?, publie? }` |
+| DELETE | `/api/brouillons/:id` | `204` |
+
+Toute requête d'écriture doit porter l'en-tête `Origin` du site. L'historique est chiffré dans KV.
 
 La génération des posts ne passe pas par ces routes : le navigateur appelle directement l'API Anthropic avec la clé de l'utilisateur, en s'appuyant sur `systemeGeneration`, `messageGeneration` et `lirePosts` de `@weekli/core`.

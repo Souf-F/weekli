@@ -1,6 +1,8 @@
-import { activiteGithub, detailsCommit, detailsRepo } from "@weekli/core";
+import { activiteGithub, detailsCommit, detailsRepo, nettoyerPost, type Post } from "@weekli/core";
 import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { Octokit } from "octokit";
+import { ecrireBrouillons, lireBrouillons, sauverPosts } from "../lib/brouillons";
 import { lireSession } from "../lib/session";
 import { NOM_REPO, SHA } from "../lib/validation";
 import type { AppEnv } from "../types";
@@ -52,4 +54,54 @@ api.get("/repos/:repo/commits/:sha", async (c) => {
 	if (!NOM_REPO.test(repo) || !SHA.test(sha)) return c.json({ erreur: "Parametres invalides" }, 400);
 	const { login, token } = c.get("session");
 	return c.json(await detailsCommit(octokit(token), login, repo, sha));
+});
+
+// Historique des brouillons
+
+const ID = /^[0-9a-f-]{36}$/;
+const corpsLimite = bodyLimit({
+	maxSize: 64 * 1024,
+	onError: (c) => c.json({ erreur: "Requete trop volumineuse" }, 413),
+});
+
+api.get("/brouillons", async (c) => c.json(await lireBrouillons(c.env, c.get("session").login)));
+
+api.post("/brouillons", corpsLimite, async (c) => {
+	const corps = await c.req.json().catch(() => null);
+	const posts = (Array.isArray(corps?.posts) ? corps.posts : [])
+		.slice(0, 5)
+		.map(nettoyerPost)
+		.filter(Boolean) as Post[];
+	if (posts.length === 0) return c.json({ erreur: "Aucun post valide" }, 400);
+	return c.json(await sauverPosts(c.env, c.get("session").login, posts), 201);
+});
+
+api.patch("/brouillons/:id", corpsLimite, async (c) => {
+	const id = c.req.param("id");
+	if (!ID.test(id)) return c.json({ erreur: "Identifiant invalide" }, 400);
+	const corps = (await c.req.json().catch(() => null)) as { texte?: unknown; publie?: unknown } | null;
+	const { login } = c.get("session");
+	const brouillons = await lireBrouillons(c.env, login);
+	const cible = brouillons.find((b) => b.id === id);
+	if (!cible) return c.json({ erreur: "Introuvable" }, 404);
+
+	if (typeof corps?.texte === "string") {
+		const propre = nettoyerPost({ ...cible, texte: corps.texte });
+		if (!propre) return c.json({ erreur: "Texte vide" }, 400);
+		cible.texte = propre.texte;
+	}
+	if (typeof corps?.publie === "boolean") cible.publie = corps.publie;
+	await ecrireBrouillons(c.env, login, brouillons);
+	return c.json(cible);
+});
+
+api.delete("/brouillons/:id", async (c) => {
+	const id = c.req.param("id");
+	if (!ID.test(id)) return c.json({ erreur: "Identifiant invalide" }, 400);
+	const { login } = c.get("session");
+	const brouillons = await lireBrouillons(c.env, login);
+	const restants = brouillons.filter((b) => b.id !== id);
+	if (restants.length === brouillons.length) return c.json({ erreur: "Introuvable" }, 404);
+	await ecrireBrouillons(c.env, login, restants);
+	return c.body(null, 204);
 });

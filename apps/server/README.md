@@ -10,6 +10,7 @@ Worker Cloudflare qui porte tout le back-end de Weekli.
 | `/authorize`, `/token`, `/register`, `/callback`, `/.well-known/*` | OAuth 2.1 pour les clients MCP comme Claude | 1 |
 | `/auth/login`, `/auth/callback`, `/auth/logout` | Connexion GitHub du site, session par cookie | 2 |
 | `/api/moi`, `/api/activite`, `/api/repos/:repo`, `/api/repos/:repo/commits/:sha` | API JSON du tableau de bord | 2 |
+| `/api/brouillons`, `/api/brouillons/:id` | Historique chiffré des brouillons | 1 et 2 |
 | tout le reste | Front React compilé (`../web/dist`), en SPA | 2 |
 
 ## Lancer

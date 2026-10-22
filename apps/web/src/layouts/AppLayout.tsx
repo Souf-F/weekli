@@ -39,6 +39,9 @@ export function AppLayout() {
 					<NavLink to="/app" end className={({ isActive }) => (isActive ? styles.actif : "")}>
 						Tableau de bord
 					</NavLink>
+					<NavLink to="/app/historique" className={({ isActive }) => (isActive ? styles.actif : "")}>
+						Historique
+					</NavLink>
 					<NavLink to="/app/reglages" className={({ isActive }) => (isActive ? styles.actif : "")}>
 						Réglages
 					</NavLink>

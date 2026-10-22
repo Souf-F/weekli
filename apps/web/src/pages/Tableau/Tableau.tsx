@@ -33,6 +33,7 @@ export function Tableau() {
 	const [posts, setPosts] = useState<Post[]>([]);
 	const [enCours, setEnCours] = useState(false);
 	const [erreur, setErreur] = useState("");
+	const [sauvegarde, setSauvegarde] = useState("");
 	const arret = useRef<AbortController | null>(null);
 
 	// Chargement de l'activite ; tout est coche par defaut
@@ -81,6 +82,7 @@ export function Tableau() {
 		arret.current = new AbortController();
 		setEnCours(true);
 		setErreur("");
+		setSauvegarde("");
 		setPosts([]);
 		try {
 			let details: DetailsCommit[] = [];
@@ -98,6 +100,13 @@ export function Tableau() {
 				signal: arret.current.signal,
 			});
 			setPosts(final);
+			// Chaque generation est gardee dans l'historique ; un echec ici ne doit pas masquer les posts
+			if (final.length > 0) {
+				api
+					.sauverBrouillons(final)
+					.then(() => setSauvegarde("Enregistrés dans l'historique."))
+					.catch(() => setSauvegarde("Posts non enregistrés dans l'historique : pense à les copier."));
+			}
 		} catch (e) {
 			if (!arret.current?.signal.aborted) setErreur(messageErreur(e));
 		} finally {
@@ -142,6 +151,11 @@ export function Tableau() {
 
 			<section className={styles.posts}>
 				{erreur && <p className={p.erreur}>{erreur}</p>}
+				{sauvegarde && (
+					<p className={p.aide}>
+						{sauvegarde} <Link to="/app/historique">Voir l'historique</Link>
+					</p>
+				)}
 				{posts.length === 0 && !enCours && !erreur && (
 					<div className={styles.vide}>
 						<h2>

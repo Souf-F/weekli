@@ -1,0 +1,46 @@
+.entete {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 16px;
+	flex-wrap: wrap;
+	margin-bottom: 28px;
+}
+.entete h1 {
+	font-size: clamp(2.4rem, 5vw, 3.6rem);
+}
+.filtres {
+	display: flex;
+	gap: 4px;
+	padding: 4px;
+	border: 1px solid var(--bord-verre);
+	border-radius: 12px;
+	background: var(--verre-fort);
+}
+.filtres button {
+	padding: 8px 14px;
+	border: 0;
+	border-radius: 9px;
+	background: transparent;
+	font: 500 0.88rem var(--sans);
+	color: var(--texte-doux);
+	cursor: pointer;
+}
+.filtres .actif {
+	background: var(--espresso);
+	color: var(--platine);
+}
+.grille {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
+	gap: 16px;
+}
+.vide {
+	padding: 40px 28px;
+	border: 1px dashed var(--moka-clair);
+	border-radius: 20px;
+	background: rgba(255, 255, 255, 0.25);
+}
+.vide p {
+	margin: 0 0 6px;
+}

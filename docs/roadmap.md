@@ -47,5 +47,5 @@ flowchart LR
 
 ## V1.0 : tableau de bord
 
-- [ ] Historique des brouillons et des posts publiés
+- [x] Historique des brouillons et des posts publiés
 - [ ] Style d'écriture mémorisé par utilisateur

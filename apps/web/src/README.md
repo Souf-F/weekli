@@ -21,6 +21,7 @@ src/
 └── pages/
     ├── Accueil/           Page d'accueil, une section par fichier dans sections/
     ├── Tableau/           Tableau de bord : activité, options, cartes de posts
+    ├── Historique/        Brouillons enregistrés, filtres et actions
     └── Reglages/          Clé API, modèle, style
 ```
 

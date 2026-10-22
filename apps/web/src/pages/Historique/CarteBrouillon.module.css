@@ -1,0 +1,72 @@
+.carte {
+	display: flex;
+	flex-direction: column;
+	padding: 20px;
+	border: 1px solid var(--filet);
+	border-radius: 16px;
+	background: #fff;
+	box-shadow: 0 20px 50px -30px rgba(42, 28, 19, 0.4);
+}
+.publie {
+	opacity: 0.75;
+}
+.entete {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-size: 0.8rem;
+	color: var(--texte-doux);
+}
+.badge {
+	padding: 3px 10px;
+	border-radius: 999px;
+	background: rgba(111, 78, 55, 0.1);
+	color: var(--moka);
+	font-weight: 500;
+}
+.publie .badge {
+	background: rgba(63, 107, 69, 0.12);
+	color: var(--succes);
+}
+.titre {
+	margin: 12px 0 2px;
+	font-family: var(--serif);
+	font-style: italic;
+	font-weight: 400;
+	font-size: 1.3rem;
+	color: var(--moka);
+}
+.meta {
+	margin: 0 0 8px;
+	font-size: 0.8rem;
+	color: var(--texte-doux);
+}
+.texte {
+	flex: 1;
+	width: 100%;
+	border: 0;
+	resize: vertical;
+	font: 400 0.92rem/1.55 var(--sans);
+	color: var(--espresso);
+	background: transparent;
+	outline: none;
+}
+.texte:focus {
+	background: rgba(230, 224, 240, 0.35);
+	border-radius: 8px;
+}
+.pied {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+	margin-top: 12px;
+	padding-top: 12px;
+	border-top: 1px solid var(--filet);
+}
+.etat {
+	margin-right: auto;
+	font-family: var(--mono);
+	font-size: 0.75rem;
+	color: var(--texte-doux);
+}

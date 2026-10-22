@@ -16,6 +16,7 @@ Vite relaie `/api`, `/auth`, `/mcp` et les routes OAuth vers le Worker (`http://
 |---|---|---|
 | `/` | Accueil : présentation, deux modes, installation du connecteur | Immédiat |
 | `/app` | Tableau de bord : commits, options, génération et édition des posts | À la demande |
+| `/app/historique` | Brouillons enregistrés : édition, copie, publié ou non, suppression | À la demande |
 | `/app/reglages` | Clé API, modèle, exemples de style | À la demande |
 
 L'app est chargée à part (`React.lazy`) pour que l'accueil reste léger : le SDK Anthropic n'est téléchargé qu'en ouvrant `/app`.
