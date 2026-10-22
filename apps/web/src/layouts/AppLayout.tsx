@@ -42,6 +42,12 @@ export function AppLayout() {
 					<NavLink to="/app/historique" className={({ isActive }) => (isActive ? styles.actif : "")}>
 						Historique
 					</NavLink>
+					<NavLink to="/app/studio" className={({ isActive }) => (isActive ? styles.actif : "")}>
+						Studio vidéo
+					</NavLink>
+					<NavLink to="/app/captures" className={({ isActive }) => (isActive ? styles.actif : "")}>
+						Captures
+					</NavLink>
 					<NavLink to="/app/reglages" className={({ isActive }) => (isActive ? styles.actif : "")}>
 						Réglages
 					</NavLink>

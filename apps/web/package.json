@@ -13,6 +13,7 @@
 	"dependencies": {
 		"@anthropic-ai/sdk": "^1.1.0",
 		"@weekli/core": "*",
+		"mediabunny": "^1.62.1",
 		"react": "^19.3.1",
 		"react-dom": "^19.3.1",
 		"react-router-dom": "^7.18.4"

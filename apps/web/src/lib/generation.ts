@@ -5,8 +5,12 @@ import {
 	lirePosts,
 	messageGeneration,
 	type OptionsGeneration,
+	nettoyerStoryboard,
 	type Post,
+	SCHEMA_STORYBOARD,
+	type Storyboard,
 	systemeGeneration,
+	systemeStoryboard,
 } from "@weekli/core";
 import type { Modele } from "./reglages";
 
@@ -48,6 +52,34 @@ export async function genererPosts({ cleApi, modele, repos, details, options, su
 
 	const texte = message.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("");
 	return lirePosts(texte);
+}
+
+// Storyboard video redige par Claude, en sortie JSON structuree, puis nettoye avant tout rendu
+export async function genererStoryboard(
+	cleApi: string,
+	modele: Modele,
+	post: Post,
+	signal?: AbortSignal,
+): Promise<Storyboard> {
+	const client = new Anthropic({ apiKey: cleApi, dangerouslyAllowBrowser: true });
+	const repli =
+		modele === "claude-haiku-5-5" ? {} : { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const };
+	const message = await client.beta.messages.create(
+		{
+			model: modele,
+			max_tokens: 4000,
+			output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA_STORYBOARD } },
+			system: systemeStoryboard(),
+			messages: [{ role: "user", content: `Titre : ${post.titre}\nSource : ${post.source}\n\n${post.texte}` }],
+			...repli,
+		},
+		{ signal },
+	);
+	if (message.stop_reason === "refusal") throw new Error("Le modele a refuse cette demande.");
+	const texte = message.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("");
+	const story = nettoyerStoryboard(JSON.parse(texte));
+	if (story.scenes.length === 0) throw new Error("Storyboard vide, reessaie.");
+	return story;
 }
 
 export function messageErreur(err: unknown): string {

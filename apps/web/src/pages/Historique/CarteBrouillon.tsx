@@ -69,6 +69,9 @@ export function CarteBrouillon({ brouillon: b, surModifie, surSupprime }: Props)
 				<Bouton taille="petit" variante="contour" onClick={basculerPublie} disabled={occupe}>
 					{b.publie ? "Remettre à publier" : "Marquer publié"}
 				</Bouton>
+				<Bouton taille="petit" variante="contour" vers={`/app/studio?brouillon=${b.id}`}>
+					En vidéo
+				</Bouton>
 				<Bouton taille="petit" onClick={copier} disabled={occupe}>
 					Copier
 				</Bouton>

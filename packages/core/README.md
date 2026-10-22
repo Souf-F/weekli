@@ -11,6 +11,7 @@ Le moteur de Weekli, partagé par le serveur et le front.
 | `src/filtre.ts` | Retire le bruit des commits, plafonne à 10 repos et 30 commits par repo |
 | `src/prompts.ts` | Prompt MCP `posts_semaine`, prompts de génération du site, lecture de la réponse |
 | `src/brouillons.ts` | Nettoyage des posts reçus, création et plafond de l'historique |
+| `src/storyboard.ts` | Scènes vidéo, nettoyage, storyboard automatique, consignes et schéma pour Claude |
 | `src/index.ts` | Point d'entrée unique |
 
 `github.ts` n'importe Octokit qu'en type : le front peut importer le paquet sans embarquer Octokit.

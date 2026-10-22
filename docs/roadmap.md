@@ -19,7 +19,7 @@ flowchart LR
 - [x] Site vitrine
 - [x] Tests unitaires du filtrage
 
-## V0.2 : le site devient un outil *(en cours)*
+## V0.2 : le site devient un outil
 
 - [x] Monorepo `core` / `server` / `web`
 - [x] Front React : accueil et tableau de bord
@@ -30,20 +30,20 @@ flowchart LR
 
 ## V0.3 : captures de sites
 
-- [ ] Vérification de propriété de domaine (DNS TXT ou fichier `.well-known`)
-- [ ] `capturer_site` via Cloudflare Browser Rendering
-- [ ] Floutage automatique des données sensibles
+- [x] Vérification de propriété de domaine (DNS TXT ou fichier `.well-known`)
+- [x] `capturer_site` via Cloudflare Browser Run
+- [x] Floutage automatique des données sensibles
 
 ## V0.4 : storyboards vidéo
 
-- [ ] Outil `creer_storyboard` : scènes, durées, textes, captures
-- [ ] Bibliothèque de scènes : terminal, problème/solution, avant/après, architecture, liste
+- [x] Storyboard automatique ou rédigé par Claude, éditable scène par scène
+- [x] Bibliothèque de scènes : titre, terminal, liste, avant/après, citation, fin
 
 ## V0.5 : rendu motion design
 
-- [ ] Scènes en HTML + GSAP
-- [ ] Rendu MP4 1080×1350 (format LinkedIn 4:5)
-- [ ] Sous-titres incrustés
+- [x] Scènes animées sur canvas, aux couleurs Weekli
+- [x] Export MP4 (ou WebM selon le navigateur) 1080×1350, format LinkedIn 4:5
+- [ ] Scène « capture » qui intègre une capture de site
 
 ## V1.0 : tableau de bord
 
