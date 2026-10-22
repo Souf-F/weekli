@@ -56,3 +56,16 @@ Renvoie le message complet, les statistiques et jusqu'à 15 fichiers modifiés a
 | `style` | Quelques posts de l'utilisateur, pour imiter son style |
 
 Guide Claude : appeler les outils dans l'ordre, choisir 2 ou 3 sujets, écrire en français, 800 à 1300 caractères, sans inventer de faits.
+
+## API du site (mode 2)
+
+Routes JSON servies par le Worker, toutes protégées par la session (cookie `HttpOnly`). Sans session : `401 {"erreur": "Non connecte"}`.
+
+| Méthode | Route | Réponse |
+|---|---|---|
+| GET | `/api/moi` | `{ login, nom, avatar }` |
+| GET | `/api/activite?jours=7` | Même format que `activite_github` (1 à 30 jours) |
+| GET | `/api/repos/:repo` | Même format que `details_repo` |
+| GET | `/api/repos/:repo/commits/:sha` | Même format que `details_commit` (SHA validé : 7 à 40 caractères hexadécimaux) |
+
+La génération des posts ne passe pas par ces routes : le navigateur appelle directement l'API Anthropic avec la clé de l'utilisateur, en s'appuyant sur `systemeGeneration`, `messageGeneration` et `lirePosts` de `@weekli/core`.

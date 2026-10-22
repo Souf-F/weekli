@@ -1,0 +1,38 @@
+.cta {
+	padding: clamp(40px, 7vw, 88px);
+	text-align: center;
+	box-shadow: var(--ombre);
+}
+.titre {
+	font-size: clamp(2.6rem, 6vw, 5rem);
+}
+.texte {
+	max-width: 520px;
+	margin: 22px auto 32px;
+	color: var(--texte-doux);
+}
+.url {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	max-width: 620px;
+	margin: 0 auto;
+	padding: 8px 8px 8px 20px;
+	border: 1px solid var(--filet);
+	border-radius: 14px;
+	background: rgba(255, 255, 255, 0.75);
+	text-align: left;
+}
+.url code {
+	flex: 1;
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+	.url {
+		flex-direction: column;
+		align-items: stretch;
+		padding: 14px;
+	}
+}

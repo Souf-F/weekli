@@ -1,0 +1,16 @@
+.pied {
+	max-width: var(--largeur);
+	margin: 0 auto;
+	padding: 36px 16px 48px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	flex-wrap: wrap;
+	border-top: 1px solid var(--filet);
+	font-size: 0.9rem;
+	color: var(--texte-doux);
+}
+.pied p {
+	margin: 0;
+}

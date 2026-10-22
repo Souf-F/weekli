@@ -1,0 +1,84 @@
+@import "./tokens.css";
+
+* {
+	box-sizing: border-box;
+}
+
+html {
+	scroll-behavior: smooth;
+}
+
+body {
+	margin: 0;
+	color: var(--espresso);
+	font-family: var(--sans);
+	font-size: 16px;
+	line-height: 1.6;
+	-webkit-font-smoothing: antialiased;
+	overflow-x: hidden;
+	/* Repli si WebGL est indisponible */
+	background:
+		radial-gradient(60% 50% at 15% 10%, var(--platine), transparent),
+		radial-gradient(50% 50% at 85% 20%, var(--lavande), transparent),
+		radial-gradient(40% 40% at 90% 95%, var(--moka-clair), transparent), var(--lavande);
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+h1,
+h2,
+h3 {
+	margin: 0;
+	font-weight: 400;
+}
+h1,
+h2 {
+	font-family: var(--serif);
+	letter-spacing: -0.01em;
+	line-height: 1.02;
+}
+h1 em,
+h2 em {
+	color: var(--moka);
+}
+h3 {
+	font-size: 1.08rem;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+}
+code {
+	font-family: var(--mono);
+	font-size: 0.85em;
+}
+::selection {
+	background: var(--moka);
+	color: var(--platine);
+}
+
+/* Apparitions au scroll (voir hooks/useReveal) */
+.revele {
+	opacity: 0;
+	transform: translateY(28px);
+	filter: blur(6px);
+	transition:
+		opacity 1s var(--ease),
+		transform 1s var(--ease),
+		filter 1s var(--ease);
+	transition-delay: var(--delai, 0s);
+}
+.revele.vu {
+	opacity: 1;
+	transform: none;
+	filter: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.revele {
+		opacity: 1;
+		transform: none;
+		filter: none;
+		transition: none;
+	}
+}

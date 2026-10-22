@@ -1,0 +1,25 @@
+{
+	"name": "@weekli/server",
+	"version": "0.2.0",
+	"private": true,
+	"description": "Worker Cloudflare de Weekli : serveur MCP, OAuth GitHub, API du site et hebergement du front",
+	"type": "module",
+	"scripts": {
+		"dev": "wrangler dev --ip 0.0.0.0 --port 8788",
+		"deploy": "wrangler deploy",
+		"typegen": "wrangler types --env-file .dev.vars.example",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@cloudflare/workers-oauth-provider": "^0.8.1",
+		"@weekli/core": "*",
+		"agents": "^0.17.1",
+		"hono": "^4.12.27",
+		"octokit": "^5.0.5",
+		"zod": "^4.4.3"
+	},
+	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20260628.1",
+		"wrangler": "^4.105.0"
+	}
+}

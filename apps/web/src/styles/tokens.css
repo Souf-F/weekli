@@ -1,0 +1,25 @@
+/* Palette et constantes de design, seule source de verite pour les couleurs */
+:root {
+	--platine: #e5e4e2;
+	--lavande: #e6e0f0;
+	--lavande-pro: #c9bedd;
+	--moka: #6f4e37;
+	--moka-clair: #b89f8d;
+	--espresso: #2a1c13;
+	--texte-doux: #6a5a4f;
+	--danger: #a3392b;
+	--succes: #3f6b45;
+
+	--verre: rgba(255, 255, 255, 0.42);
+	--verre-fort: rgba(255, 255, 255, 0.62);
+	--bord-verre: rgba(255, 255, 255, 0.7);
+	--filet: rgba(111, 78, 55, 0.16);
+	--ombre: 0 30px 80px -30px rgba(42, 28, 19, 0.35);
+
+	--serif: "Instrument Serif", "Times New Roman", serif;
+	--sans: "Geist", system-ui, sans-serif;
+	--mono: "JetBrains Mono", ui-monospace, monospace;
+
+	--largeur: 1200px;
+	--ease: cubic-bezier(0.22, 1, 0.36, 1);
+}

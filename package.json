@@ -1,27 +1,31 @@
 {
 	"name": "weekli",
-	"version": "0.0.1",
 	"private": true,
+	"description": "Weekli transforme ton activite GitHub en posts LinkedIn, via Claude (connecteur MCP) ou via le site (cle API)",
+	"license": "MIT",
+	"workspaces": [
+		"packages/*",
+		"apps/*"
+	],
 	"scripts": {
-		"deploy": "wrangler deploy",
-		"dev": "wrangler dev",
-		"start": "wrangler dev",
-		"cf-typegen": "wrangler types",
-		"type-check": "tsc --noEmit"
-	},
-	"dependencies": {
-		"@cloudflare/workers-oauth-provider": "^0.8.1",
-		"agents": "^0.17.1",
-		"hono": "^4.12.27",
-		"just-pick": "^4.2.0",
-		"octokit": "^5.0.5",
-		"zod": "^4.4.3"
+		"dev": "npm run dev --workspace @weekli/server & npm run dev --workspace @weekli/web",
+		"build": "npm run build --workspace @weekli/web",
+		"typecheck": "npm run typecheck --workspaces --if-present",
+		"test": "npm run test --workspaces --if-present",
+		"deploy": "npm run build && npm run deploy --workspace @weekli/server",
+		"format": "prettier --write ."
 	},
 	"devDependencies": {
-		"@cloudflare/workers-types": "^4.20260628.1",
-		"typescript": "6.0.3",
-		"wrangler": "^4.105.0"
+		"prettier": "^3.6.2",
+		"typescript": "~6.0.3"
 	},
-	"description": "Connecteur MCP qui transforme ton activite GitHub en posts LinkedIn, rediges par ton propre Claude",
-	"license": "MIT"
+	"engines": {
+		"node": ">=20"
+	},
+	"allowScripts": {
+		"esbuild@0.28.2": true,
+		"workerd@1.20261019.1": true,
+		"core-js-pure": false,
+		"fsevents": false
+	}
 }

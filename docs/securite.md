@@ -28,6 +28,19 @@ flowchart LR
 | Injection de prompt via un README ou un commit | Les données sont renvoyées comme JSON, Claude reste l'agent de l'utilisateur, aucun outil n'a d'effet de bord |
 | Fuite de secrets | Secrets dans `wrangler secret`, `.dev.vars` hors du dépôt |
 
+## Mode 2 : le site
+
+| Sujet | Choix |
+|---|---|
+| Session | Identifiant aléatoire de 256 bits dans un cookie `HttpOnly`, `SameSite=Lax`, préfixe `__Host-` en HTTPS. Le token GitHub reste dans KV, côté serveur. |
+| Connexion GitHub | `state` aléatoire stocké dans KV (10 minutes, usage unique) **et** dans un cookie : un `state` volé ne sert à rien sans le navigateur d'origine. |
+| Déconnexion | `POST /auth/logout` : la session est supprimée de KV, pas seulement le cookie. |
+| Clé API Anthropic | Jamais envoyée au serveur Weekli. Stockée en `sessionStorage` (effacée à la fermeture), ou en `localStorage` si l'utilisateur le demande. |
+| Injection de script | CSP stricte (`script-src 'self'`, `connect-src` limité au site et à `api.anthropic.com`), React échappe tout le contenu, aucun `dangerouslySetInnerHTML`. |
+| Clickjacking | `frame-ancestors 'none'`. |
+
+Les en-têtes sont définis dans `apps/web/public/_headers`.
+
 ## Secrets
 
 | Secret | Usage |

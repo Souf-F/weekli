@@ -1,0 +1,34 @@
+/* Styles communs a toutes les sections de la page d'accueil */
+.section {
+	max-width: var(--largeur);
+	margin: 0 auto;
+	padding: 130px 16px;
+}
+.entete {
+	max-width: 720px;
+	margin-bottom: 56px;
+}
+.surTitre {
+	margin: 0 0 16px;
+	font-family: var(--mono);
+	font-size: 0.75rem;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--moka);
+}
+.titre {
+	font-size: clamp(2.4rem, 5vw, 4.2rem);
+}
+.panneau {
+	border: 1px solid var(--bord-verre);
+	border-radius: 22px;
+	background: var(--verre-fort);
+	backdrop-filter: blur(20px);
+	-webkit-backdrop-filter: blur(20px);
+}
+
+@media (max-width: 600px) {
+	.section {
+		padding-block: 90px;
+	}
+}

@@ -1,0 +1,33 @@
+.bandeau {
+	overflow: hidden;
+	padding: 22px 0;
+	border-block: 1px solid var(--filet);
+	background: rgba(255, 255, 255, 0.25);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+.piste {
+	display: flex;
+	gap: 64px;
+	width: max-content;
+	font-family: var(--serif);
+	font-size: 1.6rem;
+	color: var(--texte-doux);
+	animation: defile 38s linear infinite;
+}
+.piste span:nth-child(even) {
+	font-style: italic;
+	color: var(--moka);
+}
+@keyframes defile {
+	to {
+		transform: translateX(-50%);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.piste {
+		animation: none;
+	}
+}

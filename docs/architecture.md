@@ -2,16 +2,26 @@
 
 ## Vue d'ensemble
 
-Weekli est un seul **Cloudflare Worker** qui joue trois rôles :
+Le dépôt est un **monorepo npm** en trois paquets :
+
+| Paquet | Rôle |
+|---|---|
+| `packages/core` | Moteur partagé : lecture GitHub, filtrage, prompts, types |
+| `apps/server` | Worker Cloudflare, déployé seul |
+| `apps/web` | Front React, compilé puis servi par le Worker |
+
+En production, Weekli est un seul **Cloudflare Worker** qui joue quatre rôles :
 
 1. **Serveur d'autorisation OAuth** pour les clients MCP (Claude), via `@cloudflare/workers-oauth-provider`.
 2. **Serveur MCP** sur `/mcp`, une instance de `WeekliMCP` (un Durable Object par session).
-3. **Site vitrine** statique servi depuis `public/`.
+3. **API du site** sur `/api/*`, avec sa propre connexion GitHub sur `/auth/*`.
+4. **Hébergement du front** React compilé, en application monopage.
 
 ```mermaid
 flowchart TB
     R[Requête entrante] --> A{Route}
-    A -- fichier de public/ --> S[Site statique]
+    A -- fichier du front --> S[Front React compilé]
+    A -- /auth/* /api/* --> W[Session et API du site]
     A -- /mcp --> T{Token MCP valide ?}
     T -- non --> E[401 + métadonnées OAuth]
     T -- oui --> D[Durable Object WeekliMCP<br/>this.props = login + token GitHub]
@@ -67,4 +77,6 @@ Le filtrage limite la réponse à **10 repos et 30 commits par repo**, pour gard
 | Cloudflare Workers | Gratuit à petite échelle, déployé partout, OAuth et Durable Objects intégrés |
 | Durable Object par session | État isolé par utilisateur, prêt pour les fonctionnalités à venir (brouillons, historique) |
 | Pas d'appel LLM côté serveur | Surface d'attaque et coûts réduits, l'IA reste chez l'utilisateur |
-| Site en vanilla JS | Aucune dépendance, chargement instantané |
+| Monorepo avec `@weekli/core` | Une seule implémentation de la lecture GitHub et des prompts pour les deux modes |
+| Génération dans le navigateur (mode 2) | La clé API ne touche jamais le serveur, aucun coût d'IA côté Weekli |
+| React + CSS Modules | Composants isolés, styles sans collision, chargement différé de l'app |

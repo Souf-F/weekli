@@ -1,0 +1,67 @@
+.etapes {
+	position: relative;
+	list-style: none;
+	margin: 0;
+	padding: 36px;
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 16px;
+	--progression: 0;
+}
+.etapes::before,
+.etapes::after {
+	content: "";
+	position: absolute;
+	top: 58px;
+	left: 58px;
+	right: 58px;
+	height: 1px;
+	background: var(--filet);
+}
+.etapes::after {
+	background: var(--moka);
+	transform-origin: left;
+	transform: scaleX(var(--progression));
+}
+.etape {
+	position: relative;
+	padding-top: 70px;
+}
+.etape p {
+	margin: 8px 0 0;
+	color: var(--texte-doux);
+	font-size: 0.95rem;
+	max-width: 260px;
+}
+.num {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 1;
+	display: grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	background: var(--espresso);
+	color: var(--platine);
+	font-family: var(--mono);
+	font-size: 0.78rem;
+}
+
+@media (max-width: 980px) {
+	.etapes {
+		grid-template-columns: 1fr 1fr;
+		row-gap: 40px;
+	}
+	.etapes::before,
+	.etapes::after {
+		display: none;
+	}
+}
+@media (max-width: 600px) {
+	.etapes {
+		grid-template-columns: 1fr;
+		padding: 24px;
+	}
+}

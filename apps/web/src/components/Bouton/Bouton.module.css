@@ -1,0 +1,51 @@
+.bouton {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 14px 24px;
+	border: 1px solid var(--espresso);
+	border-radius: 12px;
+	font: 500 0.95rem var(--sans);
+	cursor: pointer;
+	white-space: nowrap;
+	transition:
+		transform 0.4s var(--ease),
+		box-shadow 0.4s var(--ease),
+		background 0.3s,
+		border-color 0.3s;
+}
+.bouton:hover:not(:disabled) {
+	transform: translateY(-2px);
+}
+.bouton:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.plein {
+	background: var(--espresso);
+	color: var(--platine);
+}
+.plein:hover:not(:disabled) {
+	background: var(--moka);
+	border-color: var(--moka);
+	box-shadow: 0 14px 30px -12px rgba(42, 28, 19, 0.6);
+}
+
+.contour {
+	background: var(--verre);
+	color: var(--espresso);
+	border-color: var(--filet);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+}
+.contour:hover:not(:disabled) {
+	background: var(--verre-fort);
+}
+
+.petit {
+	padding: 10px 18px;
+	font-size: 0.88rem;
+	border-radius: 10px;
+}

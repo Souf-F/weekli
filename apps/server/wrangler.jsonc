@@ -1,0 +1,28 @@
+/**
+ * Configuration du Worker Weekli.
+ * Secrets (jamais dans ce fichier) :
+ *   npx wrangler secret put GITHUB_CLIENT_ID
+ *   npx wrangler secret put GITHUB_CLIENT_SECRET
+ *   npx wrangler secret put COOKIE_ENCRYPTION_KEY
+ */
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "weekli",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-03-10",
+  "compatibility_flags": ["nodejs_compat"],
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["WeekliMCP"] }],
+  "durable_objects": {
+    "bindings": [{ "class_name": "WeekliMCP", "name": "MCP_OBJECT" }]
+  },
+  "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "<Add-KV-ID>" }],
+  // Le front React compile (apps/web/dist) est servi par le meme Worker.
+  // Les routes dynamiques passent d'abord par le Worker, le reste tombe sur la SPA.
+  "assets": {
+    "directory": "../web/dist",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/auth/*", "/mcp", "/mcp/*", "/authorize", "/token", "/register", "/callback", "/.well-known/*"]
+  },
+  "observability": { "enabled": true },
+  "dev": { "port": 8788 }
+}

@@ -1,0 +1,35 @@
+# Environnement de developpement complet : docker compose up
+#   http://localhost:5173  front React (Vite, rechargement a chaud)
+#   http://localhost:8788  Worker : MCP (/mcp), OAuth, API, et front compile
+#
+# Prerequis : apps/server/.dev.vars rempli (voir apps/server/.dev.vars.example)
+
+services:
+  server:
+    build:
+      context: .
+      target: server
+    ports:
+      - "8788:8788"
+    env_file:
+      - apps/server/.dev.vars
+    environment:
+      # Les secrets sont passes par l'environnement, jamais copies dans l'image
+      CLOUDFLARE_INCLUDE_PROCESS_ENV: "true"
+    volumes:
+      - ./apps/server/src:/app/apps/server/src
+      - ./packages/core/src:/app/packages/core/src
+
+  web:
+    build:
+      context: .
+      target: web
+    ports:
+      - "5173:5173"
+    environment:
+      API_URL: http://server:8788
+    volumes:
+      - ./apps/web/src:/app/apps/web/src
+      - ./packages/core/src:/app/packages/core/src
+    depends_on:
+      - server

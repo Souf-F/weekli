@@ -1,0 +1,23 @@
+.grille {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 16px;
+	align-items: start;
+}
+.securite {
+	margin: 16px 0 20px;
+	padding: 14px 14px 14px 32px;
+	border-radius: 12px;
+	background: rgba(111, 78, 55, 0.08);
+	font-size: 0.85rem;
+	color: var(--texte-doux);
+}
+.securite li + li {
+	margin-top: 4px;
+}
+
+@media (max-width: 800px) {
+	.grille {
+		grid-template-columns: 1fr;
+	}
+}

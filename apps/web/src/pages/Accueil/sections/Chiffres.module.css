@@ -1,0 +1,46 @@
+.grille {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	border: 1px solid var(--bord-verre);
+	border-radius: 22px;
+	background: var(--espresso);
+	color: var(--platine);
+	overflow: hidden;
+}
+.chiffre {
+	padding: 40px 28px;
+}
+.chiffre + .chiffre {
+	border-left: 1px solid rgba(229, 228, 226, 0.12);
+}
+.chiffre strong {
+	display: block;
+	font-family: var(--serif);
+	font-weight: 400;
+	font-size: clamp(3rem, 6vw, 4.8rem);
+	line-height: 1;
+	color: var(--lavande);
+}
+.chiffre span {
+	display: block;
+	margin-top: 10px;
+	font-size: 0.92rem;
+	color: rgba(229, 228, 226, 0.7);
+}
+.note {
+	margin: 22px 0 0;
+	text-align: center;
+	font-size: 0.92rem;
+}
+
+@media (max-width: 980px) {
+	.grille {
+		grid-template-columns: 1fr 1fr;
+	}
+	.chiffre:nth-child(3) {
+		border-left: 0;
+	}
+	.chiffre:nth-child(n + 3) {
+		border-top: 1px solid rgba(229, 228, 226, 0.12);
+	}
+}

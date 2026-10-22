@@ -1,120 +1,102 @@
 # Weekli
 
-**Ton code de la semaine devient tes posts LinkedIn.**
+**Ton code de la semaine, raconté sur LinkedIn.**
 
-Weekli est un **connecteur MCP** (Model Context Protocol) qui relie ton GitHub à ton compte Claude. Tu demandes *« fais mes posts LinkedIn de la semaine »*, Claude lit tes commits grâce aux outils de Weekli et rédige les posts, avec ton propre abonnement, sans clé API.
+Weekli lit ton activité GitHub et en tire tes meilleurs posts LinkedIn, rédigés par Claude. Deux façons de l'utiliser, un seul moteur :
 
-> Statut : **bêta en développement**. Voir la [feuille de route](docs/roadmap.md).
+| | Mode 1 : dans Claude | Mode 2 : sur le site |
+|---|---|---|
+| Où | Dans Claude (web, desktop, mobile) | Sur le site Weekli, dans un tableau de bord |
+| Qui rédige | Ton abonnement Claude | L'API Anthropic, avec ta clé |
+| Comment | Connecteur MCP | Interface React |
+| Clé API | Aucune | La tienne, qui ne quitte jamais ton navigateur |
 
----
+> Statut : **bêta**. Voir la [feuille de route](docs/roadmap.md).
 
-## Pourquoi
-
-Les développeurs construisent beaucoup et montrent peu. Écrire un post prend du temps, et on oublie vite ce qu'on a fait il y a trois jours. Weekli transforme le travail déjà fait (les commits) en matière première pour des posts authentiques.
-
-**Le choix d'architecture clé** : Weekli n'appelle aucune IA lui-même. C'est le Claude de l'utilisateur qui pilote les outils. Conséquences :
-
-- aucune clé API à fournir, aucun coût d'IA côté serveur ;
-- l'utilisateur garde le contrôle de la conversation et relit avant de publier ;
-- le serveur reste léger, sans état sensible, et gratuit à héberger.
-
-## Comment ça marche
-
-```mermaid
-sequenceDiagram
-    actor U as Utilisateur
-    participant C as Claude
-    participant P as Weekli (Worker)
-    participant G as API GitHub
-
-    U->>C: « Fais mes posts de la semaine »
-    C->>P: activite_github(jours=7)
-    P->>G: repos + commits (token OAuth)
-    G-->>P: données brutes
-    P-->>C: commits filtrés (sans merge, typo...)
-    C->>P: details_repo / details_commit
-    P-->>C: README, diff, contexte
-    C-->>U: 2 ou 3 brouillons de posts
-    U->>U: relit, ajuste, publie
-```
-
-## Architecture
+## Vue d'ensemble
 
 ```mermaid
 flowchart LR
-    subgraph Client
-        C[Claude<br/>web, desktop, mobile]
+    subgraph M1[Mode 1]
+        C[Claude] -- MCP --> MCP
     end
-
-    subgraph CF[Cloudflare Workers]
-        O[OAuth Provider<br/>/authorize /token /register]
-        M[WeekliMCP<br/>Durable Object]
-        S[Site statique<br/>public/]
-        KV[(KV<br/>sessions OAuth)]
+    subgraph M2[Mode 2]
+        N[Navigateur<br/>React] -- session --> API
+        N -- ta clé API --> A[(API Anthropic)]
     end
-
-    GH[(GitHub API)]
-
-    C -- MCP Streamable HTTP /mcp --> O
-    O -- token valide --> M
-    O <--> KV
-    M -- Octokit, lecture seule --> GH
-    O -- connexion --> GH
+    subgraph W[Worker Cloudflare]
+        MCP[Serveur MCP]
+        API[API JSON]
+        CORE[[@weekli/core]]
+        MCP --> CORE
+        API --> CORE
+    end
+    CORE -- lecture seule --> G[(GitHub)]
 ```
 
-Détails dans [docs/architecture.md](docs/architecture.md).
+Le point clé : **le serveur Weekli n'appelle jamais d'IA lui-même**. En mode 1 c'est Claude qui pilote, en mode 2 c'est le navigateur qui appelle Anthropic directement. Le serveur ne fait que lire GitHub.
 
-## Outils MCP
-
-| Outil | Rôle |
-|---|---|
-| `activite_github` | Commits récents sur tes repos publics, sans le bruit |
-| `details_repo` | Description, site, langages et README d'un projet |
-| `details_commit` | Fichiers modifiés et extraits du diff d'un commit |
-| `posts_semaine` *(prompt)* | Guide Claude pour rédiger 2 ou 3 posts |
-
-Référence complète : [docs/outils.md](docs/outils.md).
-
-## Sécurité
-
-- Scope GitHub minimal : `read:user`, repos publics uniquement.
-- OAuth 2.1 avec PKCE, protection CSRF et écran de consentement.
-- Token GitHub chiffré dans le token MCP, jamais exposé au client.
-- Aucune publication automatique.
-
-Modèle de menace et choix détaillés : [docs/securite.md](docs/securite.md).
-
-## Démarrer en local
-
-Voir [docs/installation.md](docs/installation.md).
-
-```bash
-npm install
-cp .dev.vars.example .dev.vars   # renseigner les secrets GitHub OAuth
-npm run dev
-```
-
-## Structure du projet
+## Structure du dépôt
 
 ```
 weekli/
-├── public/                 site vitrine (HTML, CSS, JS vanilla)
-├── src/
-│   ├── index.ts            serveur MCP + déclaration des outils
-│   ├── prompts.ts          prompt posts_semaine
-│   ├── outils/
-│   │   ├── github.ts       appels à l'API GitHub
-│   │   └── filtre.ts       filtrage du bruit dans les commits
-│   ├── github-handler.ts   flux OAuth GitHub
-│   ├── workers-oauth-utils.ts  CSRF, consentement, cookies
-│   └── utils.ts
-├── docs/                   documentation
-└── wrangler.jsonc          configuration Cloudflare
+├── apps/
+│   ├── server/        Worker Cloudflare : MCP, OAuth, API, hébergement du front
+│   └── web/           Front React : site vitrine et tableau de bord
+├── packages/
+│   └── core/          Moteur partagé : lecture GitHub, filtrage, prompts
+├── docs/              Architecture, sécurité, outils, installation
+├── Dockerfile         Image de développement (cibles web et server)
+└── docker-compose.yml Environnement local complet
 ```
+
+Chaque dossier a son propre README.
+
+## Démarrer
+
+### Avec Docker
+
+```bash
+cp apps/server/.dev.vars.example apps/server/.dev.vars   # renseigner les secrets GitHub
+docker compose up --build
+```
+
+- Front avec rechargement à chaud : http://localhost:5173
+- Worker (MCP, API, front compilé) : http://localhost:8788
+
+### Sans Docker
+
+```bash
+npm install
+cp apps/server/.dev.vars.example apps/server/.dev.vars
+npm run build          # compile le front, servi ensuite par le Worker
+npm run dev            # lance le Worker (8788) et Vite (5173)
+```
+
+Création de l'app OAuth GitHub et déploiement : [docs/installation.md](docs/installation.md).
+
+## Scripts
+
+| Commande | Rôle |
+|---|---|
+| `npm run dev` | Worker et front en parallèle |
+| `npm run build` | Compile le front dans `apps/web/dist` |
+| `npm run typecheck` | Vérifie les types de tous les paquets |
+| `npm test` | Tests unitaires (Vitest) |
+| `npm run deploy` | Compile puis déploie sur Cloudflare |
+
+## Sécurité
+
+- GitHub en lecture seule (`read:user`), repos publics uniquement.
+- Mode 1 : OAuth 2.1 avec PKCE, protection CSRF, token GitHub chiffré dans le token MCP.
+- Mode 2 : session dans un cookie `HttpOnly` et `SameSite=Lax`, état OAuth lié au navigateur, clé API conservée dans le navigateur uniquement.
+- Aucune publication automatique.
+
+Détails et modèle de menace : [docs/securite.md](docs/securite.md).
 
 ## Stack
 
-Cloudflare Workers, Durable Objects, KV · Agents SDK (`McpAgent`) · `@cloudflare/workers-oauth-provider` · Octokit · TypeScript côté serveur, HTML/CSS/JS vanilla côté site.
+TypeScript · React 19 et Vite · CSS Modules · Cloudflare Workers, Durable Objects, KV · Agents SDK (`McpAgent`) · Hono · Octokit · SDK Anthropic · Vitest · Docker.
 
 ## Licence
 

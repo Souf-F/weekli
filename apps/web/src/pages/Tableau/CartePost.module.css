@@ -1,0 +1,58 @@
+.carte {
+	padding: 20px;
+	border: 1px solid var(--filet);
+	border-radius: 16px;
+	background: #fff;
+	box-shadow: 0 20px 50px -30px rgba(42, 28, 19, 0.4);
+}
+.entete {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+.entete img {
+	border-radius: 50%;
+}
+.entete div {
+	display: grid;
+	line-height: 1.3;
+}
+.entete span {
+	font-size: 0.8rem;
+	color: var(--texte-doux);
+}
+.titre {
+	margin: 14px 0 8px;
+	font-family: var(--serif);
+	font-style: italic;
+	font-weight: 400;
+	font-size: 1.3rem;
+	color: var(--moka);
+}
+.texte {
+	width: 100%;
+	border: 0;
+	resize: vertical;
+	font: 400 0.95rem/1.55 var(--sans);
+	color: var(--espresso);
+	background: transparent;
+	outline: none;
+}
+.texte:focus {
+	background: rgba(230, 224, 240, 0.35);
+	border-radius: 8px;
+}
+.pied {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-top: 12px;
+	padding-top: 12px;
+	border-top: 1px solid var(--filet);
+	font-family: var(--mono);
+	font-size: 0.78rem;
+	color: var(--texte-doux);
+}
+.trop {
+	color: var(--danger);
+}

@@ -1,0 +1,39 @@
+.grille {
+	display: grid;
+	grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr) minmax(0, 1.4fr);
+	gap: 16px;
+	align-items: start;
+}
+.colonne {
+	display: grid;
+	gap: 12px;
+	min-width: 0;
+}
+.posts {
+	display: grid;
+	gap: 16px;
+}
+.vide {
+	padding: 40px 28px;
+	border: 1px dashed var(--moka-clair);
+	border-radius: 20px;
+	background: rgba(255, 255, 255, 0.25);
+}
+.vide h2 {
+	font-size: 2.4rem;
+	margin-bottom: 12px;
+}
+
+@media (max-width: 1100px) {
+	.grille {
+		grid-template-columns: 1fr 1fr;
+	}
+	.posts {
+		grid-column: 1 / -1;
+	}
+}
+@media (max-width: 720px) {
+	.grille {
+		grid-template-columns: 1fr;
+	}
+}

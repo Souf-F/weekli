@@ -13,7 +13,9 @@ Sur GitHub : *Settings → Developer settings → OAuth Apps → New OAuth App*.
 | Champ | Local | Production |
 |---|---|---|
 | Homepage URL | `http://localhost:8788` | `https://weekli.<ton-sous-domaine>.workers.dev` |
-| Authorization callback URL | `http://localhost:8788/callback` | `https://weekli.<ton-sous-domaine>.workers.dev/callback` |
+| Authorization callback URL | `http://localhost:8788` | `https://weekli.<ton-sous-domaine>.workers.dev` |
+
+L'URL de callback est la **racine** du site : GitHub accepte alors les deux chemins utilisés par Weekli, `/callback` (connecteur MCP) et `/auth/callback` (site).
 
 Crée une app pour le local et une pour la production. Note le Client ID et génère un Client Secret.
 
@@ -21,10 +23,10 @@ Crée une app pour le local et une pour la production. Note le Client ID et gén
 
 ```bash
 npm install
-cp .dev.vars.example .dev.vars
+cp apps/server/.dev.vars.example apps/server/.dev.vars
 ```
 
-Remplis `.dev.vars` :
+Remplis `apps/server/.dev.vars` :
 
 ```
 GITHUB_CLIENT_ID=...
@@ -33,10 +35,19 @@ COOKIE_ENCRYPTION_KEY=...   # openssl rand -hex 32
 ```
 
 ```bash
-npm run dev
+npm run build   # compile le front
+npm run dev     # Worker sur 8788, Vite sur 5173
 ```
 
-Le site est sur `http://localhost:8788`, le serveur MCP sur `http://localhost:8788/mcp`.
+Le site est sur `http://localhost:5173` (ou `8788` pour la version compilée), le serveur MCP sur `http://localhost:8788/mcp`.
+
+### Avec Docker
+
+```bash
+docker compose up --build
+```
+
+Mêmes ports. Les secrets sont lus depuis `apps/server/.dev.vars` au démarrage et ne sont jamais copiés dans l'image.
 
 ## 3. Tester avec l'inspecteur MCP
 
@@ -49,11 +60,12 @@ Transport *Streamable HTTP*, URL `http://localhost:8788/mcp`, puis *Connect* : l
 ## 4. Déployer
 
 ```bash
+cd apps/server
 npx wrangler kv namespace create OAUTH_KV   # copier l'id dans wrangler.jsonc
 npx wrangler secret put GITHUB_CLIENT_ID
 npx wrangler secret put GITHUB_CLIENT_SECRET
 npx wrangler secret put COOKIE_ENCRYPTION_KEY
-npm run deploy
+cd ../.. && npm run deploy
 ```
 
 ## 5. Ajouter à Claude
