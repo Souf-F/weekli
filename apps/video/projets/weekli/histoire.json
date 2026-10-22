@@ -1,0 +1,145 @@
+{
+	"titre": "Weekli, de A à Z",
+	"projet": "weekli",
+	"format": "paysage",
+	"ambiance": "calme",
+	"prononciation": {
+		"Weekli": "Wikli",
+		"PostForge": "Poste Forge",
+		"MCP": "M C P",
+		"GitHub": "Guite-heub",
+		"LinkedIn": "Linkédine",
+		"WebGL": "Web G L",
+		"README": "lisez-moi",
+		"API": "A P I",
+		"PKCE": "P K C E",
+		"AES": "A E S",
+		"OAuth": "O-auth",
+		"CSP": "C S P",
+		"Cloudflare": "Claoude-flair",
+		"Worker": "Worker"
+	},
+	"segments": [
+		{
+			"id": "accroche",
+			"voix": "Treize commits, une seule journée. Voici comment Weekli a été construit, de A à Z.",
+			"visuel": { "type": "accroche", "texte": "Weekli, *de A à Z.*", "sousTexte": "22 octobre, de 14h19 à 23h52" }
+		},
+		{
+			"id": "debut",
+			"voix": "Tout commence à quatorze heures dix-neuf, sous le nom PostForge : un serveur MCP pour GitHub, un site et sa documentation.",
+			"visuel": {
+				"type": "chronologie",
+				"titre": "Phase 1 : *les fondations*",
+				"etapes": [
+					{ "date": "14h19", "titre": "Premier commit", "detail": "ce5b359 · +2189 lignes" },
+					{ "date": "14h55", "titre": "PostForge devient Weekli", "detail": "d4bf588" },
+					{ "date": "15h14", "titre": "Site en WebGL", "detail": "b239354 · dégradé mesh, parallaxe" }
+				]
+			}
+		},
+		{
+			"id": "architecture",
+			"voix": "Au quatrième commit, le projet devient un monorepo, avec deux portes d'entrée : Claude par MCP, ou le site avec sa propre clé API.",
+			"visuel": {
+				"type": "architecture",
+				"titre": "Un moteur, *deux modes*",
+				"noeuds": [
+					{ "id": "claude", "nom": "Claude", "detail": "mode MCP" },
+					{ "id": "site", "nom": "Site React", "detail": "ta clé API" },
+					{ "id": "worker", "nom": "Worker", "detail": "Cloudflare" },
+					{ "id": "core", "nom": "@weekli/core", "detail": "moteur partagé" },
+					{ "id": "github", "nom": "GitHub", "detail": "tes commits" }
+				],
+				"liens": [["claude", "worker"], ["site", "worker"], ["worker", "core"], ["core", "github"]]
+			}
+		},
+		{
+			"id": "readme",
+			"voix": "Chaque dossier a son README. Le serveur, le front et le moteur partagé sont séparés, avec Docker pour tout lancer.",
+			"visuel": {
+				"type": "code",
+				"fichier": "README.md",
+				"lignes": [
+					"├── apps/",
+					"│   ├── server/   Worker : MCP, OAuth, API",
+					"│   └── web/      Front React",
+					"├── packages/",
+					"│   └── core/     Lecture GitHub, prompts",
+					"├── docs/         Architecture, sécurité",
+					"└── docker-compose.yml"
+				]
+			}
+		},
+		{
+			"id": "audit",
+			"voix": "À vingt heures trente, un audit de sécurité complet. Le commit retire plus de lignes qu'il n'en ajoute.",
+			"visuel": {
+				"type": "chiffres",
+				"elements": [
+					{ "valeur": 618, "libelle": "lignes ajoutées" },
+					{ "valeur": 1178, "libelle": "lignes retirées" },
+					{ "valeur": 0, "libelle": "vulnérabilité npm" }
+				]
+			}
+		},
+		{
+			"id": "securite",
+			"voix": "Connexion OAuth avec PKCE, données chiffrées en AES, et limites de débit sur chaque route sensible.",
+			"visuel": {
+				"type": "fonctionnalites",
+				"titre": "Sécurisé *par défaut.*",
+				"elements": [
+					{ "titre": "OAuth + PKCE", "texte": "Consentement lié au navigateur", "icone": "cle" },
+					{ "titre": "AES-256-GCM", "texte": "Sessions et brouillons chiffrés", "icone": "bouclier" },
+					{ "titre": "Limites de débit", "texte": "Sur chaque route sensible", "icone": "eclair" }
+				]
+			}
+		},
+		{
+			"id": "fonctions",
+			"voix": "Puis les fonctionnalités arrivent : l'historique partagé avec Claude, les captures de sites vérifiés, et le studio vidéo.",
+			"visuel": {
+				"type": "chronologie",
+				"titre": "Phase 2 : *le produit*",
+				"etapes": [
+					{ "date": "20h36", "titre": "Historique des brouillons", "detail": "e8e8810 · site et Claude" },
+					{ "date": "22h38", "titre": "Captures de sites", "detail": "35c41ee · domaines vérifiés" },
+					{ "date": "22h38", "titre": "Studio vidéo", "detail": "baf5e12 · +1038 lignes" }
+				]
+			}
+		},
+		{
+			"id": "tests",
+			"voix": "Soixante-quatorze tests automatisés couvrent le moteur et le serveur, et l'audit des dépendances reste à zéro.",
+			"visuel": {
+				"type": "terminal",
+				"commande": "npm test && npm audit",
+				"lignes": ["@weekli/core     33 tests réussis", "@weekli/server   41 tests réussis", "found 0 vulnerabilities"]
+			}
+		},
+		{
+			"id": "vrai-test",
+			"voix": "Le vrai test, avec un vrai compte GitHub, a révélé trois derniers bugs, corrigés avant minuit.",
+			"visuel": {
+				"type": "chronologie",
+				"titre": "Phase 3 : *l'épreuve du réel*",
+				"etapes": [
+					{ "date": "23h16", "titre": "Serveurs sur 127.0.0.1", "detail": "79d19b9" },
+					{ "date": "23h43", "titre": "CSP du consentement", "detail": "bd48684 · redirection GitHub" },
+					{ "date": "23h52", "titre": "Finitions du studio", "detail": "c3ca2fd" }
+				]
+			}
+		},
+		{
+			"id": "lecon",
+			"voix": "La leçon de la journée : les tests rassurent, mais le meilleur test reste le vrai.",
+			"visuel": { "type": "citation", "texte": "Le meilleur test reste *le vrai.*" }
+		},
+		{
+			"id": "appel",
+			"voix": "Tout le code, l'historique et la documentation sont ouverts, sur GitHub.",
+			"visuel": { "type": "appel", "titre": "Lis le code, *commit par commit.*", "lien": "github.com/Souf-F/weekli", "sousTexte": "Open source · licence MIT" }
+		}
+	]
+}

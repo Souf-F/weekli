@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { estBruit, filtrerActivite, MAX_COMMITS, MAX_REPOS } from "./filtre";
+import { estGenere } from "./github";
 import type { ActiviteRepo } from "./types";
 
 const repo = (nom: string, messages: string[]): ActiviteRepo => ({
@@ -44,4 +45,17 @@ describe("filtrerActivite", () => {
 		expect(res[0].repo).toBe("r14");
 		expect(res[0].commits).toHaveLength(MAX_COMMITS);
 	});
+});
+
+describe("estGenere", () => {
+	it.each([
+		"package-lock.json",
+		"apps/web/package-lock.json",
+		"yarn.lock",
+		"apps/server/worker-configuration.d.ts",
+		"apps/web/dist/index.js",
+	])("ecarte %s", (f) => expect(estGenere(f)).toBe(true));
+	it.each(["src/index.ts", "README.md", "apps/web/src/App.tsx", "distance.ts"])("garde %s", (f) =>
+		expect(estGenere(f)).toBe(false),
+	);
 });

@@ -52,15 +52,21 @@ Le point clé : **le serveur Weekli n'appelle jamais d'IA lui-même**. En mode 1
 weekli/
 ├── apps/
 │   ├── server/        Worker Cloudflare : MCP, OAuth, API, hébergement du front
-│   └── web/           Front React : site vitrine et tableau de bord
+│   ├── web/           Front React : site vitrine et tableau de bord
+│   └── video/         Vidéos de projet en motion design 3D (Remotion)
 ├── packages/
 │   └── core/          Moteur partagé : lecture GitHub, filtrage, prompts
 ├── docs/              Architecture, sécurité, outils, installation
+├── .claude/skills/    Skill Claude Code « video-projet »
 ├── Dockerfile         Image de développement (cibles web et server)
 └── docker-compose.yml Environnement local complet
 ```
 
 Chaque dossier a son propre README.
+
+## Vidéos de projet
+
+Le skill Claude Code [`video-projet`](.claude/skills/video-projet/SKILL.md) produit, pour n'importe quel dépôt, une pub d'une minute ou l'histoire du projet de A à Z (commits, architecture, README), avec voix off, musique générée, décor 3D et transitions en motion design. Détails : [apps/video](apps/video).
 
 ## Démarrer
 
@@ -108,7 +114,7 @@ Détails et modèle de menace : [docs/securite.md](docs/securite.md).
 
 ## Stack
 
-TypeScript · React 19 et Vite · CSS Modules · Cloudflare Workers, Durable Objects, KV, Browser Run · Agents SDK (`McpAgent`) · Hono · Octokit · SDK Anthropic · WebCodecs (mediabunny) · Vitest · Docker.
+TypeScript · React 19 et Vite · CSS Modules · Cloudflare Workers, Durable Objects, KV, Browser Run · Agents SDK (`McpAgent`) · Hono · Octokit · SDK Anthropic · WebCodecs (mediabunny) · Vitest · Remotion et Three.js · Docker.
 
 ## Licence
 

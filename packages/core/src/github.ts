@@ -6,6 +6,10 @@ const TAILLE_README = 6000;
 const TAILLE_PATCH = 1500;
 const MAX_FICHIERS = 15;
 
+const GENERES =
+	/(^|\/)(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|bun\.lockb?|worker-configuration\.d\.ts)$|(^|\/)(dist|build|\.next)\//;
+export const estGenere = (fichier: string) => GENERES.test(fichier);
+
 // Activite filtree de l'utilisateur sur ses repos publics depuis `jours`
 export async function activiteGithub(octokit: Octokit, login: string, jours: number): Promise<Activite> {
 	const depuis = new Date(Date.now() - jours * 86_400_000);
@@ -77,13 +81,19 @@ export async function detailsCommit(
 	sha: string,
 ): Promise<DetailsCommit> {
 	const { data } = await octokit.rest.repos.getCommit({ owner: login, repo, ref: sha });
+	// Les fichiers generes (lockfiles, types generes, builds) faussent les chiffres : ils sont exclus
+	const ecrits = (data.files ?? []).filter((f) => !estGenere(f.filename));
 
 	return {
 		sha: data.sha.slice(0, 7),
 		message: data.commit.message,
 		date: data.commit.author?.date?.slice(0, 10) ?? "",
-		stats: data.stats,
-		fichiers: (data.files ?? []).slice(0, MAX_FICHIERS).map((f) => ({
+		stats: {
+			additions: ecrits.reduce((t, f) => t + f.additions, 0),
+			deletions: ecrits.reduce((t, f) => t + f.deletions, 0),
+			total: ecrits.reduce((t, f) => t + f.changes, 0),
+		},
+		fichiers: ecrits.slice(0, MAX_FICHIERS).map((f) => ({
 			nom: f.filename,
 			statut: f.status,
 			ajouts: f.additions,

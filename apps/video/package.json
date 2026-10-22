@@ -1,0 +1,30 @@
+{
+	"name": "@weekli/video",
+	"version": "0.1.0",
+	"private": true,
+	"description": "Videos de projet (presentation d'une minute, histoire de A a Z) generees avec Remotion",
+	"type": "module",
+	"scripts": {
+		"studio": "remotion studio src/index.ts",
+		"collecter": "node scripts/collecter.mjs",
+		"produire": "node scripts/produire.mjs",
+		"typecheck": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@types/react": "^19.3.0",
+		"@types/react-dom": "^19.3.0",
+		"@types/three": "^0.186.0",
+		"playwright-core": "^1.64.1"
+	},
+	"dependencies": {
+		"@react-three/fiber": "9.8.2",
+		"@remotion/cli": "4.0.538",
+		"@remotion/google-fonts": "4.0.538",
+		"@remotion/three": "4.0.538",
+		"@remotion/transitions": "4.0.538",
+		"react": "^19.3.1",
+		"react-dom": "^19.3.1",
+		"remotion": "4.0.538",
+		"three": "0.186.1"
+	}
+}
