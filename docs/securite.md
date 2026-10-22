@@ -74,6 +74,21 @@ En production : `npx wrangler secret put <NOM>`. En local : `apps/server/.dev.va
 
 Dans *Settings → Code security* du dépôt, active **Secret scanning** et **Push protection** : GitHub bloquera aussi tout secret connu au moment du push.
 
-## À venir : captures de sites
+## Captures de sites
 
-Les captures ne concerneront que des domaines dont l'utilisateur a **prouvé la propriété** (enregistrement DNS TXT), avec floutage des emails, tokens et IP détectés.
+Sans garde-fou, un outil de capture permet de photographier le site de n'importe qui, ou de sonder un réseau interne (SSRF). Les protections :
+
+| Risque | Protection |
+|---|---|
+| Capturer le site d'un autre | Preuve de propriété obligatoire : enregistrement TXT `_weekli.<domaine>` ou fichier `/.well-known/weekli-verification.txt`, avec un jeton HMAC propre au couple utilisateur et domaine |
+| Atteindre une adresse interne (SSRF) | Noms d'hôte publics uniquement (ni IP, ni `localhost`, ni domaine interne), HTTPS obligatoire, drapeau `global_fetch_strictly_public` qui interdit au Worker toute adresse privée |
+| Redirection vers un autre site | Redirection HTTP vérifiée avant d'ouvrir le navigateur, adresse finale vérifiée après le chargement |
+| Fuite de données à l'écran | Emails, IP, tokens, JWT, longues chaînes hexadécimales et champs sensibles floutés dans la page avant la capture |
+| Abus | 5 captures et 5 vérifications par minute et par utilisateur, 10 domaines au maximum |
+| Conservation | Aucune image stockée : elle est renvoyée puis oubliée |
+
+La vérification par fichier ne suit aucune redirection, lit au plus 1 Ko et abandonne après 5 secondes.
+
+## Vidéos
+
+Le rendu vidéo se fait **entièrement dans le navigateur** (canvas, `MediaRecorder`). Le storyboard, qu'il vienne de Claude ou de l'utilisateur, est nettoyé par `nettoyerStoryboard` : types de scènes connus uniquement, textes tronqués, durées bornées. Il ne contient que du texte, jamais de code exécuté.

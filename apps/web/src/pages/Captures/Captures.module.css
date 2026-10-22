@@ -1,0 +1,69 @@
+.entete {
+	margin-bottom: 28px;
+}
+.entete h1 {
+	font-size: clamp(2.4rem, 5vw, 3.6rem);
+}
+.formulaire {
+	display: grid;
+	grid-template-columns: 1.2fr 1fr 1fr auto;
+	gap: 12px;
+	align-items: end;
+}
+.formulaire label {
+	margin-bottom: 0;
+}
+.vide {
+	padding: 40px 28px;
+	border: 1px dashed var(--moka-clair);
+	border-radius: 20px;
+	background: rgba(255, 255, 255, 0.25);
+}
+.vide p {
+	margin: 0 0 6px;
+}
+.grille {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
+	gap: 16px;
+	margin-top: 16px;
+}
+.capture {
+	margin: 0;
+	padding: 12px;
+	border: 1px solid var(--filet);
+	border-radius: 16px;
+	background: #fff;
+}
+.capture img {
+	display: block;
+	width: 100%;
+	border-radius: 10px;
+	border: 1px solid var(--filet);
+}
+.capture .mobile {
+	max-width: 260px;
+	margin: 0 auto;
+}
+.capture figcaption {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+	margin-top: 10px;
+	font-size: 0.82rem;
+}
+.capture code {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.capture a {
+	color: var(--moka);
+	font-weight: 500;
+}
+
+@media (max-width: 800px) {
+	.formulaire {
+		grid-template-columns: 1fr;
+	}
+}

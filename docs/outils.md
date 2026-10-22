@@ -64,6 +64,17 @@ Seul outil qui écrit : il n'agit que sur l'historique de l'utilisateur connect�
 |---|---|---|---|
 | `nonPublies` | booléen | `true` | Seulement les brouillons pas encore publiés |
 
+## `capturer_site`
+
+Capture d'écran d'une page d'un site dont l'utilisateur a **prouvé la propriété** (page Réglages du site).
+
+| Paramètre | Type | Défaut | Description |
+|---|---|---|---|
+| `url` | URL https | | Page d'un domaine vérifié, sans identifiants ni port |
+| `format` | `bureau` ou `mobile` | `bureau` | 1280 × 800, ou 390 × 844 en densité 2 |
+
+Garanties : domaine vérifié obligatoire, redirection vers un autre domaine refusée (HTTP et JavaScript), emails, IP, tokens et champs de mot de passe floutés avant la capture, 5 captures par minute, aucune image stockée.
+
 ## Prompt `posts_semaine`
 
 | Argument | Description |
@@ -87,6 +98,11 @@ Routes JSON servies par le Worker, toutes protégées par la session (cookie `Ht
 | POST | `/api/brouillons` | Corps `{ posts: Post[] }` (5 au maximum, 64 Ko) ; renvoie les brouillons créés |
 | PATCH | `/api/brouillons/:id` | Corps `{ texte?, publie? }` |
 | DELETE | `/api/brouillons/:id` | `204` |
+| GET | `/api/domaines` | Domaines vérifiés de l'utilisateur |
+| POST | `/api/domaines/preparer` | Corps `{ hote }` ; renvoie l'enregistrement DNS TXT et le fichier à publier, sans rien enregistrer |
+| POST | `/api/domaines/verifier` | Corps `{ hote }` ; vérifie la preuve (DNS ou fichier) puis enregistre le domaine |
+| DELETE | `/api/domaines/:hote` | `204` |
+| POST | `/api/captures` | Corps `{ url, format }` ; renvoie une image JPEG |
 
 Toute requête d'écriture doit porter l'en-tête `Origin` du site. L'historique est chiffré dans KV.
 

@@ -12,6 +12,7 @@
 		"test": "vitest run"
 	},
 	"dependencies": {
+		"@cloudflare/codemode": "^0.5.5",
 		"@cloudflare/workers-oauth-provider": "^1.2.4",
 		"@modelcontextprotocol/client": "2.3.1",
 		"@modelcontextprotocol/sdk": "1.32.1",
@@ -24,7 +25,7 @@
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^4.20260628.1",
-		"wrangler": "^4.105.0",
-		"vitest": "^5.0.5"
+		"vitest": "^5.0.5",
+		"wrangler": "^4.105.0"
 	}
 }

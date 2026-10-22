@@ -3,6 +3,18 @@ import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { Octokit } from "octokit";
 import { ecrireBrouillons, lireBrouillons, sauverPosts } from "../lib/brouillons";
+import { capturer, ErreurCapture, type Format, verifierUrl } from "../lib/capture";
+import {
+	ajouterDomaine,
+	ecrireDomaines,
+	jeton,
+	lireDomaines,
+	nomTxt,
+	normaliserHote,
+	urlFichier,
+	valeurAttendue,
+	verifier,
+} from "../lib/domaines";
 import { lireSession } from "../lib/session";
 import { NOM_REPO, SHA } from "../lib/validation";
 import type { AppEnv } from "../types";
@@ -104,4 +116,78 @@ api.delete("/brouillons/:id", async (c) => {
 	if (restants.length === brouillons.length) return c.json({ erreur: "Introuvable" }, 404);
 	await ecrireBrouillons(c.env, login, restants);
 	return c.body(null, 204);
+});
+
+// Domaines verifies et captures
+
+api.get("/domaines", async (c) => c.json(await lireDomaines(c.env, c.get("session").login)));
+
+// Donne les instructions de verification ; rien n'est enregistre tant que la preuve n'est pas faite
+api.post("/domaines/preparer", corpsLimite, async (c) => {
+	const corps = (await c.req.json().catch(() => null)) as { hote?: unknown } | null;
+	const hote = typeof corps?.hote === "string" ? normaliserHote(corps.hote) : null;
+	if (!hote) return c.json({ erreur: "Nom de domaine invalide (exemple : monsite.dev)" }, 400);
+	const attendu = valeurAttendue(await jeton(c.env.COOKIE_ENCRYPTION_KEY, c.get("session").login, hote));
+	return c.json({
+		hote,
+		dns: { nom: nomTxt(hote), type: "TXT", valeur: attendu },
+		fichier: { url: urlFichier(hote), contenu: attendu },
+	});
+});
+
+api.post("/domaines/verifier", corpsLimite, async (c) => {
+	const corps = (await c.req.json().catch(() => null)) as { hote?: unknown } | null;
+	const hote = typeof corps?.hote === "string" ? normaliserHote(corps.hote) : null;
+	if (!hote) return c.json({ erreur: "Nom de domaine invalide" }, 400);
+	const { login } = c.get("session");
+	const { success } = await c.env.LIMITE_CAPTURE.limit({ key: `verif:${login}` });
+	if (!success) return c.json({ erreur: "Trop de tentatives, reessaie dans une minute" }, 429);
+
+	const attendu = valeurAttendue(await jeton(c.env.COOKIE_ENCRYPTION_KEY, login, hote));
+	if (!(await verifier(hote, attendu))) {
+		return c.json(
+			{ erreur: "Preuve introuvable. L'enregistrement DNS peut mettre quelques minutes a se propager." },
+			422,
+		);
+	}
+	try {
+		return c.json(await ajouterDomaine(c.env, login, hote));
+	} catch (err) {
+		return c.json({ erreur: err instanceof Error ? err.message : "Impossible d'ajouter le domaine" }, 400);
+	}
+});
+
+api.delete("/domaines/:hote", async (c) => {
+	const hote = normaliserHote(c.req.param("hote"));
+	if (!hote) return c.json({ erreur: "Nom de domaine invalide" }, 400);
+	const { login } = c.get("session");
+	await ecrireDomaines(
+		c.env,
+		login,
+		(await lireDomaines(c.env, login)).filter((d) => d.hote !== hote),
+	);
+	return c.body(null, 204);
+});
+
+api.post("/captures", corpsLimite, async (c) => {
+	const corps = (await c.req.json().catch(() => null)) as { url?: unknown; format?: unknown } | null;
+	const format: Format = corps?.format === "mobile" ? "mobile" : "bureau";
+	const { login } = c.get("session");
+
+	const { success } = await c.env.LIMITE_CAPTURE.limit({ key: `capture:${login}` });
+	if (!success) return c.json({ erreur: "5 captures par minute au maximum" }, 429);
+
+	try {
+		const domaines = await lireDomaines(c.env, login);
+		const url = verifierUrl(typeof corps?.url === "string" ? corps.url : "", domaines);
+		const image = await capturer(c.env, url, format, domaines);
+		return c.body(
+			Uint8Array.from(atob(image), (x) => x.charCodeAt(0)),
+			200,
+			{ "Content-Type": "image/jpeg" },
+		);
+	} catch (err) {
+		if (err instanceof ErreurCapture) return c.json({ erreur: err.message }, 400);
+		throw err;
+	}
 });

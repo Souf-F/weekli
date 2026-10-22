@@ -1,0 +1,67 @@
+.liste {
+	list-style: none;
+	margin: 16px 0;
+	padding: 0;
+	display: grid;
+	gap: 6px;
+}
+.liste li {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 8px 12px;
+	border: 1px solid var(--filet);
+	border-radius: 10px;
+	background: rgba(255, 255, 255, 0.6);
+}
+.liste button {
+	border: 0;
+	background: none;
+	color: var(--danger);
+	font: 500 0.82rem var(--sans);
+	cursor: pointer;
+}
+.ajout {
+	display: flex;
+	gap: 8px;
+}
+.ajout input {
+	flex: 1;
+	min-width: 0;
+	padding: 10px 12px;
+	border: 1px solid var(--filet);
+	border-radius: 10px;
+	background: rgba(255, 255, 255, 0.8);
+	font: 400 0.95rem var(--mono);
+}
+.preuve {
+	margin-top: 16px;
+	padding: 16px;
+	border-radius: 12px;
+	background: rgba(111, 78, 55, 0.08);
+	font-size: 0.9rem;
+}
+.preuve p {
+	margin: 0 0 8px;
+}
+.methode {
+	margin-top: 14px !important;
+	font-weight: 600;
+}
+.preuve dl {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	gap: 4px 12px;
+	margin: 0 0 12px;
+}
+.preuve dt {
+	color: var(--texte-doux);
+}
+.preuve dd {
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+.preuve code {
+	user-select: all;
+}

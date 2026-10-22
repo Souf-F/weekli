@@ -12,6 +12,8 @@ import { McpAgent } from "agents/mcp";
 import { Octokit } from "octokit";
 import { z } from "zod";
 import { lireBrouillons, sauverPosts } from "../lib/brouillons";
+import { capturer, ErreurCapture, verifierUrl } from "../lib/capture";
+import { lireDomaines } from "../lib/domaines";
 import { NOM_REPO, SHA } from "../lib/validation";
 import type { Props } from "../types";
 
@@ -108,6 +110,32 @@ export class WeekliMCP extends McpAgent<Env, Record<string, never>, Props> {
 				lireBrouillons(this.env, login)
 					.then((b) => json(nonPublies ? b.filter((x) => !x.publie) : b))
 					.catch(erreur),
+		);
+
+		this.server.registerTool(
+			"capturer_site",
+			{
+				description:
+					"Prend une capture d'ecran d'une page d'un site dont l'utilisateur a verifie la propriete dans Weekli (reglages du site). Les emails, IP et tokens visibles sont floutes. Utile pour illustrer un post.",
+				inputSchema: {
+					url: z.string().url().max(2000).describe("Adresse https d'une page d'un domaine verifie"),
+					format: z.enum(["bureau", "mobile"]).default("bureau"),
+				},
+				annotations: { readOnlyHint: true, openWorldHint: true },
+			},
+			async ({ url, format }) => {
+				const { success } = await this.env.LIMITE_CAPTURE.limit({ key: `capture:${login}` });
+				if (!success) return erreur(new Error("5 captures par minute au maximum"));
+				try {
+					const domaines = await lireDomaines(this.env, login);
+					const image = await capturer(this.env, verifierUrl(url, domaines), format, domaines);
+					return { content: [{ type: "image" as const, data: image, mimeType: "image/jpeg" }] };
+				} catch (err) {
+					if (err instanceof ErreurCapture) return erreur(err);
+					console.error("capturer_site :", err);
+					return erreur(new Error("La capture a echoue."));
+				}
+			},
 		);
 
 		this.server.registerPrompt(

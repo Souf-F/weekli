@@ -18,6 +18,10 @@ src/
     ├── pages.ts           Pages HTML du Worker (consentement, erreurs), tout échappé
     ├── securite.ts        En-têtes, vérification d'origine, limitation de débit
     ├── validation.ts      Formats autorisés pour les noms de repo et les SHA
+    ├── brouillons.ts      Historique chiffré des brouillons
+    ├── domaines.ts        Preuve de propriété des domaines (DNS, fichier)
+    ├── url-capture.ts     Validation des adresses à capturer
+    ├── capture.ts         Capture via Browser Run en CDP, floutage, contrôle des redirections
     └── __tests__/         Tests Vitest du chiffrement et des protections
 ```
 
