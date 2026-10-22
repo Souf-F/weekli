@@ -17,6 +17,16 @@ import p from "../Tableau/Panneau.module.css";
 import { EditeurScene } from "./EditeurScene";
 import styles from "./Studio.module.css";
 
+// "Mon meilleur commit de sécurité" devient "mon-meilleur-commit-de-securite"
+const nomFichier = (titre: string) =>
+	titre
+		.normalize("NFD")
+		.replace(/[\u0300-\u036f]/g, "")
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, "-")
+		.replace(/^-|-$/g, "")
+		.slice(0, 60);
+
 export function Studio() {
 	const reglages = useMemo(lireReglages, []);
 	const [parametres] = useSearchParams();
@@ -91,7 +101,7 @@ export function Studio() {
 			const { video: blob, extension } = await exporter(story, setProgression, arret.current.signal);
 			setVideo({
 				url: URL.createObjectURL(blob),
-				nom: `weekli-${(brouillon?.titre || "video").toLowerCase().replace(/[^a-z0-9]+/g, "-")}.${extension}`,
+				nom: `weekli-${nomFichier(brouillon?.titre || "video")}.${extension}`,
 			});
 		} catch (e) {
 			if (!arret.current.signal.aborted) setErreur(e instanceof Error ? e.message : "Export impossible");

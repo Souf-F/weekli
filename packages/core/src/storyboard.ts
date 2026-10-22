@@ -14,8 +14,15 @@ export type Storyboard = { scenes: Scene[] };
 
 export const LIMITES_VIDEO = { scenes: 8, dureeMin: 2, dureeMax: 7, texte: 140, lignes: 6 } as const;
 
-const court = (v: unknown, max: number = LIMITES_VIDEO.texte) =>
-	typeof v === "string" ? v.replace(/\s+/g, " ").trim().slice(0, max) : "";
+// Tronque sans couper un mot : on s'arrete au dernier espace et on ajoute des points de suspension
+const court = (v: unknown, max: number = LIMITES_VIDEO.texte) => {
+	if (typeof v !== "string") return "";
+	const texte = v.replace(/\s+/g, " ").trim();
+	if (texte.length <= max) return texte;
+	const coupe = texte.slice(0, max - 1);
+	const espace = coupe.lastIndexOf(" ");
+	return `${(espace > max / 2 ? coupe.slice(0, espace) : coupe).replace(/[\s,;:.]+$/, "")}…`;
+};
 const duree = (v: unknown, defaut: number) =>
 	Math.min(
 		Math.max(typeof v === "number" && Number.isFinite(v) ? v : defaut, LIMITES_VIDEO.dureeMin),
@@ -99,18 +106,20 @@ export function storyboardDepuisPost(post: Post): Storyboard {
 		.filter((l) => l && !/^#\w/.test(l));
 	const hashtags = (post.texte.match(/#[\p{L}\d_]+/gu) ?? []).slice(0, 3).join(" ");
 	const numerotees = lignes.filter((l) => /^(\d+[.)]|[-•])\s/.test(l)).map((l) => l.replace(/^(\d+[.)]|[-•])\s*/, ""));
-	const phrases = lignes.filter((l) => !/^(\d+[.)]|[-•])\s/.test(l));
+	// Les liens et les phrases qui annoncent une liste ne font pas de bonnes scenes
+	const phrases = lignes.filter((l) => !/^(\d+[.)]|[-•])\s/.test(l) && !/https?:\/\//.test(l));
 	const accroche = phrases[0] ?? post.titre;
 	const forte = phrases
 		.slice(1)
 		.sort((a, b) => a.length - b.length)
-		.find((p) => p.length > 25 && p.length < 120);
+		.find((p) => p.length > 25 && p.length < 120 && !p.endsWith(":"));
 
 	const scenes: unknown[] = [{ type: "titre", titre: post.titre || accroche, sousTitre: post.titre ? accroche : "" }];
 	if (numerotees.length >= 2) scenes.push({ type: "liste", titre: "En bref", elements: numerotees });
 	else if (phrases.length > 2) scenes.push({ type: "liste", titre: "En bref", elements: phrases.slice(1, 4) });
 	if (forte) scenes.push({ type: "citation", texte: forte });
-	scenes.push({ type: "fin", titre: post.source || "Weekli", lien: hashtags });
+	// La source peut contenir des SHA ("weekli · 88baace") : seul le nom du projet sert de titre de fin
+	scenes.push({ type: "fin", titre: post.source.split(/[·|,]/)[0].trim() || "Weekli", lien: hashtags });
 	return nettoyerStoryboard({ scenes });
 }
 

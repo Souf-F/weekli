@@ -45,4 +45,40 @@ describe("storyboardDepuisPost", () => {
 		expect(s.scenes[3]).toMatchObject({ titre: "scanner-ssl", lien: "#infosec #osint" });
 		expect(dureeTotale(s)).toBeGreaterThan(10);
 	});
+
+	it("n'utilise ni un lien ni une phrase d'annonce comme citation", () => {
+		const s = storyboardDepuisPost({
+			titre: "Titre",
+			format: "",
+			source: "weekli",
+			texte:
+				"Accroche du post.\n\nCe que j'ai appris cette semaine :\nhttps://github.com/Souf-F/weekli\nUne phrase forte et assez longue pour une citation.",
+		});
+		const citation = s.scenes.find((x) => x.type === "citation") as { texte: string } | undefined;
+		expect(citation?.texte).toBe("Une phrase forte et assez longue pour une citation.");
+	});
+
+	it("garde seulement le nom du projet pour la scene de fin", () => {
+		const s = storyboardDepuisPost({ titre: "T", format: "", source: "weekli · 88baace, bd48684", texte: "Accroche." });
+		expect(s.scenes.at(-1)).toMatchObject({ type: "fin", titre: "weekli" });
+	});
+
+	it("tronque les textes trop longs sans couper un mot", () => {
+		const s = nettoyerStoryboard({
+			scenes: [
+				{
+					type: "liste",
+					titre: "x",
+					elements: [
+						"Un flux OAuth herite d'un modele, remplace par les fonctions maintenues de la bibliotheque officielle",
+					],
+					duree: 4,
+				},
+			],
+		});
+		const el = (s.scenes[0] as { elements: string[] }).elements[0];
+		expect(el.length).toBeLessThanOrEqual(80);
+		expect(el.endsWith("…")).toBe(true);
+		expect(el).not.toMatch(/\sbi…$/);
+	});
 });

@@ -162,22 +162,30 @@ const DESSINS: { [K in Scene["type"]]: (ctx: Ctx, s: Extract<Scene, { type: K }>
 		ctx.globalAlpha *= fenetre(t, 0, 0.15);
 		ctx.fillText(s.titre.toUpperCase(), MARGE, 330);
 		ctx.restore();
-		s.elements.forEach((el, i) => {
+		// Chaque carte prend la hauteur de son texte (3 lignes au plus, points de suspension au-dela)
+		const largeurTexte = LARGEUR - MARGE * 2 - 220;
+		ctx.font = `500 38px ${SANS}`;
+		const blocs = s.elements.map((el) => {
+			const lignes = lignesCoupees(ctx, el, largeurTexte);
+			if (lignes.length > 3) lignes.splice(2, lignes.length - 2, `${lignes[2].replace(/\s+\S*$/, "")}…`);
+			return lignes;
+		});
+		let y = 390;
+		blocs.forEach((lignes, i) => {
+			const hauteur = 70 + lignes.length * 48;
 			const k = fenetre(t, 0.1 + i * 0.12, 0.3 + i * 0.12);
-			const y = 400 + i * 210;
 			ctx.save();
 			ctx.globalAlpha *= k;
 			ctx.translate((1 - k) * -60, 0);
-			carte(ctx, MARGE, y, LARGEUR - MARGE * 2, 170);
+			carte(ctx, MARGE, y, LARGEUR - MARGE * 2, hauteur);
 			ctx.fillStyle = C.moka;
 			ctx.font = `italic 80px ${SERIF}`;
-			ctx.fillText(String(i + 1).padStart(2, "0"), MARGE + 40, y + 110);
+			ctx.fillText(String(i + 1).padStart(2, "0"), MARGE + 40, y + hauteur / 2 + 26);
 			ctx.fillStyle = C.espresso;
-			ctx.font = `500 40px ${SANS}`;
-			lignesCoupees(ctx, el, LARGEUR - MARGE * 2 - 220)
-				.slice(0, 2)
-				.forEach((l, j) => ctx.fillText(l, MARGE + 180, y + (j === 0 ? 78 : 128)));
+			ctx.font = `500 38px ${SANS}`;
+			lignes.forEach((l, j) => ctx.fillText(l, MARGE + 180, y + 62 + j * 48));
 			ctx.restore();
+			y += hauteur + 28;
 		});
 	},
 
@@ -224,7 +232,13 @@ const DESSINS: { [K in Scene["type"]]: (ctx: Ctx, s: Extract<Scene, { type: K }>
 		ctx.globalAlpha *= k;
 		ctx.textAlign = "center";
 		ctx.fillStyle = C.espresso;
-		ctx.font = `140px ${SERIF}`;
+		// Taille reduite jusqu'a tenir dans la largeur utile
+		let taille = 140;
+		ctx.font = `${taille}px ${SERIF}`;
+		while (taille > 56 && ctx.measureText(s.titre).width > LARGEUR - MARGE * 2) {
+			taille -= 6;
+			ctx.font = `${taille}px ${SERIF}`;
+		}
 		ctx.fillText(s.titre, LARGEUR / 2, 640 + (1 - k) * 40);
 		if (s.lien) {
 			ctx.fillStyle = C.moka;
