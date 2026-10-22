@@ -13,9 +13,10 @@ Sur GitHub : *Settings → Developer settings → OAuth Apps → New OAuth App*.
 | Champ | Local | Production |
 |---|---|---|
 | Homepage URL | `http://localhost:8788` | `https://weekli.<ton-sous-domaine>.workers.dev` |
-| Authorization callback URL | `http://localhost:8788` | `https://weekli.<ton-sous-domaine>.workers.dev` |
+| Redirect URI 1 | `http://localhost:8788/auth/callback` | `https://weekli.<ton-sous-domaine>.workers.dev/auth/callback` |
+| Redirect URI 2 | `http://localhost:8788/callback` | `https://weekli.<ton-sous-domaine>.workers.dev/callback` |
 
-L'URL de callback est la **racine** du site : GitHub accepte alors les deux chemins utilisés par Weekli, `/callback` (connecteur MCP) et `/auth/callback` (site).
+Déclare ces deux URLs **exactes** (sans joker) : `/auth/callback` pour le site, `/callback` pour le connecteur MCP. Laisse « Expire user access tokens » coché : les sessions durent 8 heures, comme les tokens.
 
 Crée une app pour le local et une pour la production. Note le Client ID et génère un Client Secret.
 

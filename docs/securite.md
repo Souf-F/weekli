@@ -24,7 +24,7 @@ flowchart LR
 |---|---|
 | Vol du code d'autorisation | PKCE S256 obligatoire **vers Claude et vers GitHub** |
 | Confused deputy (un client MCP détourne l'app GitHub de Weekli) | Consentement par client **avant** toute redirection vers GitHub, géré par `@cloudflare/workers-oauth-provider` |
-| Formulaire de consentement forgé ou rejoué | Demande gardée côté serveur, formulaire lié au navigateur par un cookie `__Host-`, usage unique, 10 minutes |
+| Formulaire de consentement forgé ou rejoué | Demande gardée côté serveur, formulaire lié au navigateur par un cookie `__Host-`, usage unique, 10 minutes ; CSP sans script hors nonce, `form-action` limité au site et à GitHub |
 | Client MCP au nom trompeur | Nom échappé, domaine de redirection affiché, alerte si la redirection va vers `localhost` |
 | Token accepté par un autre service | Audience liée à la ressource `PUBLIC_URL/mcp` (RFC 8707, RFC 9728) |
 | CSRF | Cookies `SameSite=Lax` **et** vérification de l'en-tête `Origin` sur toute requête d'écriture |
@@ -45,7 +45,7 @@ flowchart LR
 
 | Sujet | Choix |
 |---|---|
-| Cookie | `HttpOnly`, `SameSite=Lax`, préfixe `__Host-` en HTTPS, 7 jours |
+| Cookie | `HttpOnly`, `SameSite=Lax`, préfixe `__Host-` en HTTPS, 8 heures (durée de vie des tokens GitHub) |
 | Contenu | Uniquement un identifiant aléatoire. Les données (token GitHub compris) sont chiffrées dans KV. |
 | Connexion | `state` aléatoire stocké chiffré dans KV avec le vérifieur PKCE, lié au navigateur par cookie, usage unique |
 | Déconnexion | `POST /auth/logout` supprime la session de KV, pas seulement le cookie |

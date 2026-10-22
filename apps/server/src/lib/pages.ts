@@ -14,9 +14,14 @@ h1{font:400 2rem/1.1 Georgia,serif;margin:0 0 16px}p{margin:0 0 14px;color:#6a5a
 .actions{display:flex;gap:10px;margin-top:24px}button{flex:1;padding:14px;border-radius:12px;border:1px solid #2a1c13;font:500 .95rem system-ui;cursor:pointer}
 .ok{background:#2a1c13;color:#e5e4e2}.non{background:#fff;color:#2a1c13}`;
 
-// Aucune ressource externe, aucun script : la CSP le garantit
+// Aucune ressource externe et aucun script tiers : la CSP le garantit.
+// form-action s'applique aussi a la redirection qui suit l'envoi : GitHub doit y figurer.
 const CSP =
-	"default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'";
+	"default-src 'none'; style-src 'unsafe-inline'; form-action 'self' https://github.com; frame-ancestors 'none'; base-uri 'none'";
+
+// Seul script autorise sur la page de consentement, par un nonce a usage unique :
+// il desactive les boutons apres le premier clic (un formulaire de consentement ne sert qu'une fois)
+const SCRIPT_UN_CLIC = `document.querySelector("form").addEventListener("submit", () => setTimeout(() => document.querySelectorAll("button").forEach((b) => (b.disabled = true))));`;
 
 function page(titre: string, corps: string) {
 	return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -31,8 +36,9 @@ export function pageConsentement(d: ConsentDescription, handle: string, headers:
 		? `<p class="alerte">L'accès sera envoyé à une application de ton ordinateur. Continue seulement si tu viens de lancer la connexion depuis elle.</p>`
 		: "";
 
+	const nonce = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16))));
 	headers.set("Content-Type", "text/html; charset=utf-8");
-	headers.set("Content-Security-Policy", CSP);
+	headers.set("Content-Security-Policy", `${CSP}; script-src 'nonce-${nonce}'`);
 	return new Response(
 		page(
 			"Autoriser l'accès à Weekli",
@@ -43,7 +49,8 @@ ${local}
 <form method="post">
 <input type="hidden" name="handle" value="${echapper(handle)}">
 <div class="actions"><button class="non" name="decision" value="deny">Refuser</button><button class="ok" name="decision" value="approve">Autoriser</button></div>
-</form>`,
+</form>
+<script nonce="${nonce}">${SCRIPT_UN_CLIC}</script>`,
 		),
 		{ headers },
 	);

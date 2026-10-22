@@ -3,7 +3,8 @@ import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import type { AppEnv, Session } from "../types";
 import { chiffrer, dechiffrer } from "./chiffrement";
 
-const DUREE = 60 * 60 * 24 * 7; // 7 jours
+// Alignee sur la duree de vie des tokens GitHub (8 h quand l'app OAuth fait expirer les tokens)
+const DUREE = 60 * 60 * 8;
 const USAGE = "session";
 const cle = (id: string) => `session:${id}`;
 
