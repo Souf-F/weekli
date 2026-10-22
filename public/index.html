@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="fr">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>PostForge</title>
+	<meta name="description" content="Connecteur MCP qui transforme ton activite GitHub en posts LinkedIn, rediges par ton propre Claude.">
+	<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+	<header class="nav">
+		<a class="logo" href="/">Post<span>Forge</span></a>
+		<nav>
+			<a href="#fonctionnement">Fonctionnement</a>
+			<a href="#securite">Sécurité</a>
+			<a href="https://github.com/Souf-F/postforge" rel="noopener">GitHub</a>
+		</nav>
+	</header>
+
+	<main>
+		<section class="hero">
+			<p class="badge">Connecteur MCP · Bêta</p>
+			<h1>Ton code de la semaine devient<br>tes posts LinkedIn.</h1>
+			<p class="sous-titre">
+				PostForge connecte ton GitHub à ton compte Claude. Tu demandes
+				« fais mes posts de la semaine », Claude lit tes commits et rédige,
+				avec ton abonnement, sans clé API.
+			</p>
+			<a class="bouton" href="#installer">Ajouter à Claude</a>
+		</section>
+
+		<section id="fonctionnement">
+			<h2>Comment ça marche</h2>
+			<ol class="etapes">
+				<li>
+					<h3>Connecte</h3>
+					<p>Ajoute PostForge comme connecteur dans Claude et autorise la lecture de ton profil GitHub public.</p>
+				</li>
+				<li>
+					<h3>Demande</h3>
+					<p>Lance le prompt <code>posts_semaine</code> ou écris simplement « fais mes posts LinkedIn de la semaine ».</p>
+				</li>
+				<li>
+					<h3>Publie</h3>
+					<p>Claude analyse tes commits, choisit les meilleurs sujets et rédige. Tu relis, tu ajustes, tu publies.</p>
+				</li>
+			</ol>
+		</section>
+
+		<section id="outils">
+			<h2>Les outils exposés à Claude</h2>
+			<div class="cartes">
+				<article><code>activite_github</code><p>Tes commits récents, sans le bruit (merge, typo, chore).</p></article>
+				<article><code>details_repo</code><p>Description, site, langages et README d'un projet.</p></article>
+				<article><code>details_commit</code><p>Fichiers modifiés et extraits du diff, pour raconter un problème résolu.</p></article>
+				<article class="bientot"><code>capturer_site</code><p>Captures de tes démos, sur domaines vérifiés. Bientôt.</p></article>
+			</div>
+		</section>
+
+		<section id="securite">
+			<h2>Sécurité</h2>
+			<ul class="liste">
+				<li><strong>Lecture seule</strong> : scope GitHub <code>read:user</code>, uniquement tes repos publics.</li>
+				<li><strong>Aucune clé IA stockée</strong> : c'est ton Claude qui rédige, PostForge ne fournit que les données.</li>
+				<li><strong>OAuth 2.1 + PKCE</strong> avec protection CSRF et consentement explicite.</li>
+				<li><strong>Rien n'est publié automatiquement</strong> : tu gardes toujours la main.</li>
+			</ul>
+		</section>
+
+		<section id="installer">
+			<h2>Ajouter PostForge à Claude</h2>
+			<ol class="liste">
+				<li>Dans Claude, ouvre <em>Paramètres → Connecteurs → Ajouter un connecteur personnalisé</em>.</li>
+				<li>Colle cette URL :</li>
+			</ol>
+			<div class="url">
+				<code id="url-mcp">https://postforge.example/mcp</code>
+				<button id="copier" type="button">Copier</button>
+			</div>
+			<p class="note">Connecte-toi avec GitHub quand Claude te le demande, c'est prêt.</p>
+		</section>
+	</main>
+
+	<footer>
+		<p>PostForge · projet open source · <a href="https://github.com/Souf-F/postforge">code source</a></p>
+	</footer>
+
+	<script src="/app.js"></script>
+</body>
+</html>
