@@ -4,87 +4,179 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Weekli</title>
-	<meta name="description" content="Connecteur MCP qui transforme ton activite GitHub en posts LinkedIn, rediges par ton propre Claude.">
+	<meta name="description" content="Weekli relie ton GitHub à ton compte Claude pour transformer ton code de la semaine en posts LinkedIn.">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 	<link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-	<header class="nav">
-		<a class="logo" href="/">Week<span>li</span></a>
-		<nav>
-			<a href="#fonctionnement">Fonctionnement</a>
+	<canvas id="mesh" aria-hidden="true"></canvas>
+
+	<header class="nav" id="nav">
+		<a class="logo" href="/"><span class="logo-carre">W</span>Weekli</a>
+		<nav class="nav-liens">
+			<a href="#fonctionnalites">Fonctionnalités</a>
+			<a href="#comment">Comment ça marche</a>
 			<a href="#securite">Sécurité</a>
-			<a href="https://github.com/Souf-F/weekli" rel="noopener">GitHub</a>
 		</nav>
+		<a class="bouton bouton-petit" href="#installer">Ajouter à Claude</a>
 	</header>
 
 	<main>
+		<!-- Hero -->
 		<section class="hero">
-			<p class="badge">Connecteur MCP · Bêta</p>
-			<h1>Ton code de la semaine devient<br>tes posts LinkedIn.</h1>
-			<p class="sous-titre">
-				Weekli connecte ton GitHub à ton compte Claude. Tu demandes
-				« fais mes posts de la semaine », Claude lit tes commits et rédige,
-				avec ton abonnement, sans clé API.
-			</p>
-			<a class="bouton" href="#installer">Ajouter à Claude</a>
+			<div class="hero-texte">
+				<p class="pastille apparait"><span class="point"></span>Connecteur MCP pour Claude</p>
+				<h1 class="apparait">Ton code de la semaine,<br><em>raconté sur LinkedIn.</em></h1>
+				<p class="hero-intro apparait">
+					Weekli relie ton GitHub à ton compte Claude. Tu demandes tes posts de la semaine,
+					Claude analyse tes commits et rédige dans ton style. Avec ton abonnement, sans clé API.
+				</p>
+				<div class="hero-actions apparait">
+					<a class="bouton" href="#installer">Ajouter à Claude</a>
+					<a class="bouton bouton-contour" href="https://github.com/Souf-F/weekli" rel="noopener">Voir le code</a>
+				</div>
+				<p class="hero-note apparait">Open source · Lecture seule · Aucune donnée stockée</p>
+			</div>
+
+			<div class="scene" data-vitesse="-0.12">
+				<div class="maquette inclinable">
+					<div class="maquette-barre">
+						<span class="pt"></span><span class="pt"></span><span class="pt"></span>
+						<span class="maquette-titre">Claude</span>
+						<span class="maquette-badge">Weekli connecté</span>
+					</div>
+					<div class="maquette-corps">
+						<div class="msg msg-moi">Fais mes posts LinkedIn de la semaine.</div>
+						<div class="outil"><span class="outil-icone">⌘</span><code>activite_github</code><span class="outil-res">23 commits · 3 projets</span></div>
+						<div class="outil"><span class="outil-icone">⌘</span><code>details_commit</code><span class="outil-res">scanner-ssl · a1b2c3d</span></div>
+						<div class="msg msg-claude">
+							<span class="post-titre">Post 1 · Retour d'expérience</span>
+							<p>Cette semaine, mon scanner a appris à repérer les sous-domaines oubliés. Ceux qu'on crée pour un test, puis qu'on laisse vivre des années.</p>
+							<p class="post-suite">Voici comment je les détecte en trois requêtes…</p>
+							<span class="post-tags">#cybersecurite #javascript #buildinpublic</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="flottant flottant-1" data-profondeur="40"><strong>23</strong> commits analysés</div>
+				<div class="flottant flottant-2" data-profondeur="-30"><span class="point"></span>3 brouillons prêts</div>
+				<div class="flottant flottant-3" data-profondeur="60">#buildinpublic</div>
+			</div>
 		</section>
 
-		<section id="fonctionnement">
-			<h2>Comment ça marche</h2>
-			<ol class="etapes">
-				<li>
-					<h3>Connecte</h3>
-					<p>Ajoute Weekli comme connecteur dans Claude et autorise la lecture de ton profil GitHub public.</p>
+		<!-- Bandeau -->
+		<div class="bandeau" aria-hidden="true">
+			<div class="bandeau-piste">
+				<span>Claude</span><span>MCP</span><span>GitHub</span><span>LinkedIn</span><span>Cloudflare Workers</span><span>OAuth 2.1</span><span>Open source</span>
+				<span>Claude</span><span>MCP</span><span>GitHub</span><span>LinkedIn</span><span>Cloudflare Workers</span><span>OAuth 2.1</span><span>Open source</span>
+			</div>
+		</div>
+
+		<!-- Fonctionnalités -->
+		<section class="section" id="fonctionnalites">
+			<div class="entete-section apparait">
+				<p class="sur-titre">Fonctionnalités</p>
+				<h2>Tout ce qu'il faut pour publier.<br><em>Rien de plus.</em></h2>
+			</div>
+
+			<div class="grille">
+				<article class="carte apparait">
+					<div class="carte-icone"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="12" r="2.5"/><path d="M6 8.5v7M8.3 7.2l7.4 3.6"/></svg></div>
+					<h3>Activité GitHub filtrée</h3>
+					<p>Tes commits de la semaine, sans le bruit : merge, typo, chore et doublons disparaissent.</p>
+				</article>
+				<article class="carte apparait">
+					<div class="carte-icone"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg></div>
+					<h3>Contexte des projets</h3>
+					<p>README, langages, site de démo : Claude comprend ce que tu construis avant d'écrire.</p>
+				</article>
+				<article class="carte apparait">
+					<div class="carte-icone"><svg viewBox="0 0 24 24"><path d="M8 4v16M16 4v16"/><path d="M4 9h8M12 15h8"/></svg></div>
+					<h3>Lecture des diffs</h3>
+					<p>Un bug corrigé devient une histoire : Claude lit les fichiers modifiés et explique le problème résolu.</p>
+				</article>
+				<article class="carte apparait">
+					<div class="carte-icone"><svg viewBox="0 0 24 24"><path d="M5 19l4.5-1 9.8-9.8a2 2 0 0 0-3.5-3.5L6 14.5 5 19z"/></svg></div>
+					<h3>Ton style d'écriture</h3>
+					<p>Donne quelques anciens posts, Weekli guide Claude pour écrire avec ta voix, pas celle d'un robot.</p>
+				</article>
+				<article class="carte apparait">
+					<div class="carte-icone"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg></div>
+					<h3>Lecture seule</h3>
+					<p>Scope GitHub minimal, repos publics uniquement. Weekli ne peut rien modifier, rien publier.</p>
+				</article>
+				<article class="carte apparait bientot">
+					<div class="carte-icone"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="12" cy="12.5" r="3.5"/><path d="M8 6l1.5-2h5L16 6"/></svg></div>
+					<h3>Captures et vidéos</h3>
+					<p>Captures de tes démos et vidéos en motion design pour chaque post. Bientôt.</p>
+				</article>
+			</div>
+		</section>
+
+		<!-- Comment ça marche -->
+		<section class="section" id="comment">
+			<div class="entete-section apparait">
+				<p class="sur-titre">Comment ça marche</p>
+				<h2>Du commit au post.<br><em>Sans friction.</em></h2>
+			</div>
+
+			<ol class="etapes" id="etapes">
+				<li class="etape apparait">
+					<span class="etape-num">01</span>
+					<h3>Connecte Weekli</h3>
+					<p>Ajoute l'URL du connecteur dans Claude et autorise la lecture de ton profil GitHub.</p>
 				</li>
-				<li>
-					<h3>Demande</h3>
-					<p>Lance le prompt <code>posts_semaine</code> ou écris simplement « fais mes posts LinkedIn de la semaine ».</p>
+				<li class="etape apparait">
+					<span class="etape-num">02</span>
+					<h3>Demande tes posts</h3>
+					<p>Une phrase suffit. Claude appelle les outils Weekli et parcourt ta semaine.</p>
 				</li>
-				<li>
-					<h3>Publie</h3>
-					<p>Claude analyse tes commits, choisit les meilleurs sujets et rédige. Tu relis, tu ajustes, tu publies.</p>
+				<li class="etape apparait">
+					<span class="etape-num">03</span>
+					<h3>Claude choisit</h3>
+					<p>Il repère les deux ou trois sujets qui méritent d'être racontés.</p>
+				</li>
+				<li class="etape apparait">
+					<span class="etape-num">04</span>
+					<h3>Tu publies</h3>
+					<p>Tu relis, tu ajustes, tu copies. Rien ne part sans ton accord.</p>
 				</li>
 			</ol>
 		</section>
 
-		<section id="outils">
-			<h2>Les outils exposés à Claude</h2>
-			<div class="cartes">
-				<article><code>activite_github</code><p>Tes commits récents, sans le bruit (merge, typo, chore).</p></article>
-				<article><code>details_repo</code><p>Description, site, langages et README d'un projet.</p></article>
-				<article><code>details_commit</code><p>Fichiers modifiés et extraits du diff, pour raconter un problème résolu.</p></article>
-				<article class="bientot"><code>capturer_site</code><p>Captures de tes démos, sur domaines vérifiés. Bientôt.</p></article>
+		<!-- Chiffres -->
+		<section class="section chiffres" id="securite">
+			<div class="chiffres-grille">
+				<div class="chiffre apparait"><strong data-compte="0">0</strong><span>clé API à fournir</span></div>
+				<div class="chiffre apparait"><strong data-compte="2">0</strong><span>minutes d'installation</span></div>
+				<div class="chiffre apparait"><strong data-compte="100" data-suffixe="%">0</strong><span>lecture seule</span></div>
+				<div class="chiffre apparait"><strong data-compte="0">0</strong><span>publication sans toi</span></div>
 			</div>
+			<p class="chiffres-note apparait">OAuth 2.1 avec PKCE, protection CSRF, token GitHub chiffré et jamais exposé à Claude.</p>
 		</section>
 
-		<section id="securite">
-			<h2>Sécurité</h2>
-			<ul class="liste">
-				<li><strong>Lecture seule</strong> : scope GitHub <code>read:user</code>, uniquement tes repos publics.</li>
-				<li><strong>Aucune clé IA stockée</strong> : c'est ton Claude qui rédige, Weekli ne fournit que les données.</li>
-				<li><strong>OAuth 2.1 + PKCE</strong> avec protection CSRF et consentement explicite.</li>
-				<li><strong>Rien n'est publié automatiquement</strong> : tu gardes toujours la main.</li>
-			</ul>
-		</section>
-
-		<section id="installer">
-			<h2>Ajouter Weekli à Claude</h2>
-			<ol class="liste">
-				<li>Dans Claude, ouvre <em>Paramètres → Connecteurs → Ajouter un connecteur personnalisé</em>.</li>
-				<li>Colle cette URL :</li>
-			</ol>
-			<div class="url">
-				<code id="url-mcp">https://weekli.example/mcp</code>
-				<button id="copier" type="button">Copier</button>
+		<!-- Installation -->
+		<section class="section" id="installer">
+			<div class="cta apparait">
+				<p class="sur-titre">Prêt en deux minutes</p>
+				<h2>L'agent qui raconte<br><em>ton travail.</em></h2>
+				<p class="cta-texte">Dans Claude : Paramètres, Connecteurs, Ajouter un connecteur personnalisé. Puis colle cette adresse.</p>
+				<div class="url">
+					<code id="url-mcp">https://weekli.example/mcp</code>
+					<button id="copier" class="bouton" type="button">Copier</button>
+				</div>
 			</div>
-			<p class="note">Connecte-toi avec GitHub quand Claude te le demande, c'est prêt.</p>
 		</section>
 	</main>
 
-	<footer>
-		<p>Weekli · projet open source · <a href="https://github.com/Souf-F/weekli">code source</a></p>
+	<footer class="pied">
+		<a class="logo" href="/"><span class="logo-carre">W</span>Weekli</a>
+		<p>Projet open source sous licence MIT.</p>
+		<a href="https://github.com/Souf-F/weekli" rel="noopener">GitHub ↗</a>
 	</footer>
 
-	<script src="/app.js"></script>
+	<script type="module" src="/app.js"></script>
 </body>
 </html>
