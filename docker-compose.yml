@@ -10,7 +10,7 @@ services:
       context: .
       target: server
     ports:
-      - "8788:8788"
+      - "127.0.0.1:8788:8788" # jamais expose au reseau local
     env_file:
       - apps/server/.dev.vars
     environment:
@@ -25,7 +25,7 @@ services:
       context: .
       target: web
     ports:
-      - "5173:5173"
+      - "127.0.0.1:5173:5173"
     environment:
       API_URL: http://server:8788
     volumes:

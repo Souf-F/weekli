@@ -5,11 +5,12 @@
 	"description": "Worker Cloudflare de Weekli : serveur MCP, OAuth GitHub, API du site et hebergement du front",
 	"type": "module",
 	"scripts": {
-		"dev": "wrangler dev --ip 0.0.0.0 --port 8788",
+		"dev": "wrangler dev --ip 127.0.0.1 --port 8788",
 		"deploy": "wrangler deploy",
 		"typegen": "wrangler types --env-file .dev.vars.example",
 		"typecheck": "tsc --noEmit",
-		"test": "vitest run"
+		"test": "vitest run",
+		"dev:docker": "wrangler dev --ip 0.0.0.0 --port 8788"
 	},
 	"dependencies": {
 		"@cloudflare/codemode": "^0.5.5",

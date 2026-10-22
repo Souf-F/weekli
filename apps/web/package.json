@@ -4,11 +4,12 @@
 	"version": "0.2.0",
 	"type": "module",
 	"scripts": {
-		"dev": "vite --host 0.0.0.0",
+		"dev": "vite --host 127.0.0.1",
 		"build": "tsc -b && vite build",
 		"typecheck": "tsc -b",
 		"lint": "oxlint",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"dev:docker": "vite --host 0.0.0.0"
 	},
 	"dependencies": {
 		"@anthropic-ai/sdk": "^1.1.0",

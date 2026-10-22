@@ -11,13 +11,15 @@ RUN npm ci
 
 COPY . .
 
+# Dans le conteneur on ecoute sur 0.0.0.0 ; docker-compose ne publie les ports que sur 127.0.0.1
+
 # Front React servi par Vite, avec rechargement a chaud
 FROM base AS web
 EXPOSE 5173
-CMD ["npm", "run", "dev", "--workspace", "@weekli/web"]
+CMD ["npm", "run", "dev:docker", "--workspace", "@weekli/web"]
 
 # Worker Cloudflare (MCP, OAuth, API) via wrangler dev ; il sert aussi le front compile
 FROM base AS server
 RUN npm run build
 EXPOSE 8788
-CMD ["npm", "run", "dev", "--workspace", "@weekli/server"]
+CMD ["npm", "run", "dev:docker", "--workspace", "@weekli/server"]

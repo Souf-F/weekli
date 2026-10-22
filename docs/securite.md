@@ -70,6 +70,10 @@ Elle ne quitte jamais le navigateur : stockée en `sessionStorage` (effacée à 
 
 En production : `npx wrangler secret put <NOM>`. En local : `apps/server/.dev.vars`, jamais commité (exclu par Git **et** bloqué par le garde-fou).
 
+## Développement local
+
+Le Worker et Vite n'écoutent que sur `127.0.0.1` : invisibles depuis le réseau local (Wi-Fi public, école). Dans Docker, les services écoutent sur `0.0.0.0` à l'intérieur du conteneur, mais `docker-compose.yml` ne publie leurs ports que sur `127.0.0.1`.
+
 ## Recommandé côté GitHub
 
 Dans *Settings → Code security* du dépôt, active **Secret scanning** et **Push protection** : GitHub bloquera aussi tout secret connu au moment du push.
