@@ -1,7 +1,9 @@
 import { Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { Octokit } from "octokit";
-import { fetchUpstreamAuthToken, getUpstreamAuthorizeUrl } from "../lib/github-oauth";
+import { chiffrer, dechiffrer } from "../lib/chiffrement";
+import { creerPkce, echangerCode, urlAutorisation } from "../lib/github-oauth";
+import { pageErreur } from "../lib/pages";
 import { creerSession, idAleatoire, supprimerSession } from "../lib/session";
 import type { AppEnv } from "../types";
 
@@ -10,11 +12,16 @@ export const auth = new Hono<AppEnv>();
 
 const COOKIE_ETAT = "weekli_etat";
 const DUREE_ETAT = 600;
+const USAGE = "etat-connexion";
+const rappel = (url: string) => new URL("/auth/callback", url).href;
 
 auth.get("/login", async (c) => {
 	const etat = idAleatoire();
-	await c.env.OAUTH_KV.put(`etat:${etat}`, "1", { expirationTtl: DUREE_ETAT });
-	// L'etat est aussi lie au navigateur : un etat vole ne sert a rien sans ce cookie
+	const { verifieur, defi } = await creerPkce();
+	// Le verifieur PKCE reste cote serveur, chiffre ; l'etat est aussi lie au navigateur par cookie
+	await c.env.OAUTH_KV.put(`etat:${etat}`, await chiffrer(c.env.COOKIE_ENCRYPTION_KEY, USAGE, { verifieur }), {
+		expirationTtl: DUREE_ETAT,
+	});
 	setCookie(c, COOKIE_ETAT, etat, {
 		httpOnly: true,
 		secure: new URL(c.req.url).protocol === "https:",
@@ -22,40 +29,39 @@ auth.get("/login", async (c) => {
 		path: "/auth",
 		maxAge: DUREE_ETAT,
 	});
-
 	return c.redirect(
-		getUpstreamAuthorizeUrl({
-			upstream_url: "https://github.com/login/oauth/authorize",
-			client_id: c.env.GITHUB_CLIENT_ID,
-			redirect_uri: new URL("/auth/callback", c.req.url).href,
-			scope: "read:user",
-			state: etat,
-		}),
+		urlAutorisation({ clientId: c.env.GITHUB_CLIENT_ID, redirectUri: rappel(c.req.url), state: etat, defi }),
 	);
 });
 
 auth.get("/callback", async (c) => {
 	const etat = c.req.query("state");
+	const code = c.req.query("code");
 	const etatCookie = getCookie(c, COOKIE_ETAT);
 	deleteCookie(c, COOKIE_ETAT, { path: "/auth" });
 
-	if (!etat || etat !== etatCookie || !(await c.env.OAUTH_KV.get(`etat:${etat}`))) {
-		return c.text("Connexion expiree ou invalide, recommence depuis le site.", 400);
+	if (!etat || !code || !/^[0-9a-f]{64}$/.test(etat) || etat !== etatCookie) {
+		return pageErreur("Connexion expirée ou invalide. Recommence depuis le site.");
 	}
-	await c.env.OAUTH_KV.delete(`etat:${etat}`);
+	const stocke = await c.env.OAUTH_KV.get(`etat:${etat}`);
+	await c.env.OAUTH_KV.delete(`etat:${etat}`); // usage unique
+	const donnees = stocke ? await dechiffrer<{ verifieur: string }>(c.env.COOKIE_ENCRYPTION_KEY, USAGE, stocke) : null;
+	if (!donnees) return pageErreur("Connexion expirée ou invalide. Recommence depuis le site.");
 
-	const [token, erreur] = await fetchUpstreamAuthToken({
-		upstream_url: "https://github.com/login/oauth/access_token",
-		client_id: c.env.GITHUB_CLIENT_ID,
-		client_secret: c.env.GITHUB_CLIENT_SECRET,
-		code: c.req.query("code"),
-		redirect_uri: new URL("/auth/callback", c.req.url).href,
-	});
-	if (erreur) return erreur;
-
-	const { data: user } = await new Octokit({ auth: token }).rest.users.getAuthenticated();
-	await creerSession(c, { login: user.login, nom: user.name ?? user.login, avatar: user.avatar_url, token });
-
+	try {
+		const token = await echangerCode({
+			clientId: c.env.GITHUB_CLIENT_ID,
+			clientSecret: c.env.GITHUB_CLIENT_SECRET,
+			code,
+			redirectUri: rappel(c.req.url),
+			verifieur: donnees.verifieur,
+		});
+		const { data: user } = await new Octokit({ auth: token }).rest.users.getAuthenticated();
+		await creerSession(c, { login: user.login, nom: user.name ?? user.login, avatar: user.avatar_url, token });
+	} catch (err) {
+		console.error("Connexion GitHub :", err);
+		return pageErreur("GitHub a refusé la connexion. Recommence depuis le site.");
+	}
 	return c.redirect("/app");
 });
 

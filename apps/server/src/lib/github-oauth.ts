@@ -1,80 +1,58 @@
-/**
- * Constructs an authorization URL for an upstream service.
- *
- * @param {Object} options
- * @param {string} options.upstream_url - The base URL of the upstream service.
- * @param {string} options.client_id - The client ID of the application.
- * @param {string} options.redirect_uri - The redirect URI of the application.
- * @param {string} [options.state] - The state parameter.
- *
- * @returns {string} The authorization URL.
- */
-export function getUpstreamAuthorizeUrl({
-	upstream_url,
-	client_id,
-	scope,
-	redirect_uri,
-	state,
-}: {
-	upstream_url: string;
-	client_id: string;
-	scope: string;
-	redirect_uri: string;
-	state?: string;
-}) {
-	const upstream = new URL(upstream_url);
-	upstream.searchParams.set("client_id", client_id);
-	upstream.searchParams.set("redirect_uri", redirect_uri);
-	upstream.searchParams.set("scope", scope);
-	if (state) upstream.searchParams.set("state", state);
-	upstream.searchParams.set("response_type", "code");
-	return upstream.href;
+// Echanges OAuth avec GitHub, utilises par le connecteur MCP et par le site. Toujours avec PKCE (S256).
+
+const AUTORISATION = "https://github.com/login/oauth/authorize";
+const TOKEN = "https://github.com/login/oauth/access_token";
+const SCOPE = "read:user";
+
+export class ErreurGithub extends Error {}
+
+function base64url(octets: Uint8Array) {
+	return btoa(String.fromCharCode(...octets))
+		.replace(/\+/g, "-")
+		.replace(/\//g, "_")
+		.replace(/=+$/, "");
 }
 
-/**
- * Fetches an authorization token from an upstream service.
- *
- * @param {Object} options
- * @param {string} options.client_id - The client ID of the application.
- * @param {string} options.client_secret - The client secret of the application.
- * @param {string} options.code - The authorization code.
- * @param {string} options.redirect_uri - The redirect URI of the application.
- * @param {string} options.upstream_url - The token endpoint URL of the upstream service.
- *
- * @returns {Promise<[string, null] | [null, Response]>} A promise that resolves to an array containing the access token or an error response.
- */
-export async function fetchUpstreamAuthToken({
-	client_id,
-	client_secret,
-	code,
-	redirect_uri,
-	upstream_url,
-}: {
-	code: string | undefined;
-	upstream_url: string;
-	client_secret: string;
-	redirect_uri: string;
-	client_id: string;
-}): Promise<[string, null] | [null, Response]> {
-	if (!code) {
-		return [null, new Response("Missing code", { status: 400 })];
-	}
+// Verifieur PKCE : 32 octets aleatoires, et son defi SHA-256
+export async function creerPkce() {
+	const verifieur = base64url(crypto.getRandomValues(new Uint8Array(32)));
+	const empreinte = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifieur));
+	return { verifieur, defi: base64url(new Uint8Array(empreinte)) };
+}
 
-	const resp = await fetch(upstream_url, {
-		body: new URLSearchParams({ client_id, client_secret, code, redirect_uri }).toString(),
-		headers: {
-			"Content-Type": "application/x-www-form-urlencoded",
-		},
+export function urlAutorisation(p: { clientId: string; redirectUri: string; state: string; defi: string }) {
+	const url = new URL(AUTORISATION);
+	url.search = new URLSearchParams({
+		client_id: p.clientId,
+		redirect_uri: p.redirectUri,
+		scope: SCOPE,
+		state: p.state,
+		code_challenge: p.defi,
+		code_challenge_method: "S256",
+		allow_signup: "false",
+	}).toString();
+	return url.href;
+}
+
+export async function echangerCode(p: {
+	clientId: string;
+	clientSecret: string;
+	code: string;
+	redirectUri: string;
+	verifieur: string;
+}): Promise<string> {
+	const res = await fetch(TOKEN, {
 		method: "POST",
+		headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+		body: new URLSearchParams({
+			client_id: p.clientId,
+			client_secret: p.clientSecret,
+			code: p.code,
+			redirect_uri: p.redirectUri,
+			code_verifier: p.verifieur,
+		}),
 	});
-	if (!resp.ok) {
-		console.log(await resp.text());
-		return [null, new Response("Failed to fetch access token", { status: 500 })];
-	}
-	const body = await resp.formData();
-	const accessToken = body.get("access_token") as string;
-	if (!accessToken) {
-		return [null, new Response("Missing access token", { status: 400 })];
-	}
-	return [accessToken, null];
+	const corps = (await res.json().catch(() => ({}))) as { access_token?: string; error?: string };
+	if (!res.ok || !corps.access_token) throw new ErreurGithub(corps.error ?? `GitHub a repondu ${res.status}`);
+	return corps.access_token;
 }

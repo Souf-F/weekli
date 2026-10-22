@@ -3,6 +3,7 @@ import { activiteGithub, detailsCommit, detailsRepo, promptPostsSemaine } from "
 import { McpAgent } from "agents/mcp";
 import { Octokit } from "octokit";
 import { z } from "zod";
+import { NOM_REPO, SHA } from "../lib/validation";
 import type { Props } from "../types";
 
 function json(donnees: unknown) {
@@ -41,7 +42,7 @@ export class WeekliMCP extends McpAgent<Env, Record<string, never>, Props> {
 			{
 				description:
 					"Donne le contexte d'un repo public de l'utilisateur : description, site, sujets, langages et README.",
-				inputSchema: { repo: z.string().describe("Nom du repo, sans le proprietaire") },
+				inputSchema: { repo: z.string().regex(NOM_REPO).describe("Nom du repo, sans le proprietaire") },
 				annotations: { readOnlyHint: true },
 			},
 			async ({ repo }) => detailsRepo(this.octokit, login, repo).then(json, erreur),
@@ -53,8 +54,8 @@ export class WeekliMCP extends McpAgent<Env, Record<string, never>, Props> {
 				description:
 					"Donne le detail d'un commit (message complet, fichiers modifies, extraits du diff) pour expliquer un probleme resolu ou une fonctionnalite.",
 				inputSchema: {
-					repo: z.string().describe("Nom du repo, sans le proprietaire"),
-					sha: z.string().min(7).describe("SHA du commit (7 caracteres suffisent)"),
+					repo: z.string().regex(NOM_REPO).describe("Nom du repo, sans le proprietaire"),
+					sha: z.string().regex(SHA).describe("SHA du commit (7 caracteres suffisent)"),
 				},
 				annotations: { readOnlyHint: true },
 			},
@@ -67,13 +68,23 @@ export class WeekliMCP extends McpAgent<Env, Record<string, never>, Props> {
 				title: "Posts LinkedIn de la semaine",
 				description: "Analyse ton activite GitHub et redige 2 ou 3 posts LinkedIn.",
 				argsSchema: {
-					jours: z.string().optional().describe("Periode en jours (7 par defaut)"),
-					style: z.string().optional().describe("Quelques-uns de tes posts, pour imiter ton style"),
+					jours: z
+						.string()
+						.regex(/^\d{1,2}$/)
+						.optional()
+						.describe("Periode en jours (7 par defaut)"),
+					style: z.string().max(8000).optional().describe("Quelques-uns de tes posts, pour imiter ton style"),
 				},
 			},
 			({ jours, style }) => ({
 				messages: [
-					{ role: "user", content: { type: "text", text: promptPostsSemaine(Number(jours) || 7, style ?? "") } },
+					{
+						role: "user",
+						content: {
+							type: "text",
+							text: promptPostsSemaine(Math.min(Math.max(Number(jours) || 7, 1), 30), style ?? ""),
+						},
+					},
 				],
 			}),
 		);

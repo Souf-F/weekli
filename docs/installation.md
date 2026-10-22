@@ -62,6 +62,7 @@ Transport *Streamable HTTP*, URL `http://localhost:8788/mcp`, puis *Connect* : l
 ```bash
 cd apps/server
 npx wrangler kv namespace create OAUTH_KV   # copier l'id dans wrangler.jsonc
+# dans wrangler.jsonc, remplace PUBLIC_URL par l'URL https du Worker
 npx wrangler secret put GITHUB_CLIENT_ID
 npx wrangler secret put GITHUB_CLIENT_SECRET
 npx wrangler secret put COOKIE_ENCRYPTION_KEY

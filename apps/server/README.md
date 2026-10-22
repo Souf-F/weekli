@@ -29,9 +29,10 @@ Le front doit avoir été compilé au moins une fois (`npm run build` à la raci
 | `npm run deploy` | Déploie le Worker |
 | `npm run typegen` | Régénère les types de `Env` depuis `wrangler.jsonc` |
 | `npm run typecheck` | Vérification TypeScript |
+| `npm test` | Tests du chiffrement et des protections |
 
 ## Fichiers
 
-- `wrangler.jsonc` : Durable Object `WeekliMCP`, KV `OAUTH_KV`, assets du front.
+- `wrangler.jsonc` : Durable Object `WeekliMCP`, KV `OAUTH_KV`, limites de débit, `PUBLIC_URL`, assets du front.
 - `.dev.vars.example` : modèle des secrets locaux (le vrai `.dev.vars` n'est jamais commité).
 - [`src/`](src) : le code, détaillé dans son README.
