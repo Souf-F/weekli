@@ -39,7 +39,7 @@ function extraireAudio(trame: ArrayBuffer): Uint8Array | null {
 }
 
 // Renvoie le MP3 de la phrase. Seul le texte de la phrase est transmis a Microsoft, jamais l'identite de l'utilisateur.
-export async function synthetiser(texte: string): Promise<Uint8Array> {
+export async function synthetiser(texte: string): Promise<Uint8Array<ArrayBuffer>> {
 	const url = `${URL_SERVICE}?TrustedClientToken=${TOKEN_CLIENT}&ConnectionId=${identifiant()}&Sec-MS-GEC=${jetonGec(Date.now() / 1000)}&Sec-MS-GEC-Version=2-${VERSION_CHROMIUM}`;
 	const reponse = await fetch(url, {
 		headers: {
@@ -56,7 +56,7 @@ export async function synthetiser(texte: string): Promise<Uint8Array> {
 	if (!ws) throw new ErreurVoix(`connexion refusee (${reponse.status})`);
 	ws.accept();
 
-	return new Promise<Uint8Array>((resolve, reject) => {
+	return new Promise<Uint8Array<ArrayBuffer>>((resolve, reject) => {
 		const morceaux: Uint8Array[] = [];
 		let taille = 0;
 		let fini = false;
