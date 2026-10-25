@@ -29,7 +29,7 @@ export function CartePost({
 	return (
 		<article className={styles.carte}>
 			<header className={styles.entete}>
-				<img src={moi.avatar} alt="" width={44} height={44} />
+				<img crossOrigin="anonymous" src={moi.avatar} alt="" width={44} height={44} />
 				<div>
 					<strong>{moi.nom}</strong>
 					<span>

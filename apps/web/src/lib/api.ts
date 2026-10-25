@@ -46,6 +46,7 @@ export const api = {
 	preparerDomaine: (hote: string) => lire<Preuve>("/api/domaines/preparer", json("POST", { hote })),
 	verifierDomaine: (hote: string) => lire<Domaine[]>("/api/domaines/verifier", json("POST", { hote })),
 	supprimerDomaine: (hote: string) => lire<void>(`/api/domaines/${encodeURIComponent(hote)}`, { method: "DELETE" }),
+	supprimerMesDonnees: () => lire<void>("/api/moi/donnees", { method: "DELETE" }),
 	capturer: async (url: string, format: "bureau" | "mobile"): Promise<Blob> => {
 		const res = await fetch("/api/captures", { credentials: "same-origin", ...json("POST", { url, format }) });
 		if (!res.ok) {

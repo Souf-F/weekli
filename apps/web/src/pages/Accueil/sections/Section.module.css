@@ -2,33 +2,34 @@
 .section {
 	max-width: var(--largeur);
 	margin: 0 auto;
-	padding: 130px 16px;
+	padding: var(--espace-9) var(--espace-4);
 }
 .entete {
-	max-width: 720px;
-	margin-bottom: 56px;
+	max-width: calc(var(--largeur) * 0.6);
+	margin-bottom: var(--espace-7);
 }
 .surTitre {
-	margin: 0 0 16px;
-	font-family: var(--mono);
-	font-size: 0.75rem;
-	letter-spacing: 0.14em;
+	margin: 0 0 var(--espace-4);
+	font-size: var(--t-etiquette);
+	font-weight: 500;
+	line-height: var(--lh-etiquette);
+	letter-spacing: var(--suivi-etiquette);
 	text-transform: uppercase;
 	color: var(--moka);
 }
 .titre {
-	font-size: clamp(2.4rem, 5vw, 4.2rem);
+	font-size: var(--t-titre);
+	line-height: var(--lh-titre);
 }
+/* Panneau marketing : fond plein, le verre est reserve a l'app */
 .panneau {
-	border: 1px solid var(--bord-verre);
-	border-radius: 22px;
-	background: var(--verre-fort);
-	backdrop-filter: blur(20px);
-	-webkit-backdrop-filter: blur(20px);
+	border: 1px solid var(--filet);
+	border-radius: var(--rayon-l);
+	background: var(--surface);
 }
 
 @media (max-width: 600px) {
 	.section {
-		padding-block: 90px;
+		padding-block: var(--espace-8);
 	}
 }

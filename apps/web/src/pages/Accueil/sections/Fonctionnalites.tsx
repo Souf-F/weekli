@@ -20,7 +20,7 @@ const CARTES: Carte[] = [
 	},
 	{
 		titre: "Lecture des diffs",
-		texte: "Un bug corrigé devient une histoire : Claude lit les fichiers modifiés et explique le problème résolu.",
+		texte: "Claude lit les fichiers modifiés, pas seulement le message du commit, pour expliquer le problème résolu.",
 		icone: <path d="M8 4v16M16 4v16M4 9h8M12 15h8" />,
 	},
 	{
@@ -34,8 +34,8 @@ const CARTES: Carte[] = [
 		icone: <path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3zM9 12l2 2 4-4" />,
 	},
 	{
-		titre: "Captures et vidéos",
-		texte: "Captures floutées de tes démos et vidéos en motion design, exportées en MP4 depuis ton navigateur.",
+		titre: "Captures et pub vidéo",
+		texte: "Captures floutées de tes démos et pub vidéo de ton projet, à tes couleurs, exportée en MP4 depuis ton navigateur.",
 		icone: (
 			<path d="M3 8a2 2 0 0 1 2-2h3l1.5-2h5L16 6h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 9a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7z" />
 		),

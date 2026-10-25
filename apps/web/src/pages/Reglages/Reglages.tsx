@@ -3,6 +3,7 @@ import { Bouton } from "@/components/Bouton/Bouton";
 import { enregistrerReglages, lireReglages, MODELES, type Modele } from "@/lib/reglages";
 import p from "../Tableau/Panneau.module.css";
 import { PanneauDomaines } from "./PanneauDomaines";
+import { PanneauDonnees } from "./PanneauDonnees";
 import styles from "./Reglages.module.css";
 
 export function Reglages() {
@@ -42,10 +43,17 @@ export function Reglages() {
 						/>
 						Se souvenir de la clé sur cet appareil
 					</label>
+					{r.memoriser && (
+						<p className={styles.avertissement} role="note">
+							Mémorisée, la clé reste lisible dans ce navigateur jusqu'à ce que tu l'effaces. Évite cette option sur un
+							appareil partagé.
+						</p>
+					)}
 					<ul className={styles.securite}>
 						<li>La clé reste dans ton navigateur et part directement chez Anthropic.</li>
 						<li>Le serveur Weekli ne la voit jamais et ne la stocke pas.</li>
 						<li>Sans « se souvenir », elle est effacée à la fermeture de l'onglet.</li>
+						<li>Utilise une clé créée pour Weekli, avec une limite de dépense fixée chez Anthropic.</li>
 					</ul>
 					<label className={p.champ}>
 						Modèle
@@ -75,7 +83,10 @@ export function Reglages() {
 					<Bouton type="submit">{enregistre ? "Enregistré" : "Enregistrer"}</Bouton>
 				</section>
 			</form>
-			<PanneauDomaines />
+			<div className={styles.colonne}>
+				<PanneauDomaines />
+				<PanneauDonnees />
+			</div>
 		</div>
 	);
 }

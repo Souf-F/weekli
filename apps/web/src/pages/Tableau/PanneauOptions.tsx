@@ -57,26 +57,26 @@ export function PanneauOptions(props: Props) {
 					))}
 				</select>
 			</label>
-			<label className={p.ligne} style={{ marginBottom: 20 }}>
+			<label className={`${p.ligne} ${p.ligneEspacee}`}>
 				<input type="checkbox" checked={inclureDiffs} onChange={(e) => surInclureDiffs(e.target.checked)} />
 				Lire les diffs des commits choisis (5 max)
 			</label>
 
 			{enCours ? (
-				<Bouton variante="contour" onClick={surArreter} style={{ width: "100%", whiteSpace: "normal" }}>
+				<Bouton variante="contour" onClick={surArreter} className={p.pleineLargeur}>
 					Arrêter
 				</Bouton>
 			) : (
 				<Bouton
 					onClick={surGenerer}
 					disabled={sansCle || nbSelection === 0}
-					style={{ width: "100%", whiteSpace: "normal" }}
+					className={p.pleineLargeur}
 				>
 					Générer{nbSelection > 0 ? ` (${nbSelection} commit${nbSelection > 1 ? "s" : ""})` : ""}
 				</Bouton>
 			)}
 			{sansCle && (
-				<p className={p.aide} style={{ marginTop: 12 }}>
+				<p className={`${p.aide} ${p.aideEspacee}`}>
 					Ajoute ta clé API dans les réglages pour générer.
 				</p>
 			)}

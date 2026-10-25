@@ -1,5 +1,6 @@
-/* Palette et constantes de design, seule source de verite pour les couleurs */
+/* Palette et constantes de design, seule source de verite (docs/design.md, sections 3 a 6) */
 :root {
+	/* Couleurs */
 	--platine: #e5e4e2;
 	--lavande: #e6e0f0;
 	--lavande-pro: #c9bedd;
@@ -9,17 +10,82 @@
 	--texte-doux: #6a5a4f;
 	--danger: #a3392b;
 	--succes: #3f6b45;
+	--blanc: #fff;
 
+	/* Surfaces pleines des sections marketing (aucun flou) */
+	--surface: #f4f1f8;
+	--filet: rgba(111, 78, 55, 0.16);
+	--filet-sombre: rgba(229, 228, 226, 0.12);
+	--texte-sombre-doux: rgba(229, 228, 226, 0.7);
+
+	/* Verre : reserve aux panneaux de l'app et a la maquette du hero */
 	--verre: rgba(255, 255, 255, 0.42);
 	--verre-fort: rgba(255, 255, 255, 0.62);
 	--bord-verre: rgba(255, 255, 255, 0.7);
-	--filet: rgba(111, 78, 55, 0.16);
-	--ombre: 0 30px 80px -30px rgba(42, 28, 19, 0.35);
+	--flou-verre: blur(20px);
 
+	/* Voiles et champs */
+	--voile-moka: rgba(111, 78, 55, 0.1);
+	--voile-succes: rgba(63, 107, 69, 0.12);
+	--voile-danger: rgba(163, 57, 43, 0.1);
+	--voile-lavande: rgba(230, 224, 240, 0.35);
+	--voile-blanc: rgba(255, 255, 255, 0.5);
+	--champ: rgba(255, 255, 255, 0.8);
+	--vide-fond: rgba(255, 255, 255, 0.25);
+
+	/* Ombres */
+	--ombre: 0 30px 80px -30px rgba(42, 28, 19, 0.35);
+	--ombre-carte: 0 20px 50px -30px rgba(42, 28, 19, 0.4);
+	--ombre-flottant: 0 20px 40px -20px rgba(42, 28, 19, 0.35);
+	--ombre-bouton: 0 14px 30px -12px rgba(42, 28, 19, 0.6);
+
+	/* Polices */
 	--serif: "Instrument Serif", "Times New Roman", serif;
 	--sans: "Geist", system-ui, sans-serif;
 	--mono: "JetBrains Mono", ui-monospace, monospace;
 
+	/* Echelle typographique (taille / interligne) */
+	--t-affiche: clamp(3rem, 5.6vw, 5rem);
+	--lh-affiche: 1.02;
+	--t-titre: clamp(2.25rem, 4vw, 3.5rem);
+	--lh-titre: 1.05;
+	--t-sous-titre: 1.5rem;
+	--lh-sous-titre: 1.2;
+	--t-corps-grand: 1.15rem;
+	--lh-corps-grand: 1.55;
+	--t-corps: 1rem;
+	--lh-corps: 1.6;
+	--t-petit: 0.85rem;
+	--lh-petit: 1.5;
+	--t-etiquette: 0.72rem;
+	--lh-etiquette: 1.3;
+	--suivi-etiquette: 0.12em;
+	--mesure: 68ch;
+
+	/* Espacement */
+	--espace-1: 4px;
+	--espace-2: 8px;
+	--espace-3: 12px;
+	--espace-4: 16px;
+	--espace-5: 24px;
+	--espace-6: 32px;
+	--espace-7: 48px;
+	--espace-8: 72px;
+	--espace-9: 120px;
+
+	/* Formes */
+	--rayon-s: 10px;
+	--rayon-m: 16px;
+	--rayon-l: 22px;
+	--rayon-pilule: 999px;
 	--largeur: 1200px;
+
+	/* Mouvement : 200 a 350 ms pour l'interface, 600 a 900 ms pour les sections */
+	--duree-rapide: 200ms;
+	--duree-ui: 300ms;
+	--duree-section: 800ms;
 	--ease: cubic-bezier(0.22, 1, 0.36, 1);
+	--ease-out: cubic-bezier(0.4, 0, 1, 1);
+
+	--focus: 0 0 0 3px var(--platine), 0 0 0 5px var(--moka);
 }

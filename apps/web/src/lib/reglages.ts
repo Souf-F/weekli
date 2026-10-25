@@ -49,3 +49,11 @@ export function enregistrerReglages(r: Reglages) {
 	stockage("session")?.removeItem(CLE);
 	if (r.cleApi) stockage(r.memoriser ? "local" : "session")?.setItem(CLE, r.cleApi);
 }
+
+// Efface tout ce que Weekli garde dans le navigateur (cle API, modele, style)
+export function effacerReglages() {
+	for (const type of ["local", "session"] as const) {
+		stockage(type)?.removeItem(CLE);
+		stockage(type)?.removeItem(PREFS);
+	}
+}

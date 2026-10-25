@@ -1,7 +1,14 @@
 # En-tetes de securite appliques par Cloudflare aux fichiers du front.
+# COOP + COEP isolent la page (crossOriginIsolated) : onnxruntime-web peut alors calculer la voix sur 4 fils (40 a 60 s au lieu de 106 s).
+# Toute ressource tierce doit etre chargee avec crossorigin="anonymous" (avatars GitHub).
 # La CSP limite les scripts au site lui-meme : un script injecte ne pourrait pas lire la cle API.
+# Voix off (docs/handoff/frontend-voix.md) : 'wasm-unsafe-eval' autorise seulement la compilation du WebAssembly
+# d'onnxruntime-web servi par le site (pas d'eval JavaScript) ; worker-src 'self' limite le Worker vocal au site.
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://avatars.githubusercontent.com; connect-src 'self' https://api.anthropic.com; media-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data: blob: https://avatars.githubusercontent.com; connect-src 'self' https://api.anthropic.com; media-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  Strict-Transport-Security: max-age=31536000
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()

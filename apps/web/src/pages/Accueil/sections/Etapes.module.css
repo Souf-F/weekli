@@ -2,19 +2,19 @@
 	position: relative;
 	list-style: none;
 	margin: 0;
-	padding: 36px;
+	padding: var(--espace-6);
 	display: grid;
 	grid-template-columns: repeat(4, 1fr);
-	gap: 16px;
+	gap: var(--espace-4);
 	--progression: 0;
 }
 .etapes::before,
 .etapes::after {
 	content: "";
 	position: absolute;
-	top: 58px;
-	left: 58px;
-	right: 58px;
+	top: calc(var(--espace-6) + var(--espace-5));
+	left: calc(var(--espace-6) + var(--espace-5));
+	right: calc(var(--espace-6) + var(--espace-5));
 	height: 1px;
 	background: var(--filet);
 }
@@ -25,13 +25,14 @@
 }
 .etape {
 	position: relative;
-	padding-top: 70px;
+	padding-top: var(--espace-8);
 }
 .etape p {
-	margin: 8px 0 0;
+	margin: var(--espace-2) 0 0;
 	color: var(--texte-doux);
-	font-size: 0.95rem;
-	max-width: 260px;
+	font-size: var(--t-petit);
+	line-height: var(--lh-petit);
+	max-width: 26ch;
 }
 .num {
 	position: absolute;
@@ -40,19 +41,20 @@
 	z-index: 1;
 	display: grid;
 	place-items: center;
-	width: 44px;
-	height: 44px;
+	width: var(--espace-7);
+	height: var(--espace-7);
 	border-radius: 50%;
 	background: var(--espresso);
 	color: var(--platine);
-	font-family: var(--mono);
-	font-size: 0.78rem;
+	font-size: var(--t-petit);
+	font-weight: 500;
+	font-variant-numeric: tabular-nums;
 }
 
 @media (max-width: 980px) {
 	.etapes {
 		grid-template-columns: 1fr 1fr;
-		row-gap: 40px;
+		row-gap: var(--espace-7);
 	}
 	.etapes::before,
 	.etapes::after {
@@ -62,6 +64,6 @@
 @media (max-width: 600px) {
 	.etapes {
 		grid-template-columns: 1fr;
-		padding: 24px;
+		padding: var(--espace-5);
 	}
 }

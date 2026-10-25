@@ -1,0 +1,68 @@
+.entete {
+	max-width: var(--largeur);
+	margin: 0 auto;
+	padding: var(--espace-5) var(--espace-4) 0;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--espace-4);
+}
+.retour {
+	font-size: var(--t-petit);
+	color: var(--texte-doux);
+	transition: color var(--duree-ui);
+}
+.retour:hover {
+	color: var(--espresso);
+}
+.page {
+	max-width: var(--largeur);
+	margin: 0 auto;
+	padding: var(--espace-7) var(--espace-4) var(--espace-8);
+}
+/* Page de lecture : fond plein, largeur de lecture de 68 caracteres */
+.texte {
+	max-width: calc(var(--mesure) + 2 * var(--espace-7));
+	padding: var(--espace-7);
+	border: 1px solid var(--filet);
+	border-radius: var(--rayon-l);
+	background: var(--surface);
+	line-height: var(--lh-corps);
+}
+.texte h1 {
+	font-size: var(--t-titre);
+}
+.texte h2 {
+	margin: var(--espace-7) 0 var(--espace-3);
+	font-size: var(--t-sous-titre);
+	line-height: var(--lh-sous-titre);
+}
+.texte p,
+.texte ul {
+	margin: 0 0 var(--espace-3);
+}
+.texte ul {
+	padding-left: var(--espace-5);
+}
+.texte li + li {
+	margin-top: var(--espace-2);
+}
+.texte a {
+	color: var(--moka);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+.texte a:hover {
+	color: var(--espresso);
+}
+.maj {
+	margin: var(--espace-3) 0 0;
+	font-size: var(--t-petit);
+	color: var(--texte-doux);
+}
+
+@media (max-width: 640px) {
+	.texte {
+		padding: var(--espace-5) var(--espace-4);
+	}
+}

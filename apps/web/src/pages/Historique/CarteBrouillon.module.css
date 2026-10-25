@@ -1,11 +1,11 @@
 .carte {
 	display: flex;
 	flex-direction: column;
-	padding: 20px;
+	padding: var(--espace-5);
 	border: 1px solid var(--filet);
-	border-radius: 16px;
-	background: #fff;
-	box-shadow: 0 20px 50px -30px rgba(42, 28, 19, 0.4);
+	border-radius: var(--rayon-m);
+	background: var(--blanc);
+	box-shadow: var(--ombre-carte);
 }
 .publie {
 	opacity: 0.75;
@@ -14,31 +14,32 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	font-size: 0.8rem;
+	font-size: var(--t-petit);
 	color: var(--texte-doux);
 }
 .badge {
-	padding: 3px 10px;
-	border-radius: 999px;
-	background: rgba(111, 78, 55, 0.1);
+	padding: var(--espace-1) var(--espace-3);
+	border-radius: var(--rayon-pilule);
+	background: var(--voile-moka);
 	color: var(--moka);
 	font-weight: 500;
 }
 .publie .badge {
-	background: rgba(63, 107, 69, 0.12);
+	background: var(--voile-succes);
 	color: var(--succes);
 }
 .titre {
-	margin: 12px 0 2px;
+	margin: var(--espace-3) 0 var(--espace-1);
 	font-family: var(--serif);
 	font-style: italic;
 	font-weight: 400;
-	font-size: 1.3rem;
+	font-size: var(--t-sous-titre);
+	line-height: var(--lh-sous-titre);
 	color: var(--moka);
 }
 .meta {
-	margin: 0 0 8px;
-	font-size: 0.8rem;
+	margin: 0 0 var(--espace-2);
+	font-size: var(--t-petit);
 	color: var(--texte-doux);
 }
 .texte {
@@ -46,27 +47,25 @@
 	width: 100%;
 	border: 0;
 	resize: vertical;
-	font: 400 0.92rem/1.55 var(--sans);
+	font: 400 var(--t-corps) / var(--lh-corps) var(--sans);
 	color: var(--espresso);
 	background: transparent;
-	outline: none;
 }
 .texte:focus {
-	background: rgba(230, 224, 240, 0.35);
-	border-radius: 8px;
+	background: var(--voile-lavande);
+	border-radius: var(--rayon-s);
 }
 .pied {
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: var(--espace-2);
 	flex-wrap: wrap;
-	margin-top: 12px;
-	padding-top: 12px;
+	margin-top: var(--espace-3);
+	padding-top: var(--espace-3);
 	border-top: 1px solid var(--filet);
 }
 .etat {
 	margin-right: auto;
-	font-family: var(--mono);
-	font-size: 0.75rem;
+	font-size: var(--t-petit);
 	color: var(--texte-doux);
 }

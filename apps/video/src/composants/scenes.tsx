@@ -30,7 +30,7 @@ function Zone({ children, centre = false }: { children: React.ReactNode; centre?
 	);
 }
 
-export const scenesSombres: Visuel["type"][] = ["probleme", "chiffres", "terminal", "appel"];
+export const scenesSombres: Visuel["type"][] = ["probleme", "chiffres", "appel"];
 
 export function Scene({ visuel }: { visuel: Visuel }) {
 	const u = useUnite();
@@ -184,33 +184,6 @@ export function Scene({ visuel }: { visuel: Visuel }) {
 				</Zone>
 			);
 
-		case "terminal": {
-			const tapes = Math.floor(interpolate(frame, [8, 8 + visuel.commande.length * 1.4], [0, visuel.commande.length], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
-			const debutLignes = 14 + visuel.commande.length * 1.4;
-			return (
-				<Zone centre>
-					<Apparition>
-						<Carte sombre style={{ padding: 44 * u, background: "#140d09" }}>
-							<div style={{ display: "flex", gap: 14 * u, marginBottom: 34 * u }}>
-								{[C.mokaClair, C.lavandePro, C.platine].map((c) => (
-									<div key={c} style={{ width: 22 * u, height: 22 * u, borderRadius: "50%", background: c }} />
-								))}
-							</div>
-							<div style={{ fontFamily: MONO, fontSize: 36 * u, color: C.lavandePro }}>
-								$ {visuel.commande.slice(0, tapes)}
-								<span style={{ opacity: Math.floor(frame / 8) % 2 }}>▌</span>
-							</div>
-							{visuel.lignes.map((l, i) => (
-								<div key={i} style={{ fontFamily: MONO, fontSize: 32 * u, color: C.platine, marginTop: 18 * u, opacity: interpolate(frame, [debutLignes + i * 6, debutLignes + i * 6 + 8], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) }}>
-									{l}
-								</div>
-							))}
-						</Carte>
-					</Apparition>
-				</Zone>
-			);
-		}
-
 		case "capture": {
 			const k = useEntree(0, 80);
 			// Zoom lent vers le haut a gauche de l'interface (effet Ken Burns)
@@ -236,83 +209,6 @@ export function Scene({ visuel }: { visuel: Visuel }) {
 				</Zone>
 			);
 		}
-
-		case "architecture": {
-			const n = visuel.noeuds.length;
-			const pos = (i: number) => ({ x: n === 1 ? 0.5 : 0.15 + (0.7 * i) / (n - 1), y: i % 2 === 0 ? 0.32 : 0.68 });
-			const index = new Map(visuel.noeuds.map((nd, i) => [nd.id, i]));
-			return (
-				<Zone>
-					<Rubrique texte="Architecture" />
-					<Mots texte={visuel.titre} taille={70 * u} />
-					<div style={{ position: "relative", flex: 1, minHeight: 480 * u }}>
-						<svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible" }} viewBox="0 0 100 100" preserveAspectRatio="none">
-							{visuel.liens.map(([a, b], i) => {
-								const pa = pos(index.get(a) ?? 0);
-								const pb = pos(index.get(b) ?? 0);
-								const k = interpolate(frame, [20 + i * 8, 40 + i * 8], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-								return <line key={i} x1={pa.x * 100} y1={pa.y * 100} x2={(pa.x + (pb.x - pa.x) * k) * 100} y2={(pa.y + (pb.y - pa.y) * k) * 100} stroke={C.moka} strokeWidth={0.5} strokeDasharray="1.5 1" vectorEffect="non-scaling-stroke" style={{ strokeWidth: 3 * u }} />;
-							})}
-						</svg>
-						{visuel.noeuds.map((nd, i) => {
-							const p = pos(i);
-							return (
-								<div key={nd.id} style={{ position: "absolute", left: `${p.x * 100}%`, top: `${p.y * 100}%`, transform: "translate(-50%, -50%)" }}>
-									<Apparition retard={i * 8} dy={30}>
-										<Carte style={{ padding: `${22 * u}px ${28 * u}px`, minWidth: 220 * u, textAlign: "center" }}>
-											<div style={{ fontFamily: SANS, fontWeight: 600, fontSize: 34 * u, color: C.espresso }}>{nd.nom}</div>
-											{nd.detail && <div style={{ fontFamily: MONO, fontSize: 22 * u, color: C.moka, marginTop: 6 * u }}>{nd.detail}</div>}
-										</Carte>
-									</Apparition>
-								</div>
-							);
-						})}
-					</div>
-				</Zone>
-			);
-		}
-
-		case "chronologie": {
-			const progression = interpolate(frame, [10, 10 + visuel.etapes.length * 14], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-			return (
-				<Zone>
-					<Rubrique texte="Chronologie" />
-					<Mots texte={visuel.titre} taille={70 * u} />
-					<div style={{ position: "relative", paddingLeft: 60 * u, display: "flex", flexDirection: "column", gap: 26 * u }}>
-						<div style={{ position: "absolute", left: 18 * u, top: 10 * u, bottom: 10 * u, width: 3 * u, background: "rgba(111,78,55,0.2)" }} />
-						<div style={{ position: "absolute", left: 18 * u, top: 10 * u, height: `${progression * 100}%`, width: 3 * u, background: C.moka }} />
-						{visuel.etapes.map((e, i) => (
-							<Apparition key={i} retard={10 + i * 14} dx={50} dy={0}>
-								<div style={{ position: "relative" }}>
-									<div style={{ position: "absolute", left: -52 * u, top: 10 * u, width: 26 * u, height: 26 * u, borderRadius: "50%", background: C.espresso, border: `4px solid ${C.lavande}` }} />
-									<div style={{ fontFamily: MONO, fontSize: 24 * u, color: C.moka }}>{e.date}</div>
-									<div style={{ fontFamily: SANS, fontWeight: 600, fontSize: 36 * u, color: C.espresso }}>{e.titre}</div>
-									{e.detail && <div style={{ fontFamily: SANS, fontSize: 28 * u, color: C.doux }}>{e.detail}</div>}
-								</div>
-							</Apparition>
-						))}
-					</div>
-				</Zone>
-			);
-		}
-
-		case "code":
-			return (
-				<Zone centre>
-					<Apparition>
-						<Carte style={{ padding: 0, overflow: "hidden" }}>
-							<div style={{ padding: `${18 * u}px ${30 * u}px`, fontFamily: MONO, fontSize: 26 * u, color: C.moka, borderBottom: "1px solid rgba(111,78,55,0.15)" }}>{visuel.fichier}</div>
-							<div style={{ padding: `${26 * u}px ${30 * u}px` }}>
-								{visuel.lignes.map((l, i) => (
-									<div key={i} style={{ fontFamily: MONO, fontSize: 30 * u, lineHeight: 1.6, color: l.startsWith("#") ? C.moka : C.espresso, whiteSpace: "pre", opacity: interpolate(frame, [8 + i * 5, 16 + i * 5], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) }}>
-										{l}
-									</div>
-								))}
-							</div>
-						</Carte>
-					</Apparition>
-				</Zone>
-			);
 
 		case "citation":
 			return (

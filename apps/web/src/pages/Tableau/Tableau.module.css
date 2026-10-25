@@ -1,27 +1,28 @@
 .grille {
 	display: grid;
 	grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr) minmax(0, 1.4fr);
-	gap: 16px;
+	gap: var(--espace-4);
 	align-items: start;
 }
 .colonne {
 	display: grid;
-	gap: 12px;
+	gap: var(--espace-3);
 	min-width: 0;
 }
 .posts {
 	display: grid;
-	gap: 16px;
+	gap: var(--espace-4);
 }
 .vide {
-	padding: 40px 28px;
+	padding: var(--espace-7) var(--espace-5);
 	border: 1px dashed var(--moka-clair);
-	border-radius: 20px;
-	background: rgba(255, 255, 255, 0.25);
+	border-radius: var(--rayon-l);
+	background: var(--vide-fond);
 }
 .vide h2 {
-	font-size: 2.4rem;
-	margin-bottom: 12px;
+	font-size: var(--t-sous-titre);
+	line-height: var(--lh-sous-titre);
+	margin-bottom: var(--espace-3);
 }
 
 @media (max-width: 1100px) {

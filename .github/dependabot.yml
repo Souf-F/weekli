@@ -5,6 +5,10 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Delai avant d'adopter une nouvelle version : laisse le temps de reperer un paquet compromis
+    # (les correctifs de securite ne sont pas retardes)
+    cooldown:
+      default-days: 7
     groups:
       dependances:
         patterns: ["*"]
@@ -12,3 +16,5 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    cooldown:
+      default-days: 7

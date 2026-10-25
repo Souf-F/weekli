@@ -16,16 +16,17 @@ h1{font:400 2rem/1.1 Georgia,serif;margin:0 0 16px}p{margin:0 0 14px;color:#6a5a
 
 // Aucune ressource externe et aucun script tiers : la CSP le garantit.
 // form-action s'applique aussi a la redirection qui suit l'envoi : GitHub doit y figurer.
-const CSP =
-	"default-src 'none'; style-src 'unsafe-inline'; form-action 'self' https://github.com; frame-ancestors 'none'; base-uri 'none'";
+// Style et script passent par un nonce a usage unique : ni 'unsafe-inline' ni script libre.
+const nonceAleatoire = () => btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16))));
+const csp = (nonce: string, script = false) =>
+	`default-src 'none'; style-src 'nonce-${nonce}'${script ? `; script-src 'nonce-${nonce}'` : ""}; form-action 'self' https://github.com; frame-ancestors 'none'; base-uri 'none'`;
 
-// Seul script autorise sur la page de consentement, par un nonce a usage unique :
-// il desactive les boutons apres le premier clic (un formulaire de consentement ne sert qu'une fois)
+// Seul script autorise sur la page de consentement : il desactive les boutons apres le premier clic (un formulaire de consentement ne sert qu'une fois)
 const SCRIPT_UN_CLIC = `document.querySelector("form").addEventListener("submit", () => setTimeout(() => document.querySelectorAll("button").forEach((b) => (b.disabled = true))));`;
 
-function page(titre: string, corps: string) {
+function page(titre: string, corps: string, nonce: string) {
 	return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${echapper(titre)}</title><style>${STYLE}</style></head><body><main>${corps}</main></body></html>`;
+<title>${echapper(titre)}</title><style nonce="${nonce}">${STYLE}</style></head><body><main>${corps}</main></body></html>`;
 }
 
 export function pageConsentement(d: ConsentDescription, handle: string, headers: Headers) {
@@ -36,9 +37,9 @@ export function pageConsentement(d: ConsentDescription, handle: string, headers:
 		? `<p class="alerte">L'accès sera envoyé à une application de ton ordinateur. Continue seulement si tu viens de lancer la connexion depuis elle.</p>`
 		: "";
 
-	const nonce = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16))));
+	const nonce = nonceAleatoire();
 	headers.set("Content-Type", "text/html; charset=utf-8");
-	headers.set("Content-Security-Policy", `${CSP}; script-src 'nonce-${nonce}'`);
+	headers.set("Content-Security-Policy", csp(nonce, true));
 	return new Response(
 		page(
 			"Autoriser l'accès à Weekli",
@@ -51,17 +52,19 @@ ${local}
 <div class="actions"><button class="non" name="decision" value="deny">Refuser</button><button class="ok" name="decision" value="approve">Autoriser</button></div>
 </form>
 <script nonce="${nonce}">${SCRIPT_UN_CLIC}</script>`,
+			nonce,
 		),
 		{ headers },
 	);
 }
 
 export function pageErreur(message: string, statut = 400) {
-	return new Response(page("Weekli", `<h1>Connexion impossible</h1><p>${echapper(message)}</p>`), {
+	const nonce = nonceAleatoire();
+	return new Response(page("Weekli", `<h1>Connexion impossible</h1><p>${echapper(message)}</p>`, nonce), {
 		status: statut,
 		headers: {
 			"Content-Type": "text/html; charset=utf-8",
-			"Content-Security-Policy": CSP,
+			"Content-Security-Policy": csp(nonce),
 			"Cache-Control": "no-store",
 		},
 	});

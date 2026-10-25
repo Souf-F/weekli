@@ -6,22 +6,41 @@ import { NOM_REPO, SHA } from "../validation";
 const SECRET = "a".repeat(64);
 
 describe("chiffrement", () => {
-	it("dechiffre ce qu'il a chiffre", async () => {
-		const donnee = await chiffrer(SECRET, "session", { token: "gho_exemple" });
+	const AAD = "session:abc";
+
+	it("dechiffre ce qu'il a chiffre, avec un prefixe de version", async () => {
+		const donnee = await chiffrer(SECRET, "session", { token: "gho_exemple" }, AAD);
 		expect(donnee).not.toContain("gho_exemple");
-		expect(await dechiffrer(SECRET, "session", donnee)).toEqual({ token: "gho_exemple" });
+		expect(donnee.startsWith("v1.")).toBe(true);
+		expect(await dechiffrer(SECRET, "session", donnee, AAD)).toEqual({ token: "gho_exemple" });
 	});
 
 	it("refuse une autre cle, un autre usage ou une donnee alteree", async () => {
-		const donnee = await chiffrer(SECRET, "session", { a: 1 });
-		expect(await dechiffrer("b".repeat(64), "session", donnee)).toBeNull();
-		expect(await dechiffrer(SECRET, "autre", donnee)).toBeNull();
-		expect(await dechiffrer(SECRET, "session", donnee.slice(0, -4) + "AAAA")).toBeNull();
-		expect(await dechiffrer(SECRET, "session", "n'importe quoi")).toBeNull();
+		const donnee = await chiffrer(SECRET, "session", { a: 1 }, AAD);
+		expect(await dechiffrer("b".repeat(64), "session", donnee, AAD)).toBeNull();
+		expect(await dechiffrer(SECRET, "autre", donnee, AAD)).toBeNull();
+		expect(await dechiffrer(SECRET, "session", donnee.slice(0, -4) + "AAAA", AAD)).toBeNull();
+		expect(await dechiffrer(SECRET, "session", "n'importe quoi", AAD)).toBeNull();
+	});
+
+	it("lie le chiffre a sa cle KV : recopie sous une autre cle, il ne s'ouvre plus", async () => {
+		const donnee = await chiffrer(SECRET, "brouillons", { a: 1 }, "brouillons:1");
+		expect(await dechiffrer(SECRET, "brouillons", donnee, "brouillons:2")).toBeNull();
+	});
+
+	it("refuse une version inconnue et le format sans version", async () => {
+		const donnee = await chiffrer(SECRET, "s", 1, AAD);
+		expect(await dechiffrer(SECRET, "s", donnee.replace("v1.", "v2."), AAD)).toBeNull();
+		expect(await dechiffrer(SECRET, "s", donnee.slice(3), AAD)).toBeNull();
+	});
+
+	it("chiffre et dechiffre une charge de 1 Mo", async () => {
+		const gros = { texte: "x".repeat(1_000_000) };
+		expect(await dechiffrer(SECRET, "brouillons", await chiffrer(SECRET, "brouillons", gros, AAD), AAD)).toEqual(gros);
 	});
 
 	it("utilise un IV different a chaque fois", async () => {
-		expect(await chiffrer(SECRET, "s", 1)).not.toBe(await chiffrer(SECRET, "s", 1));
+		expect(await chiffrer(SECRET, "s", 1, AAD)).not.toBe(await chiffrer(SECRET, "s", 1, AAD));
 	});
 });
 

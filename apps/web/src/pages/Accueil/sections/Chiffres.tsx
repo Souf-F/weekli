@@ -2,11 +2,17 @@ import { useEffect, useRef } from "react";
 import s from "./Section.module.css";
 import styles from "./Chiffres.module.css";
 
+// Chaque chiffre est verifiable dans le depot :
+// - 6 outils : les registerTool de apps/server/src/mcp/agent.ts
+// - 0 EUR : brief.md (budget 0 EUR, aucun service payant), licence MIT
+// - 0 cle API stockee : le Worker n'appelle jamais Anthropic, la cle reste dans le navigateur (lib/reglages.ts)
+// - 90 jours : apps/server/src/lib/conservation.ts, avec un test qui verrouille la valeur
+const NBSP = "\u00a0";
 const CHIFFRES = [
-	{ valeur: 0, libelle: "clé stockée sur nos serveurs" },
-	{ valeur: 2, libelle: "modes d'utilisation" },
-	{ valeur: 100, suffixe: "%", libelle: "lecture seule" },
-	{ valeur: 0, libelle: "publication sans toi" },
+	{ valeur: 6, libelle: "outils MCP mis à disposition de Claude" },
+	{ valeur: 0, suffixe: `${NBSP}€`, libelle: "à payer pour Weekli, open source sous licence MIT" },
+	{ valeur: 0, libelle: "clé API stockée sur nos serveurs" },
+	{ valeur: 90, libelle: "jours sans activité, puis tes données sont effacées" },
 ];
 
 function Compteur({ valeur, suffixe = "" }: { valeur: number; suffixe?: string }) {
@@ -52,7 +58,8 @@ export function Chiffres() {
 				))}
 			</div>
 			<p className={`${styles.note} revele`}>
-				OAuth 2.1 avec PKCE, protection CSRF, sessions HttpOnly. Ta clé API ne quitte jamais ton navigateur.
+				Connexion GitHub en OAuth avec PKCE, scope read:user, cookie de session HttpOnly de 8 heures. En mode site, ta
+				clé API part directement vers Anthropic, jamais vers nos serveurs.
 			</p>
 		</section>
 	);

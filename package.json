@@ -2,18 +2,19 @@
 	"name": "weekli",
 	"private": true,
 	"description": "Weekli transforme ton activite GitHub en posts LinkedIn, via Claude (connecteur MCP) ou via le site (cle API)",
-	"license": "MIT",
+	"license": "GPL-3.0-only",
 	"workspaces": [
 		"packages/*",
 		"apps/*"
 	],
 	"scripts": {
 		"dev": "npm run dev --workspace @weekli/server & npm run dev --workspace @weekli/web",
-		"build": "npm run build --workspace @weekli/web",
+		"build": "node scripts/modeles-voix.mjs && npm run build --workspace @weekli/web",
 		"typecheck": "npm run typecheck --workspaces --if-present",
 		"test": "npm run test --workspaces --if-present",
 		"deploy": "npm run build && npm run deploy --workspace @weekli/server",
-		"format": "prettier --write ."
+		"format": "prettier --write .",
+		"prepare": "node scripts/installer-hooks.mjs"
 	},
 	"devDependencies": {
 		"prettier": "^3.6.2",
@@ -26,6 +27,14 @@
 		"esbuild@0.28.2": true,
 		"workerd@1.20261019.1": true,
 		"core-js-pure": false,
+		"protobufjs": false,
 		"fsevents": false
+	},
+	"overrides": {
+		"zod": "4.6.7",
+		"undici": "^7.30.1",
+		"@remotion/cli": {
+			"zod": "4.6.7"
+		}
 	}
 }

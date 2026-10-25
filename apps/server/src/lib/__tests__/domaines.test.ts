@@ -26,11 +26,11 @@ describe("normaliserHote", () => {
 
 describe("jeton", () => {
 	it("est stable pour un meme couple et different sinon", async () => {
-		const a = await jeton("s".repeat(64), "souf", "a.dev");
+		const a = await jeton("s".repeat(64), "583231", "a.dev");
 		expect(a).toMatch(/^[0-9a-f]{32}$/);
-		expect(await jeton("s".repeat(64), "SOUF", "a.dev")).toBe(a);
-		expect(await jeton("s".repeat(64), "autre", "a.dev")).not.toBe(a);
-		expect(await jeton("t".repeat(64), "souf", "a.dev")).not.toBe(a);
+		expect(await jeton("s".repeat(64), "583231", "a.dev")).toBe(a);
+		expect(await jeton("s".repeat(64), "583232", "a.dev")).not.toBe(a);
+		expect(await jeton("t".repeat(64), "583231", "a.dev")).not.toBe(a);
 	});
 });
 

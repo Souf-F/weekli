@@ -1,4 +1,5 @@
-import { chiffrer, dechiffrer } from "./chiffrement";
+import { chiffrer, cleHmac, dechiffrer } from "./chiffrement";
+import { CONSERVATION_SECONDES } from "./conservation";
 
 // Preuve de propriete d'un domaine avant toute capture : sans elle, Weekli pourrait servir
 // a capturer le site de quelqu'un d'autre.
@@ -7,7 +8,7 @@ export type Domaine = { hote: string; verifie: string };
 
 const MAX_DOMAINES = 10;
 const USAGE = "domaines";
-const cle = (login: string) => `domaines:${login.toLowerCase()}`;
+export const cleDomaines = (id: string) => `domaines:${id}`;
 const FICHIER = "/.well-known/weekli-verification.txt";
 
 // Nom d'hote public uniquement : pas d'IP, pas de localhost, pas de domaine interne
@@ -20,17 +21,11 @@ export function normaliserHote(entree: string): string | null {
 	return hote;
 }
 
-// Jeton deterministe : HMAC du couple (utilisateur, hote), rien a stocker pour le retrouver
-export async function jeton(secret: string, login: string, hote: string): Promise<string> {
-	const k = await crypto.subtle.importKey(
-		"raw",
-		new TextEncoder().encode(`${secret}:domaines`),
-		{ name: "HMAC", hash: "SHA-256" },
-		false,
-		["sign"],
-	);
+// Jeton deterministe : HMAC du couple (id GitHub numerique, hote), rien a stocker pour le retrouver
+export async function jeton(secret: string, id: string, hote: string): Promise<string> {
+	const k = await cleHmac(secret, `jeton:${USAGE}`);
 	const sig = new Uint8Array(
-		await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(`${login.toLowerCase()}:${hote}`)),
+		await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(`${id}:${hote}`)),
 	);
 	return Array.from(sig.slice(0, 16), (o) => o.toString(16).padStart(2, "0")).join("");
 }
@@ -60,19 +55,46 @@ export async function verifier(hote: string, attendu: string): Promise<boolean> 
 	return (dns.status === "fulfilled" && dns.value) || (fichier.status === "fulfilled" && fichier.value);
 }
 
-export async function lireDomaines(env: Env, login: string): Promise<Domaine[]> {
-	const donnee = await env.OAUTH_KV.get(cle(login));
-	return (donnee && (await dechiffrer<Domaine[]>(env.COOKIE_ENCRYPTION_KEY, USAGE, donnee))) || [];
+export async function lireDomaines(env: Env, id: string): Promise<Domaine[]> {
+	const donnee = await env.OAUTH_KV.get(cleDomaines(id));
+	return (donnee && (await dechiffrer<Domaine[]>(env.COOKIE_ENCRYPTION_KEY, USAGE, donnee, cleDomaines(id)))) || [];
 }
 
-export async function ecrireDomaines(env: Env, login: string, domaines: Domaine[]) {
-	await env.OAUTH_KV.put(cle(login), await chiffrer(env.COOKIE_ENCRYPTION_KEY, USAGE, domaines.slice(0, MAX_DOMAINES)));
+export async function ecrireDomaines(env: Env, id: string, domaines: Domaine[]) {
+	await env.OAUTH_KV.put(cleDomaines(id), await chiffrer(env.COOKIE_ENCRYPTION_KEY, USAGE, domaines.slice(0, MAX_DOMAINES), cleDomaines(id)), {
+		expirationTtl: CONSERVATION_SECONDES,
+	});
 }
 
-export async function ajouterDomaine(env: Env, login: string, hote: string): Promise<Domaine[]> {
-	const domaines = (await lireDomaines(env, login)).filter((d) => d.hote !== hote);
+// Un domaine dont la preuve date de plus de 7 jours est reverifie avant usage : si le proprietaire
+// a change ou retire la preuve, il disparait de la liste au lieu de rester autorise 90 jours
+const REVERIFICATION_MS = 7 * 24 * 3600 * 1000;
+
+export async function domainesRevalides(env: Env, id: string): Promise<Domaine[]> {
+	const domaines = await lireDomaines(env, id);
+	const limite = Date.now() - REVERIFICATION_MS;
+	if (!domaines.some((d) => Date.parse(d.verifie) < limite)) return domaines;
+
+	const maintenant = new Date().toISOString();
+	const liste = (
+		await Promise.all(
+			domaines.map(async (d) => {
+				if (Date.parse(d.verifie) >= limite) return d;
+				const preuve = valeurAttendue(await jeton(env.COOKIE_ENCRYPTION_KEY, id, d.hote));
+				return (await verifier(d.hote, preuve)) ? { ...d, verifie: maintenant } : null;
+			}),
+		)
+	).filter((d): d is Domaine => d !== null);
+	await ecrireDomaines(env, id, liste);
+	return liste;
+}
+
+export const supprimerDomaines = (env: Env, id: string) => env.OAUTH_KV.delete(cleDomaines(id));
+
+export async function ajouterDomaine(env: Env, id: string, hote: string): Promise<Domaine[]> {
+	const domaines = (await lireDomaines(env, id)).filter((d) => d.hote !== hote);
 	if (domaines.length >= MAX_DOMAINES) throw new Error(`${MAX_DOMAINES} domaines au maximum`);
 	const liste = [{ hote, verifie: new Date().toISOString() }, ...domaines];
-	await ecrireDomaines(env, login, liste);
+	await ecrireDomaines(env, id, liste);
 	return liste;
 }

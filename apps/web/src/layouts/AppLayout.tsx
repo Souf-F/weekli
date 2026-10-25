@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet } from "react-router-dom";
 import { Bouton } from "@/components/Bouton/Bouton";
 import { Logo } from "@/components/Logo/Logo";
 import { useMoi } from "@/hooks/useMoi";
@@ -53,7 +53,7 @@ export function AppLayout() {
 					</NavLink>
 				</nav>
 				<div className={styles.profil}>
-					<img src={etat.moi.avatar} alt="" width={32} height={32} />
+					<img crossOrigin="anonymous" src={etat.moi.avatar} alt="" width={32} height={32} />
 					<span>{etat.moi.nom}</span>
 					<Bouton variante="contour" taille="petit" onClick={deconnecter}>
 						Déconnexion
@@ -63,6 +63,10 @@ export function AppLayout() {
 			<main className={styles.contenu}>
 				<Outlet context={{ moi: etat.moi } satisfies ContexteApp} />
 			</main>
+			<footer className={styles.pied}>
+				<Link to="/confidentialite">Confidentialité</Link>
+				<Link to="/mentions-legales">Mentions légales</Link>
+			</footer>
 		</div>
 	);
 }

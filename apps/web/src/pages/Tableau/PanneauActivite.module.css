@@ -1,28 +1,30 @@
 .periode {
-	padding: 8px 10px;
+	padding: var(--espace-2) var(--espace-3);
 	border: 1px solid var(--filet);
-	border-radius: 10px;
-	background: rgba(255, 255, 255, 0.8);
+	border-radius: var(--rayon-s);
+	background: var(--champ);
 	font: inherit;
-	font-size: 0.85rem;
+	font-size: var(--t-petit);
 }
 .repos {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
-	gap: 10px;
+	gap: var(--espace-3);
 	max-height: 560px;
 	overflow: auto;
+	/* Marge interne pour que l'anneau de focus ne soit pas rogne par le defilement */
+	padding: var(--espace-1);
 }
 .repo {
 	border: 1px solid var(--filet);
-	border-radius: 14px;
-	background: rgba(255, 255, 255, 0.5);
+	border-radius: var(--rayon-m);
+	background: var(--voile-blanc);
 }
 .repo summary {
 	display: flex;
 	align-items: center;
-	gap: 10px;
-	padding: 12px 14px;
+	gap: var(--espace-3);
+	padding: var(--espace-3) var(--espace-4);
 	cursor: pointer;
 	list-style: none;
 }
@@ -31,18 +33,18 @@
 }
 .repo ul {
 	margin: 0;
-	padding: 0 14px 12px 38px;
+	padding: 0 var(--espace-4) var(--espace-3) var(--espace-7);
 	list-style: none;
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
-	gap: 6px;
+	gap: var(--espace-2);
 }
 .repo label {
 	min-width: 0;
 }
 .compte {
 	margin-left: auto;
-	font-size: 0.8rem;
+	font-size: var(--t-petit);
 	color: var(--texte-doux);
 }
 .message {
@@ -54,5 +56,5 @@
 }
 .sha {
 	color: var(--moka);
-	font-size: 0.75rem;
+	font-size: var(--t-etiquette);
 }

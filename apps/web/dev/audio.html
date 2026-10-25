@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fr">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="robots" content="noindex" />
+	<title>Banc de l'audio de la pub</title>
+	<link rel="stylesheet" href="/dev/audio.css" />
+</head>
+<body>
+	<main>
+		<h1>Banc de l'audio de la pub (F9, développement)</h1>
+		<p id="isolation" role="status"></p>
+		<div class="barre">
+			<label><input id="coupes" type="checkbox" /> Coupes seules (mesure de synchro)</label>
+			<label><input id="musique" type="checkbox" checked /> Musique et effets</label>
+			<label>Musique
+				<select id="ambiance"><option>energique</option><option>calme</option></select>
+			</label>
+			<button id="lancer" type="button">Synthétiser et exporter</button>
+		</div>
+		<div class="barre">
+			<label>Voix importées (un fichier par scène, nommé comme l'id : s1.wav, s2.wav...)
+				<input id="importees" type="file" accept="audio/*" multiple />
+			</label>
+		</div>
+		<p id="etat" role="status"></p>
+		<a id="telecharger" class="bouton" hidden>Télécharger</a>
+		<pre id="resultat"></pre>
+	</main>
+	<script type="module" src="/dev/audio.ts"></script>
+</body>
+</html>

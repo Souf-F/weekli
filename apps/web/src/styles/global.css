@@ -12,8 +12,8 @@ body {
 	margin: 0;
 	color: var(--espresso);
 	font-family: var(--sans);
-	font-size: 16px;
-	line-height: 1.6;
+	font-size: var(--t-corps);
+	line-height: var(--lh-corps);
 	-webkit-font-smoothing: antialiased;
 	overflow-x: hidden;
 	/* Repli si WebGL est indisponible */
@@ -33,20 +33,28 @@ h3 {
 	margin: 0;
 	font-weight: 400;
 }
+h1 {
+	font-size: var(--t-titre);
+}
 h1,
 h2 {
 	font-family: var(--serif);
 	letter-spacing: -0.01em;
-	line-height: 1.02;
+	line-height: var(--lh-titre);
+}
+h2 {
+	font-size: var(--t-sous-titre);
+	line-height: var(--lh-sous-titre);
 }
 h1 em,
 h2 em {
 	color: var(--moka);
 }
 h3 {
-	font-size: 1.08rem;
+	font-size: var(--t-corps-grand);
 	font-weight: 600;
 	letter-spacing: -0.01em;
+	line-height: var(--lh-sous-titre);
 }
 code {
 	font-family: var(--mono);
@@ -57,15 +65,22 @@ code {
 	color: var(--platine);
 }
 
+/* Focus clavier visible partout, sur fond clair comme sur fond espresso */
+:focus-visible {
+	outline: 2px solid transparent;
+	outline-offset: 2px;
+	box-shadow: var(--focus);
+}
+
 /* Apparitions au scroll (voir hooks/useReveal) */
 .revele {
 	opacity: 0;
-	transform: translateY(28px);
+	transform: translateY(var(--espace-5));
 	filter: blur(6px);
 	transition:
-		opacity 1s var(--ease),
-		transform 1s var(--ease),
-		filter 1s var(--ease);
+		opacity var(--duree-section) var(--ease),
+		transform var(--duree-section) var(--ease),
+		filter var(--duree-section) var(--ease);
 	transition-delay: var(--delai, 0s);
 }
 .revele.vu {
@@ -75,6 +90,9 @@ code {
 }
 
 @media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
 	.revele {
 		opacity: 1;
 		transform: none;

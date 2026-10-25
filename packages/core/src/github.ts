@@ -1,5 +1,6 @@
 import type { Octokit } from "octokit";
 import { filtrerActivite } from "./filtre";
+import { masquerSecrets } from "./masquage";
 import type { Activite, ActiviteRepo, DetailsCommit, DetailsRepo } from "./types";
 
 const TAILLE_README = 6000;
@@ -9,6 +10,31 @@ const MAX_FICHIERS = 15;
 const GENERES =
 	/(^|\/)(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|bun\.lockb?|worker-configuration\.d\.ts)$|(^|\/)(dist|build|\.next)\//;
 export const estGenere = (fichier: string) => GENERES.test(fichier);
+
+export type RepoResume = { repo: string; description: string; site: string; url: string; maj: string };
+
+const MAX_REPOS_LISTE = 30;
+
+// Repos publics de l'utilisateur, sans les forks, du plus recemment pousse au plus ancien (api-contract.md 3.2)
+export async function listerRepos(octokit: Octokit): Promise<RepoResume[]> {
+	const { data } = await octokit.rest.repos.listForAuthenticatedUser({
+		affiliation: "owner",
+		visibility: "public",
+		sort: "pushed",
+		per_page: 100,
+	});
+	return data
+		.filter((r) => !r.fork)
+		.map((r) => ({
+			repo: r.name,
+			description: r.description ?? "",
+			site: r.homepage ?? "",
+			url: r.html_url,
+			maj: r.pushed_at ?? r.updated_at ?? "",
+		}))
+		.sort((a, b) => b.maj.localeCompare(a.maj))
+		.slice(0, MAX_REPOS_LISTE);
+}
 
 // Activite filtree de l'utilisateur sur ses repos publics depuis `jours`
 export async function activiteGithub(octokit: Octokit, login: string, jours: number): Promise<Activite> {
@@ -98,7 +124,7 @@ export async function detailsCommit(
 			statut: f.status,
 			ajouts: f.additions,
 			suppressions: f.deletions,
-			extrait: f.patch?.slice(0, TAILLE_PATCH) ?? "",
+			extrait: masquerSecrets(f.patch ?? "").slice(0, TAILLE_PATCH),
 		})),
 	};
 }

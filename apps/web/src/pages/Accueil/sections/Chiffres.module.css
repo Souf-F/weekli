@@ -1,36 +1,40 @@
 .grille {
 	display: grid;
 	grid-template-columns: repeat(4, 1fr);
-	border: 1px solid var(--bord-verre);
-	border-radius: 22px;
+	border: 1px solid var(--filet);
+	border-radius: var(--rayon-l);
 	background: var(--espresso);
 	color: var(--platine);
 	overflow: hidden;
 }
 .chiffre {
-	padding: 40px 28px;
+	padding: var(--espace-7) var(--espace-5);
 }
 .chiffre + .chiffre {
-	border-left: 1px solid rgba(229, 228, 226, 0.12);
+	border-left: 1px solid var(--filet-sombre);
 }
 .chiffre strong {
 	display: block;
 	font-family: var(--serif);
 	font-weight: 400;
-	font-size: clamp(3rem, 6vw, 4.8rem);
+	font-size: var(--t-affiche);
 	line-height: 1;
 	color: var(--lavande);
+	font-variant-numeric: tabular-nums;
 }
 .chiffre span {
 	display: block;
-	margin-top: 10px;
-	font-size: 0.92rem;
-	color: rgba(229, 228, 226, 0.7);
+	margin-top: var(--espace-3);
+	font-size: var(--t-petit);
+	line-height: var(--lh-petit);
+	color: var(--texte-sombre-doux);
 }
 .note {
-	margin: 22px 0 0;
+	max-width: var(--mesure);
+	margin: var(--espace-5) auto 0;
 	text-align: center;
-	font-size: 0.92rem;
+	font-size: var(--t-petit);
+	line-height: var(--lh-petit);
 }
 
 @media (max-width: 980px) {
@@ -41,6 +45,6 @@
 		border-left: 0;
 	}
 	.chiffre:nth-child(n + 3) {
-		border-top: 1px solid rgba(229, 228, 226, 0.12);
+		border-top: 1px solid var(--filet-sombre);
 	}
 }

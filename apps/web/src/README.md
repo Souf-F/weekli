@@ -5,7 +5,7 @@ src/
 ├── main.tsx               Montage React
 ├── App.tsx                Routes, chargement différé de l'app
 ├── styles/
-│   ├── tokens.css         Palette, polices, constantes : seule source des couleurs
+│   ├── tokens.css         Palette, échelle typographique, espacements, mouvement : seule source de valeurs
 │   └── global.css         Base et animation d'apparition (.revele)
 ├── lib/                   Logique sans interface
 │   ├── api.ts             Client de l'API Weekli

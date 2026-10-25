@@ -1,25 +1,24 @@
 # apps/video
 
-Vidéos de projet générées à partir d'un dépôt Git : voix off, musique, effets sonores, décor 3D et motion design. Rendu avec [Remotion](https://www.remotion.dev) et Three.js.
+**Outil interne** pour produire la pub de lancement de Weekli lui-même (ADR-10). Ce n'est pas le moteur de pub du site, qui vit dans `packages/core/src/pub`. Voix off, musique, effets sonores, décor 3D et motion design, rendu avec [Remotion](https://www.remotion.dev) et Three.js.
 
-Deux formats, décrits dans le skill Claude Code [`video-projet`](../../.claude/skills/video-projet/SKILL.md) :
+Un seul format, `presentation` : une pub de marque de 50 à 65 s, en 16:9 (1920 × 1080) par défaut. L'esprit est celui d'une pub (idée, problème, promesse, captures), sans commits, code ni chiffres de développement. Le script se rédige avec le skill Claude Code [`video-projet`](../../.claude/skills/video-projet/SKILL.md).
 
-| Format | Contenu | Durée | Image |
-|---|---|---|---|
-| `presentation` | Une pub : problème, révélation, démo, preuves, appel | 50 à 65 s | 1080 × 1350 (LinkedIn) |
-| `histoire` | Comment le projet a été construit : commits, architecture, README, tests | 1 min 30 à 2 min 30 | 1920 × 1080 |
+**Dépôts de confiance uniquement.** `collecter` lit le README et les docs du dépôt, puis Claude les relit : un dépôt hostile peut y glisser des instructions (audit m7).
 
 ## Utilisation
 
 ```bash
-npm run collecter -w @weekli/video -- <chemin-du-repo> <nom>   # faits : commits, docs, langages
+npm run collecter -w @weekli/video -- <chemin-du-repo> <nom>   # README, docs, stack
 node apps/video/scripts/capturer.mjs <nom> accueil <url>       # capture du site (facultatif)
-# écrire apps/video/projets/<nom>/<format>.json (voir le skill)
-npm run produire -w @weekli/video -- <nom> <presentation|histoire>
+# écrire apps/video/projets/<nom>/presentation.json (voir le skill)
+npm run produire -w @weekli/video -- <nom>
 npm run studio -w @weekli/video                                # aperçu interactif
 ```
 
-Sortie : `apps/video/sorties/<nom>-<format>.mp4`.
+Les noms (projet, capture) sont limités à `a-z`, `0-9` et `-` (1 à 40 caractères) : `scripts/validation.mjs` refuse le reste.
+
+Sortie : `apps/video/sorties/<nom>-presentation.mp4`.
 
 ## Ce que fait `produire`
 
@@ -36,12 +35,12 @@ src/
 ├── composants/
 │   ├── monde3d.tsx                Décor 3D continu (shaders GLSL, Three.js)
 │   ├── transitions.tsx            Transitions 3D et éclats lumineux
-│   ├── scenes.tsx                 Les 12 types de scènes
+│   ├── scenes.tsx                 Les 8 types de scènes
 │   └── base.tsx                   Titrage cinétique, cartes, sous-titres, grain
 ├── temps.ts                       Calcul des durées et des chevauchements
 └── theme.ts                       Palette, polices, cadence
-scripts/                           collecter, capturer, produire, audio
-projets/<nom>/                     Scripts JSON des vidéos (donnees.json n'est pas versionné)
+scripts/                           collecter, capturer, produire, audio, validation
+projets/<nom>/                     Script JSON de la pub (donnees.json n'est pas versionné)
 ```
 
 Le décor 3D est un seul plan continu sous toute la vidéo : un dégradé liquide et une sculpture nacrée qui se déplace d'un coin à l'autre à chaque scène, passe en tons sombres sur les scènes sombres et plonge vers la caméra pendant les transitions.

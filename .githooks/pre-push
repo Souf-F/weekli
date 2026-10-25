@@ -1,0 +1,3 @@
+#!/bin/sh
+# Dernier filet avant le push : tous les fichiers suivis sont verifies (installe par `npm install`)
+exec node scripts/verifier-secrets.mjs --tout

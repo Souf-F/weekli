@@ -1,18 +1,16 @@
 .bandeau {
 	overflow: hidden;
-	padding: 22px 0;
+	padding: var(--espace-5) 0;
 	border-block: 1px solid var(--filet);
-	background: rgba(255, 255, 255, 0.25);
-	backdrop-filter: blur(8px);
-	-webkit-backdrop-filter: blur(8px);
 	mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
 }
 .piste {
 	display: flex;
-	gap: 64px;
+	gap: var(--espace-8);
 	width: max-content;
 	font-family: var(--serif);
-	font-size: 1.6rem;
+	font-size: var(--t-sous-titre);
+	line-height: var(--lh-sous-titre);
 	color: var(--texte-doux);
 	animation: defile 38s linear infinite;
 }
