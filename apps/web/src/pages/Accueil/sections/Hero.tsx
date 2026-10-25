@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { Bouton } from "@/components/Bouton/Bouton";
-import { NB_OUTILS } from "../donnees";
 import styles from "./Hero.module.css";
 
 export function Hero() {
@@ -42,10 +41,6 @@ export function Hero() {
 	return (
 		<section className={styles.hero}>
 			<div>
-				<p className={`${styles.pastille} revele`}>
-					<span className={styles.point} />
-					Connecteur Claude · {NB_OUTILS} outils
-				</p>
 				<h1 className="revele">
 					Ton projet raconté,
 					<br />

@@ -13,19 +13,6 @@
 	line-height: var(--lh-affiche);
 }
 
-.pastille {
-	display: inline-flex;
-	align-items: center;
-	gap: var(--espace-2);
-	margin: 0 0 var(--espace-5);
-	padding: var(--espace-1) var(--espace-3);
-	border: 1px solid var(--filet);
-	border-radius: var(--rayon-pilule);
-	background: var(--surface);
-	font-size: var(--t-petit);
-	line-height: var(--lh-petit);
-	color: var(--texte-doux);
-}
 .point {
 	width: 7px;
 	height: 7px;
