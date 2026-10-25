@@ -15,7 +15,6 @@
 	animation: defile 38s linear infinite;
 }
 .piste span:nth-child(even) {
-	font-style: italic;
 	color: var(--moka-texte);
 }
 @keyframes defile {

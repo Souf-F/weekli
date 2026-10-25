@@ -133,7 +133,6 @@
 }
 .postTitre {
 	font-family: var(--serif);
-	font-style: italic;
 	font-size: var(--t-corps-grand);
 	color: var(--moka-texte);
 }
@@ -184,7 +183,7 @@
 .flottant strong {
 	font-family: var(--serif);
 	font-size: var(--t-sous-titre);
-	font-weight: 400;
+	font-weight: 500;
 	color: var(--moka-texte);
 }
 .f1 {

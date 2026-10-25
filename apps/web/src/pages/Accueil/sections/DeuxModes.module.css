@@ -37,7 +37,7 @@
 	font-family: var(--serif);
 	font-size: var(--t-sous-titre);
 	line-height: var(--lh-sous-titre);
-	font-weight: 400;
+	font-weight: 500;
 }
 .resume {
 	margin: 0 0 var(--espace-5);

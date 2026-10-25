@@ -31,8 +31,7 @@
 .titre {
 	margin: var(--espace-3) 0 var(--espace-1);
 	font-family: var(--serif);
-	font-style: italic;
-	font-weight: 400;
+	font-weight: 500;
 	font-size: var(--t-sous-titre);
 	line-height: var(--lh-sous-titre);
 	color: var(--moka-texte);
