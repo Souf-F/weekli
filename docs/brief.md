@@ -39,7 +39,7 @@ Résultat attendu : un produit fini, démontrable de bout en bout, qui met en va
 
 ## 4. La pub vidéo (refonte)
 
-**Référence imposée : `~/Desktop/Stepwize_pub_audit_gratuit.mp4`.** Le résultat doit avoir ce niveau et ce style.
+**Référence de niveau : `~/Desktop/Stepwize_pub_audit_gratuit.mp4`.** C'est une référence de niveau et d'énergie, un exemple du style dynamique visé, pas un modèle à recopier : chaque pub suit une des trames de `docs/design.md` et l'identité du projet de l'utilisateur.
 
 Ce que c'est : la pub du **projet de l'utilisateur**, comme celle d'une entreprise. L'idée, le problème résolu, ce que ça apporte, comment le site a été pensé (parti pris, pas technique). **Jamais** de commits, de code, de terminal ou de chiffres de développement.
 
@@ -95,7 +95,7 @@ On garde l'existant (mesh WebGL, café et platine, maquette 3D) avec une passe d
 
 - [ ] OAuth testé de bout en bout en local, depuis Claude et depuis le site.
 - [ ] Posts générés depuis Claude dans le style mémorisé.
-- [ ] Pub vidéo d'un projet générée depuis Claude, rendue sur le site, de niveau comparable à la référence Stepwize, validée par Soufiane.
+- [ ] Pub vidéo d'un projet générée depuis Claude, rendue sur le site, de niveau comparable à la référence sans en copier la structure, validée par Soufiane.
 - [ ] RGPD : suppression des données, page de confidentialité.
 - [ ] Tests verts, typecheck OK, aucun tiret long.
 - [ ] Audit sécurité final OK, rapport PDF dans `docs/reviews/`.
