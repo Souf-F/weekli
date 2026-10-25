@@ -16,7 +16,7 @@ const m = (texte: string, accent?: string) => ({ texte, accent });
 // Contenu calque sur la reference pour comparer tailles et positions a texte egal ou voisin.
 // Projet fictif : aucun nom de client reel.
 const SCENES: ScenePub[] = [
-	{ id: "e1", type: "etape", voix: "", duree: 4.5, onglet: "Comprendre", filigrane: "Comprendre", titre: m("On comprend ce qui bloque.", "ce qui bloque."), texte: "À partir du terrain : réunions, échanges, fichiers et retours terrain.", visuel: { type: "capture", capture: "accueil", cadrage: "haut" } },
+	{ id: "e1", type: "etape", voix: "", duree: 4.5, onglet: "Comprendre", filigrane: "Comprendre", titre: m("On comprend ce qui bloque.", "ce qui bloque."), texte: "À partir du terrain : réunions, échanges, fichiers et retours terrain.", visuel: { type: "capture", capture: "accueil", cadrage: "complet" } },
 	{ id: "e2", type: "etape", voix: "", duree: 4.5, onglet: "Agir", filigrane: "Agir", titre: m("On lance les actions.", "les actions."), texte: "Une personne dédiée clarifie, priorise et lance les premières actions.", visuel: { type: "liste", titre: "Plan d'action", elements: ["Clarifier le sujet", "Prioriser ce qui compte", "Lancer les premières actions"] } },
 	{ id: "e3", type: "etape", voix: "", duree: 4.5, onglet: "Suivre", filigrane: "Suivre", titre: m("Tout est suivi dans la plateforme.", "dans la plateforme."), texte: "Chaque action, chaque décision, chaque preuve, au même endroit.", visuel: { type: "capture", capture: "tableau", cadrage: "complet", focus: { x: 0.3, y: 0.24, largeur: 0.66, hauteur: 0.3 } } },
 	{ id: "e4", type: "etape", voix: "", duree: 4.5, onglet: "Capitaliser", filigrane: "Capitaliser", titre: m("On garde chaque leçon.", "chaque leçon."), texte: "Tout ce qui est appris est conservé. Pour ne plus repartir de zéro.", visuel: { type: "capture", capture: "mobile", cadrage: "complet" } },
@@ -128,7 +128,7 @@ export const PLANCHE: { ref: number; scene: string; s: number | ((d: number) => 
 	{ ref: 44.0, scene: "p", s: 1.0, legende: "Preuve, noms qui s'empilent" },
 	{ ref: 46.0, scene: "p", s: 3.4, legende: "Preuve, cartes" },
 	{ ref: 50.0, scene: "a", s: (d) => d * 0.42, legende: "Appel, badge" },
-	{ ref: 52.0, scene: "a", s: (d) => d * 0.86, legende: "Appel en place" },
+	{ ref: 52.0, scene: "a", s: (d) => d * 0.78, legende: "Appel en place" },
 	{ ref: 52.5, scene: "a", s: (d) => d - 0.7, legende: "Appel, bulle de sortie" },
 	{ ref: 56.0, scene: "f", s: 3.0, legende: "Fin" },
 ];
@@ -224,7 +224,7 @@ async function exporterPlanche(adresse: string) {
 	const extra: [string, number][] = [
 		["vide", 2.5],
 		["long-e", 3.2],
-		["long-a", 4.4],
+		["long-a", 3.6],
 		["long-p", 3.6],
 	];
 	for (const [n, [id, s]] of extra.entries()) {

@@ -152,7 +152,7 @@ export function creerResultat(c: Contexte): Scene {
 			ctx.arc(x + CARTE.largeur / 2, FRISE.yPoints + 0.5, actif ? 7 : 6, 0, Math.PI * 2);
 			ctx.fill();
 
-			if (k < AVANT || k === AVANT) {
+			if (k <= AVANT) {
 				// le probleme revient ; les cartes passees palissent quand le tampon tombe
 				const pali = k < AVANT ? 1 - 0.45 * easeOutCubic(avancement(s, tTampon, 0.4)) : 1;
 				const tamponnee = k === AVANT && pt > 0;

@@ -24,7 +24,7 @@ type DonneesEtape = Extract<ScenePub, { type: "etape" }>;
 
 // Positions mesurees sur la reference (1920 x 1080)
 const EN_TETE = { y: 92, logo: 32, nom: 30, onglet: 22, ecartOnglets: 44, souligne: 4, ySouligne: 120 };
-const COLONNE = { x: MARGE, largeur: 780, yEtiquette: 300, yTitre: 360, ecartTexte: 28, largeurTexte: 640 };
+const COLONNE = { x: MARGE, largeur: 840, yEtiquette: 300, yTitre: 360, ecartTexte: 28, largeurTexte: 640 };
 const ZONE_CARTE = { x: 940, y: 230, largeur: 860, hauteur: 640 };
 const FILIGRANE = { echelle: 1.05, ligneDeBase: 965, vitesse: 40, opacite: 0.08, trait: 2 };
 const POUSSEE = 0.025; // avancee lente du contenu sur la scene (camera)
