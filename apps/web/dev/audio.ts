@@ -68,6 +68,7 @@ async function lancer(o: Options) {
 		s.voix.mode = "importee";
 	} else {
 		voix = await synthetiserVoix(s, {
+			surEtat: (e) => (el("voix-etat").textContent = e.secours ? `Secours Kokoro : ${e.raison}` : `Voix : ${e.source}`),
 			surProgression: (p) => (etat.textContent = p.etape === "chargement" ? `Chargement du modèle ${p.role} ${p.recu}/${p.total}` : `Synthèse ${p.scene}/${p.total}`),
 		});
 	}
