@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="fr">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="robots" content="noindex" />
+	<title>Comparaison des polices de titres</title>
+	<link rel="stylesheet" href="/src/styles/tokens.css" />
+	<link rel="stylesheet" href="/src/styles/fonts.css" />
+	<link rel="stylesheet" href="/dev/polices.css" />
+</head>
+<body>
+	<header class="barre-outil">
+		<h1>Polices de titres : hero et deux sections, quatre colonnes</h1>
+		<div class="vues" role="group" aria-label="Affichage">
+			<button type="button" data-vue="planche" aria-pressed="true">Planche</button>
+			<button type="button" data-vue="a" aria-pressed="false">Actuelle</button>
+			<button type="button" data-vue="b" aria-pressed="false">Option 1</button>
+			<button type="button" data-vue="c" aria-pressed="false">Option 2</button>
+			<button type="button" data-vue="d" aria-pressed="false">Option 3</button>
+		</div>
+	</header>
+	<main id="planche" data-vue="planche"></main>
+	<script type="module" src="/dev/polices.ts"></script>
+</body>
+</html>
