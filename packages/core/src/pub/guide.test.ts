@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CATALOGUE_PUB, QUESTIONS_PUB, REGLES_POST_PROJET, REGLES_PUB, TRAMES_PUB } from "./guide";
 import { DUREES_SCENE } from "./limites";
-import { TRAMES, type TypeScene } from "./types";
+import { ICONES, TRAMES, type TypeScene } from "./types";
 
 const TIRETS = new RegExp(`[${String.fromCharCode(0x2013, 0x2014)}]`);
 
@@ -51,5 +51,20 @@ describe("guide de redaction", () => {
 		expect(REGLES_PUB).toMatch(/Varier, ne jamais copier une référence/);
 		expect(REGLES_PUB).toMatch(/jamais un passage obligé/);
 		expect(CATALOGUE_PUB).toMatch(/une question courte, un chiffre réel/);
+	});
+
+	it("decrit les scenes d'explication, les icones et la rarete des captures", () => {
+		for (const t of ["transformation", "flux", "avantapres"]) expect(CATALOGUE_PUB).toContain(t);
+		for (const i of ICONES) expect(CATALOGUE_PUB).toContain(i);
+		expect(CATALOGUE_PUB).toMatch(/RARE et BRÈVE : 2 au plus par pub, 2,5 s au plus/);
+		expect(REGLES_PUB).toMatch(/Captures : rares et brèves/);
+		expect(REGLES_PUB).toMatch(/transformation \(une donnée devient un résultat\)/);
+	});
+
+	it("impose de dire chaque argument une seule fois et de varier selon le projet", () => {
+		expect(REGLES_PUB).toMatch(/Chaque argument une seule fois/);
+		expect(REGLES_PUB).toMatch(/n'est dit qu'une seule fois dans toute la pub, voix et visuels confondus/);
+		expect(REGLES_PUB).toMatch(/graine dérivée du nom du repo/);
+		expect(REGLES_PUB).toMatch(/Deux pubs de projets différents ne se ressemblent pas/);
 	});
 });

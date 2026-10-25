@@ -247,7 +247,10 @@ Durées en secondes : minimum, défaut, maximum. La durée réelle suit la voix 
 | `chorus` | Tension | Sombre | 3 / 4 / 5,5 | `titre`, `chute`, `bulles[3..6]` | `titre` au centre en Grand, bulles blanches (22 px) qui apparaissent autour en ressort, puis tombent en tournant ; `chute` remplace le titre, accent en `alerteSombre` |
 | `rupture` | Rupture | Clair | 2,5 / 3,5 / 4,5 | `texte` | Frappe en Grand couleur `encre`, partie accentuée en `accentClair`, curseur carré. Silence musical de 0,4 s au début (la musique repart à la révélation) |
 | `revelation` | Révélation | Sombre, halo, rayons | 4,5 / 6 / 7,5 | `slogan`, `signature?` (le nom vient de `projet.nom`) | t 0 à 0,25 : 300 particules carrées convergent et forment le logo (ou le monogramme pixel), rayons qui s'ouvrent, onde et impact sonore ; t 0,25 : nom en Affiche blanc à droite du logo ; t 0,45 : slogan mot à mot, partie accentuée surlignée ; t 0,7 : signature en Slogan soulignée. Légère poussée de caméra (échelle 1 vers 1,04) |
-| `etape` | Parcours | Clair | 3,5 / 4,5 / 6 | `onglet`, `filigrane`, `titre`, `texte?`, `visuel` | Gabarit fixe partagé par toutes les étapes : en-tête (logo 28 px + nom à gauche, onglets de toutes les étapes à droite, souligné qui glisse vers l'onglet actif en 0,4 s). Colonne gauche (colonnes 1 à 5) : « ÉTAPE 0n / 0N » en Étiquette `accentClair`, titre en Titre (seconde ligne `accentClair`), texte en Texte `encreDouce`. Colonne droite (colonnes 7 à 12) : la carte (voir 8.10). Filigrane en bas, contour `encre` 7 %, défile horizontalement (40 px/s) |
+| `etape` | Parcours | Clair | 3,5 / 4,5 / 6 | `onglet`, `filigrane`, `titre`, `texte?`, `visuel` | Gabarit fixe partagé par toutes les étapes : en-tête (logo 28 px + nom à gauche, onglets de toutes les étapes à droite, souligné qui glisse vers l'onglet actif en 0,4 s). Colonne gauche (colonnes 1 à 5) : « ÉTAPE 0n / 0N » en Étiquette `accentClair`, titre en Titre (seconde ligne `accentClair`), texte en Texte `encreDouce`. Colonne droite (colonnes 7 à 12) : la carte (voir 8.10). Filigrane en bas, contour `encre` 7 %, défile horizontalement (40 px/s). Une étape portée par une capture est un clin d'œil de 2,5 s au plus, but `montrer`, voix de 5 mots (8.10) ; 2 captures au plus par pub |
+| `transformation` | Parcours | Clair | 3,5 / 4,5 / 6 | `titre`, `entree{icone,libelle}`, `operateur`, `sortie{icone,libelle}`, `texte?` | Une tuile d'entrée glisse dans un anneau, éclate en 36 carrés et se réassemble en tuile de sortie : une donnée devient un résultat (spécification complète en 8.17) |
+| `flux` | Parcours | Clair | 4 / 5 / 6,5 | `titre`, `noeuds[3]{icone,libelle,detail?}` | Trois tuiles à icône reliées par des rails qu'une impulsion parcourt, la dernière se remplit (8.17) |
+| `avantapres` | Parcours | Clair | 3,5 / 4,5 / 6 | `titre`, `avant?`, `apres?`, `paires[2..3]{avant,apres}` | Un panneau passe de l'état « avant » à l'état « après » : un filet le balaie et les lignes se retournent lettre à lettre (8.17) |
 | `resultat` | Résultat | Clair | 4 / 5 / 6,5 | `titre`, `avant`, `tampon`, `apres`, `chute?` | Surtitre « RÉSULTAT » ; titre en Titre ; frise de 6 cartes datées qui défile vers la gauche : les 3 premières portent `avant` avec pastille `alerteClair`, la 4e reçoit le tampon (`tampon` en capitales, cadre arrondi incliné de -8°, écrasement 1,3 vers 1 et petite secousse), la 5e est une carte pleine `accentClair` portant `apres`, la 6e un point d'interrogation pâle. Cercle de focus fin autour du tampon. `chute` en Slogan en bas |
 | `preuve` | Preuve | Sombre | 3,5 / 4,5 / 6 | `surtitre`, `elements[1..4]`, `cartes[0..3]?` | Surtitre en Étiquette ; chaque élément en Grand blanc s'empile avec un filet `blanc` 12 % dessous ; les cartes (fond `sombreHalo`, bord 1 px blanc 10 %) entrent à droite décalées de 120 ms |
 | `appel` | Action | Clair | 4 / 5 / 6,5 | `question`, `badge?`, `action`, `bouton` | Question en Grand centrée, accent `accentClair` ; badge en pilule blanche ombrée, partie accentuée dans un bloc `accentClair` texte blanc ; `action` en Affiche, lettres qui tombent ; bouton pilule `accentClair` avec flèche qui glisse. Sortie : bulle `sombre` qui grandit depuis le bouton |
@@ -257,16 +260,29 @@ Durées en secondes : minimum, défaut, maximum. La durée réelle suit la voix 
 
 L'interface de l'utilisateur ne peut pas être redessinée : on la montre par ses captures, traitées comme des cartes d'interface.
 
+**Rares et brèves (décision de Soufiane, 2026-10-25).** Les gens n'ont pas le temps de lire un écran et peuvent aller sur le site. Une capture est donc un clin d'œil, jamais une explication (l'explication est confiée à 8.17) :
+
+| Règle | Valeur | Contrôle |
+|---|---|---|
+| Nombre | 2 scènes-capture au plus par pub (`LIMITES_PUB.capturesScene.max`), facultatives | Au-delà, la scène passe en liste vide et un avertissement conseille une scène d'explication |
+| Durée | 2,5 s au plus (1,8 s au moins) | `dureeScene` borne l'étape-capture ; `duree` est ramenée à 2,5 s |
+| But | Toujours `montrer` (pause de lecture de 0,5 s) | Un autre but est remplacé, avec un avertissement |
+| Voix | 5 mots au plus (la scène ne peut pas durer plus que sa voix) | Avertissement au-delà |
+| Chronologie | 0 à 0,4 s : la carte entre (montée de 40 px, échelle 0,94 vers 1, `easeOutExpo`) ; 0,4 à 2,1 s : Ken Burns lent ; le `focus`, s'il est donné, s'encadre à 0,9 s sans assombrir l'extérieur plus qu'à 55 % ; pas de vignette secondaire | |
+| Texte | Le titre et le `texte` restent courts : l'écran n'a pas à être lu en entier | |
+
+Le tableau ci-dessous décrit la carte elle-même.
+
 | Élément | Règle |
 |---|---|
 | Source | `POST /api/captures` (domaine vérifié, floutage automatique) ou image importée (locale) |
 | Cadrage | `haut` (0 à 55 % de la hauteur), `milieu` (25 à 80 %), `bas` (45 à 100 %), `complet`, ou rectangle libre en fractions. Le rapport du cadre est respecté, la carte s'adapte entre 4:3 et 16:10 |
 | Carte bureau | Surface blanche, rayon 20 px, barre de navigateur de 40 px (trois points `encreDouce` 30 %, pilule d'adresse avec le domaine), ombre `0 40px 80px -30px` couleur `sombre` à 35 %, largeur 760 à 880 px |
 | Carte mobile | Cadre de téléphone arrondi (rayon 48 px, bord 10 px `encre`), 340 px de large, légèrement incliné (-4°) |
-| Entrée | Montée de 60 px, échelle 0,94 vers 1, opacité, 500 ms, `easeOutExpo` |
+| Entrée | Montée de 60 px, échelle 0,94 vers 1, opacité, 500 ms, `easeOutExpo` (400 ms et 40 px pour une capture brève, voir plus haut) |
 | Vie | Lent Ken Burns : échelle 1 vers 1,05 et glissement vers le centre du `focus` (ou du cadre) sur toute la scène |
 | Focus | Si `focus` est donné : à t 0,45, l'extérieur du rectangle s'assombrit à 35 %, un cadre `accentClair` de 3 px se dessine autour, la carte zoome légèrement vers lui (1,05 vers 1,12) |
-| Vignettes | Si deux captures sont disponibles, la seconde apparaît en petite carte (360 px) décalée en bas à gauche de la première, avec 150 ms de retard (effet de profondeur) |
+| Vignettes | Hors capture brève : si deux captures sont disponibles, la seconde apparaît en petite carte (360 px) décalée en bas à gauche de la première, avec 150 ms de retard (effet de profondeur) |
 | Sans capture | `visuel: liste` : carte blanche titrée, 2 à 4 lignes avec case, les cases se cochent une à une (`accentClair`), barre de progression qui se remplit. Cas limite : une scène `etape` dont la capture est inconnue passe en liste vide (`elements: []`) ; le moteur affiche alors seulement le titre de l'étape, sans carte. Le script de départ ne produit jamais ce cas : chaque `etape` y porte soit une capture existante, soit une liste de 2 à 4 éléments |
 | Interdits | Capture brute plein écran, capture d'un terminal, d'un éditeur de code ou de GitHub |
 
@@ -292,17 +308,17 @@ Chaque pub suit l'une de trois **trames**, inscrite dans le champ `trame` du scr
 
 | Trame | Ordre des scènes | Durée | Quand l'utiliser |
 |---|---|---|---|
-| `probleme-qui-revient` | `ouverture` 2,5, `repetition` 3,5, `boucle` 4, `chorus` 4 (facultative), `rupture` 3,5, `revelation` 6, `etape` x2 à 4 (4,5), `resultat` 5, `preuve` 4,5 (facultative), `appel` 5, `fin` 4 | 55 à 60 s | Un irritant précis et répété dans le quotidien de la cible. La répétition est le propos et doit être vraie dans les réponses. Tension sur le premier quart. |
-| `demonstration-directe` | `ouverture` 2,5 (contraste Avant/Après ou question), `revelation` 6, `etape` x3 à 4 (4,5), `resultat` 5, `preuve` 4,5 (facultative), `appel` 5, `fin` 4 | 50 à 55 s avec 4 étapes | Un produit simple, expliqué en le montrant, avec au moins 4 captures utiles. Pas de tension longue : la révélation tombe avant 6 s, le reste est l'usage. |
-| `vision-manifeste` | `ouverture` 2,5 (« Notre idée », citation ou chiffre réel), `rupture` 3,5 (la conviction tapée), `chorus` 4 (seulement sans capture), `revelation` 6, `etape` x2 à 4 (4,5), `preuve` 4,5 (facultative), `resultat` 5, `appel` 5, `fin` 4 | 50 à 58 s | Un projet porté par une conviction (liberté, vie privée, ouvert, respect) ou un projet personnel ou culturel : le propos est un principe, pas une répétition. La preuve vient de l'usage et des engagements réels. |
+| `probleme-qui-revient` | `ouverture` 2,5, `repetition` 3,5, `boucle` 4, `chorus` 4 (facultative), `rupture` 3,5, `revelation` 6, parcours de 2 à 4 scènes (4,5 ; `transformation`, `flux`, `avantapres`, `etape`), `resultat` 5, `preuve` 4,5 (facultative), `appel` 5, `fin` 4 | 55 à 60 s | Un irritant précis et répété dans le quotidien de la cible. La répétition est le propos et doit être vraie dans les réponses. Tension sur le premier quart. |
+| `demonstration-directe` | `ouverture` 2,5 (contraste Avant/Après ou question), `revelation` 6, parcours de 3 à 4 scènes (4,5 ; `transformation`, `flux`, `avantapres` et au plus une capture brève), `resultat` 5, `preuve` 4,5 (facultative), `appel` 5, `fin` 4 | 50 à 55 s | Un produit qui s'explique par son fonctionnement (une transformation, un flux, un avant et un après). Pas de tension longue : la révélation tombe avant 6 s, le reste est l'usage. Les captures ne sont plus nécessaires. |
+| `vision-manifeste` | `ouverture` 2,5 (« Notre idée », citation ou chiffre réel), `rupture` 3,5 (la conviction tapée), `revelation` 6, parcours de 2 à 4 scènes (4,5), `preuve` 4,5 (facultative), `resultat` 5, `appel` 5, `fin` 4 | 50 à 58 s | Un projet porté par une conviction (liberté, vie privée, ouvert, respect) ou un projet personnel ou culturel : le propos est un principe, pas une répétition. La preuve vient de l'usage et des engagements réels. |
 
 **Choix de la trame par `scriptPubDepuisReponses`** (heuristique sans IA, `choisirTrame`, sur les réponses en minuscules sans accents) :
 
 1. Mot de conviction (croire, mériter, devoir, liberté, libre, vie privée, open source, indépendant, éthique, respect) dans le problème ou la promesse : `vision-manifeste`.
-2. Sinon, mot de répétition dans le problème (toujours, encore, chaque, revient, même, perd, oubli, retard, sonne...) ou moins de 4 captures : `probleme-qui-revient`.
+2. Sinon, mot de répétition dans le problème (toujours, encore, chaque, revient, même, perd, oubli, retard, sonne...) ou aucune capture : `probleme-qui-revient`.
 3. Sinon : `demonstration-directe`.
 
-Une trame passée dans l'entrée (`trame`) l'emporte, sauf `demonstration-directe` sans capture (rien à montrer, moins de 8 scènes), remplacée par `probleme-qui-revient`. Claude, qui rédige le script en mode MCP ou clé API, choisit lui-même la trame d'après les 3 réponses et la même table ; l'heuristique ne sert qu'au script de départ du studio.
+Une trame passée dans l'entrée (`trame`) l'emporte, sauf `demonstration-directe` sans aucune capture, remplacée par `probleme-qui-revient` (le script de départ ne sait pas écrire un parcours de 4 scènes sans un clin d'œil de capture pour tenir 50 s ; un auteur humain ou Claude peut, lui, tenir avec 3 scènes d'explication et plus de voix). Claude, qui rédige le script en mode MCP ou clé API, choisit lui-même la trame d'après les 3 réponses et la même table ; l'heuristique ne sert qu'au script de départ du studio.
 
 #### Structure de la trame `probleme-qui-revient`
 
@@ -316,7 +332,7 @@ La durée d'une scène inclut sa zone de chevauchement avec la précédente (8.8
 | 4 | `chorus` (facultative) | 4 | 0,5 | 13,2 | 8 |
 | 5 | `rupture` | 3,5 | 0,3 | 16,4 | 9 |
 | 6 | `revelation` | 6 | 0,6 | 21,8 | 10 |
-| 7 à 10 | `etape` × 4 (ou × 3) | 4,5 × 4 | 0,5 puis 0 | 39,3 | 4 × 13 |
+| 7 à 10 | Parcours de 3 à 4 scènes (`transformation`, `flux`, `avantapres`, `etape`) | 4,5 × 4 (une capture : 2,5) | 0,5 puis 0 | 39,3 | 4 × 13 (une capture : 5) |
 | 11 | `resultat` | 5 | 0,5 | 43,8 | 11 |
 | 12 | `preuve` (facultative) | 4,5 | 0,6 | 47,7 | 12 |
 | 13 | `appel` | 5 | 0,3 | 52,4 | 12 |
@@ -336,38 +352,38 @@ Le README, la description du repo et les captures nourrissent les étapes ; rien
 
 ### 8.15 Exemple complet (projet fictif)
 
-Projet inventé pour illustrer le format : « Tablée », réservations en ligne pour petits restaurants. Voix de 146 mots, durée estimée de 52 s (12 scènes, trois étapes, chevauchements soustraits) : `nettoyerScriptPub` ne renvoie aucun avertissement.
+Projet inventé pour illustrer le format : « Tablée », réservations en ligne pour petits restaurants. Voix de 140 mots, durée estimée de 51,6 s (12 scènes, chevauchements soustraits) : `nettoyerScriptPub` ne renvoie aucun avertissement. Il respecte les règles de 8.10 (deux captures brèves, voix de 5 mots, but `montrer` posé par le moteur) et de 8.18 (chaque argument une fois). Il date d'avant les scènes d'explication de 8.17, qui illustrent mieux le fonctionnement qu'une capture ; la pub de Weekli (`apps/web/dev/pub-weekli.json`) en montre une de chaque.
 
 ```json
 {
   "version": 1,
   "titre": "Pub Tablée",
-  "projet": { "nom": "Tablée", "repo": "tablee", "lien": "https://tablee.example" },
+  "projet": {"nom": "Tablée", "repo": "tablee", "lien": "https://tablee.example"},
   "reponses": {
     "pourQui": "Les restaurateurs indépendants qui prennent les réservations au téléphone pendant le service.",
     "probleme": "Le téléphone sonne en plein coup de feu, les réservations se perdent sur un carnet, des tables restent vides.",
     "promesse": "Les réservations arrivent toutes seules et le service reste calme."
   },
-  "marque": { "primaire": "#c2410c", "accent": "#ea580c", "logo": "monogramme", "monogramme": "T", "typo": "nette" },
-  "voix": { "mode": "synthese", "vitesse": 1, "prononciation": { "Tablée": "Tablé" } },
+  "marque": {"primaire": "#c2410c", "accent": "#ea580c", "logo": "monogramme", "monogramme": "T", "typo": "nette"},
+  "voix": {"mode": "synthese", "vitesse": 1, "prononciation": {"Tablée": "Tablé"}},
   "musique": "energique",
   "captures": [
-    { "id": "accueil", "source": "site", "url": "https://tablee.example/", "format": "bureau", "legende": "Accueil" },
-    { "id": "salle", "source": "site", "url": "https://tablee.example/demo/salle", "format": "bureau", "legende": "Plan de salle" }
+    {"id": "accueil", "source": "site", "url": "https://tablee.example/", "format": "bureau", "legende": "Accueil"},
+    {"id": "salle", "source": "site", "url": "https://tablee.example/demo/salle", "format": "bureau", "legende": "Plan de salle"}
   ],
   "scenes": [
-    { "id": "ouverture", "type": "ouverture", "moment": "Samedi", "detail": "20:30 · plein service", "voix": "Samedi soir, vingt heures trente. Le restaurant est plein." },
-    { "id": "repetition", "type": "repetition", "lignes": [{ "texte": "Même carnet.", "accent": "carnet." }, { "texte": "Même téléphone.", "accent": "téléphone." }], "impact": "ENCORE.", "carte": { "titre": "Appel manqué", "detail": "Table pour 4, 21:00" }, "voix": "Le téléphone sonne. Encore. Et les mains sont prises." },
-    { "id": "boucle", "type": "boucle", "phrase": { "texte": "Service après service, les mêmes tables vides.", "accent": "tables vides." }, "reperes": ["Vendredi", "Samedi", "Dimanche"], "carte": { "titre": "Réservation perdue", "detail": "Rappeler ?" }, "voix": "Service après service, les réservations se perdent sur un carnet, et des tables restent vides." },
-    { "id": "chorus", "type": "chorus", "titre": { "texte": "Tout le monde décroche.", "accent": "décroche." }, "chute": { "texte": "Personne ne note.", "accent": "ne note." }, "bulles": ["C'est pour quand ?", "Vous avez mon nom ?", "On était quatre.", "Je rappelle plus tard."], "voix": "Tout le monde décroche, mais personne ne note. Les clients rappellent." },
-    { "id": "rupture", "type": "rupture", "texte": { "texte": "Et si les réservations arrivaient toutes seules ?", "accent": "toutes seules ?" }, "voix": "Et si les réservations arrivaient toutes seules, sans appel ?" },
-    { "id": "revelation", "type": "revelation", "slogan": { "texte": "Vos réservations, sans le téléphone.", "accent": "sans le téléphone." }, "signature": "Le service reste calme.", "voix": "Voici Tablée. Vos réservations en ligne, sans le téléphone, pour un service serein." },
-    { "id": "etape-reserver", "type": "etape", "onglet": "Réserver", "filigrane": "RÉSERVER", "titre": { "texte": "Le client réserve en ligne.", "accent": "en ligne." }, "texte": "Un lien sur Google, Instagram ou votre site.", "visuel": { "type": "capture", "capture": "accueil", "cadrage": "haut" }, "voix": "Vos clients réservent en ligne, depuis Google ou Instagram, en trente secondes, à toute heure." },
-    { "id": "etape-confirmer", "type": "etape", "onglet": "Confirmer", "filigrane": "CONFIRMER", "titre": { "texte": "Tout est confirmé pour vous.", "accent": "pour vous." }, "texte": "Un message part la veille et le jour même.", "visuel": { "type": "liste", "titre": "Rappels", "elements": ["Confirmation envoyée", "Rappel la veille", "Table attribuée"] }, "voix": "La confirmation et le rappel partent tout seuls, la veille et le jour même." },
-    { "id": "etape-servir", "type": "etape", "onglet": "Servir", "filigrane": "SERVIR", "titre": { "texte": "Votre salle, d'un coup d'œil.", "accent": "d'un coup d'œil." }, "visuel": { "type": "capture", "capture": "salle", "cadrage": "milieu", "focus": { "x": 0.55, "y": 0.3, "largeur": 0.3, "hauteur": 0.35 } }, "voix": "Pendant le service, toute votre salle tient sur un seul écran, à jour en direct." },
-    { "id": "resultat", "type": "resultat", "titre": { "texte": "Le service reste calme.", "accent": "calme." }, "avant": "Appel manqué", "tampon": "Réservé", "apres": "Table pleine", "chute": { "texte": "Samedi prochain : complet.", "accent": "complet." }, "voix": "Résultat : moins d'appels, plus de tables pleines, un samedi complet." },
-    { "id": "appel", "type": "appel", "question": { "texte": "Encore un samedi au téléphone ?", "accent": "au téléphone ?" }, "badge": { "texte": "Premier mois offert", "accent": "offert" }, "action": "Essayez.", "bouton": "Ouvrir mon carnet en ligne", "voix": "Encore un samedi au téléphone ? Le premier mois est offert, sans engagement. Essayez." },
-    { "id": "fin", "type": "fin", "slogan": "Le service reste calme.", "bouton": "Essayer Tablée", "liens": ["tablee.example"], "voix": "Tablée. Le service reste calme, et vos tables restent pleines." }
+    {"id": "ouverture", "type": "ouverture", "moment": "Samedi", "detail": "20:30 · coup de feu", "voix": "Samedi soir, vingt heures trente. La salle déborde de monde."},
+    {"id": "repetition", "type": "repetition", "lignes": [{"texte": "Même carnet.", "accent": "carnet."}, {"texte": "Même téléphone.", "accent": "téléphone."}], "impact": "ENCORE.", "carte": {"titre": "Appel manqué", "detail": "Table pour 4, 21:00"}, "voix": "Le téléphone sonne. Encore. Et les mains sont prises, une fois de plus."},
+    {"id": "boucle", "type": "boucle", "phrase": {"texte": "Service après service, les mêmes tables vides.", "accent": "tables vides."}, "reperes": ["Vendredi", "Samedi", "Dimanche"], "carte": {"titre": "Réservation perdue", "detail": "Rappeler ?"}, "voix": "Service après service, les réservations se perdent sur un carnet, et des tables restent vides."},
+    {"id": "chorus", "type": "chorus", "titre": {"texte": "Tout le monde décroche.", "accent": "décroche."}, "chute": {"texte": "Personne ne note.", "accent": "ne note."}, "bulles": ["C'est pour quand ?", "Vous avez mon nom ?", "On était quatre.", "Je rappelle plus tard."], "voix": "Tout le monde décroche, mais personne ne note. Les clients rappellent, encore et encore."},
+    {"id": "rupture", "type": "rupture", "texte": {"texte": "Et si les réservations arrivaient toutes seules ?", "accent": "toutes seules ?"}, "voix": "Et si les réservations arrivaient toutes seules, sans appel ?"},
+    {"id": "revelation", "type": "revelation", "slogan": {"texte": "Vos réservations, sans le téléphone.", "accent": "sans le téléphone."}, "signature": "Plus de calme, moins de bruit.", "voix": "Voici Tablée. Vos réservations en ligne, sans le téléphone, pour un service serein."},
+    {"id": "etape-reserver", "type": "etape", "onglet": "Réserver", "filigrane": "RÉSERVER", "titre": {"texte": "Le client réserve en ligne.", "accent": "en ligne."}, "texte": "Un lien sur Google, Instagram ou votre site.", "visuel": {"type": "capture", "capture": "accueil", "cadrage": "haut"}, "voix": "Vos clients réservent en ligne."},
+    {"id": "etape-confirmer", "type": "etape", "onglet": "Confirmer", "filigrane": "CONFIRMER", "titre": {"texte": "Tout est confirmé pour vous.", "accent": "pour vous."}, "texte": "Un message part la veille et le jour même.", "visuel": {"type": "liste", "titre": "Rappels", "elements": ["Confirmation envoyée", "Rappel la veille", "Table attribuée"]}, "voix": "La confirmation et le rappel partent tout seuls, la veille et le jour même, sans que personne y pense."},
+    {"id": "etape-servir", "type": "etape", "onglet": "Servir", "filigrane": "SERVIR", "titre": {"texte": "Votre salle, d'un coup d'œil.", "accent": "d'un coup d'œil."}, "visuel": {"type": "capture", "capture": "salle", "cadrage": "milieu", "focus": {"x": 0.55, "y": 0.3, "largeur": 0.3, "hauteur": 0.35}}, "voix": "Votre salle, d'un coup d'œil."},
+    {"id": "resultat", "type": "resultat", "titre": {"texte": "Le service reste calme.", "accent": "calme."}, "avant": "Appel manqué", "tampon": "Réservé", "apres": "Table pleine", "chute": {"texte": "Le week-end prochain : complet.", "accent": "complet."}, "voix": "Résultat : moins d'appels, plus de tables remplies, un week-end complet."},
+    {"id": "appel", "type": "appel", "question": {"texte": "Encore un samedi au téléphone ?", "accent": "au téléphone ?"}, "badge": {"texte": "Premier mois offert", "accent": "offert"}, "action": "Essayez.", "bouton": "Ouvrir mon carnet numérique", "voix": "Encore un samedi au téléphone ? Le premier mois est offert, sans engagement. Essayez."},
+    {"id": "fin", "type": "fin", "slogan": "Le service reste calme.", "bouton": "Essayer Tablée", "liens": ["tablee.example"], "voix": "Tablée. Le service reste calme, soir après soir, pour toute l'équipe."}
   ]
 }
 ```
@@ -403,9 +419,9 @@ Choix conseillé : un projet sobre prend `accent`, `soulignement` et `flou` ; un
 |---|---|---|---|
 | `lire` | Message indispensable | 1,2 s | Rien ne bouge sauf le fond ; texte court |
 | `comprendre` | Schéma, parcours | 0,8 s | On laisse voir la relation puis son résultat |
-| `montrer` | Capture, carton, exemple dense | 0,5 s | Exposition brève possible, contenu jamais raccourci |
+| `montrer` | Capture (2,5 s au plus, 2 par pub), carton, exemple dense | 0,5 s | Exposition brève possible, contenu jamais raccourci |
 
-But par défaut : `lire` pour `ouverture`, `repetition`, `chorus`, `rupture`, `revelation`, `preuve`, `appel` ; `comprendre` pour `boucle`, `etape`, `resultat` ; `montrer` pour `fin`. La pause prolonge la scène dans ses bornes de 8.9 sans ralentir les gestes. Quand la voix est plus courte que gestes plus pause, la durée de la scène suit gestes plus pause (dans les bornes). Un seul calendrier régit scènes, transitions et repères audio.
+But par défaut : `lire` pour `ouverture`, `repetition`, `chorus`, `rupture`, `revelation`, `preuve`, `appel` ; `comprendre` pour `boucle`, `etape`, `transformation`, `flux`, `avantapres`, `resultat` ; `montrer` pour `fin`. Une étape portée par une capture prend toujours `montrer` (8.10). La pause prolonge la scène dans ses bornes de 8.9 sans ralentir les gestes. Quand la voix est plus courte que gestes plus pause, la durée de la scène suit gestes plus pause (dans les bornes). Un seul calendrier régit scènes, transitions et repères audio.
 
 **Image zéro complète et miniature.** La première image est un état complet : logo ou monogramme lisible, titre utile, bon contraste, rien à moitié entré. Le moteur rend donc l'ouverture avec le logo et le nom déjà posés dès t = 0 (pas de fondu depuis le noir). Une miniature PNG au ratio de la vidéo (1920 x 1080) est livrée avec le MP4 : elle reprend l'image zéro avec le titre de la pub, jamais une image prise au hasard. Il ne faut pas promettre qu'une plateforme l'utilisera automatiquement.
 
@@ -420,6 +436,163 @@ But par défaut : `lire` pour `ouverture`, `repetition`, `chorus`, `rupture`, `r
 3. Aucun noir involontaire : sur le MP4 décodé, aucune image dont la luminance moyenne est inférieure à 2 % hors des fonds sombres de marque, et aucune plage de plus de 0,2 s ; le fond sombre `sombre` n'est pas un noir.
 4. Durée, dimensions, cadence et présence de la piste audio conformes au plan ; durée audio égale à la durée vidéo à une image près ; fondu de fin présent.
 5. Image zéro identique à la miniature PNG.
+
+### 8.17 Scènes d'explication en motion design (sans capture)
+
+Décision de Soufiane (2026-10-25) : les gens n'ont pas le temps de lire un écran et peuvent aller sur le site ; les pubs de projets différents risquaient de se ressembler. On explique donc le fonctionnement par des **objets animés** plutôt que par des captures. Trois types de scènes s'ajoutent au catalogue 8.9 : `transformation`, `flux`, `avantapres`. Elles appartiennent à l'acte « Parcours » (fond clair), avec `etape`, et suivent la méthode adoptée en 8.16 : **continuité d'objet** (un seul objet qui change de forme, jamais deux objets qui se remplacent), un geste qui explique un changement puis se stabilise, une pause de lecture.
+
+**Règles communes** (pour l'agent frontend)
+
+| Règle | Valeur |
+|---|---|
+| Fond | `clair` avec grille de points et motif de carrés (8.6). Pas de filigrane ni d'onglets : ces scènes ne sont pas numérotées et ne comptent pas dans « ÉTAPE 0n / 0N » |
+| Marges | Grille de 8.3 : x de 120 à 1800 px, y de 96 à 984 px, rien d'important à moins de 64 px des bords |
+| En-tête | Logo (28 px) et nom du projet en haut à gauche, comme les étapes (x 120, y 96) |
+| Titre | `titre` en Titre (76 px, interligne 1,04), mot par mot (8.7), accent en `accentClair` avec le rebond du geste `accent`. Bloc x 120 à 1100, y 168 à 336 (2 lignes au plus). Sans geste `accent` choisi : même couleur, sans rebond |
+| Scène | Zone de jeu : x 120 à 1800, y 440 à 940 (500 px de haut), centre en (960, 690) |
+| Objets | Tuiles blanches `surface`, rayon 40 px, ombre `0 30px 60px -28px` `sombre` à 30 %, bord 2 px `encre` à 8 %. Texte de tuile en Texte (30 px, graisse 600), détail en Carte (22 px, `encreDouce`). Aucune capture, aucun texte de moins de 22 px |
+| Icône | Glyphe de 96 px dans une tuile de 168 à 240 px, trait 5 px `encre`, bouts et angles arrondis, un seul élément rempli en `accentClair` par icône. Dessin vectoriel `Path2D` sur grille 24 (échelle 4), listé plus bas |
+| Carrés | Les carrés arrondis (côté 24 px, rayon 4 px) du logo et du motif sont la matière des transformations : ils éclatent, voyagent et se réassemblent. Ils prennent la couleur de l'objet qu'ils quittent puis celle de l'objet qu'ils forment |
+| Courbes | Entrées en `easeOutExpo`, déplacements en `easeInOutCubic`, rebonds en ressort amorti : `nette` amortissement 0,8 (dépassement 2 %), `editoriale` 0,55 (dépassement 6 %) |
+| Pause de lecture | But `comprendre` : après le dernier geste, 0,8 s au moins sans mouvement hors fond, anneau et rayons lents. La durée de la scène suit la voix (8.9) ; si elle est plus longue que les gestes plus la pause, la pause s'allonge, jamais les gestes |
+| Temps | Les instants ci-dessous sont donnés pour la durée par défaut du type (notée D) en secondes locales. Pour une autre durée, les gestes d'entrée gardent leur durée absolue et seule la pause finale varie |
+| Transition d'entrée | Par défaut `transformation` : `flou`, `flux` : `coupe`, `avantapres` : `glitch` (modifiable, 8.8) |
+| Honnêteté | Illustratif (8.16) : la voix dit « voici comment ça se passe » ou « imaginez », jamais « en direct ». La planche de relecture du studio marque ces scènes « Illustration » |
+| Image fixe | À t = D, l'image doit se lire sans le son et sans l'animation : tous les textes visibles, aucun objet à demi formé |
+
+#### `transformation` : une donnée devient un résultat
+
+Durée 3,5 / 4,5 / 6 s (D = 4,5), but `comprendre`, 13 à 15 mots de voix.
+
+| Champ | Limite | Rôle |
+|---|---|---|
+| `titre` | MotsAccent 50 | « Ta semaine devient un récit. » |
+| `entree` | `{ icone, libelle (20) }` | Ce que l'utilisateur apporte : « Ta semaine » |
+| `operateur` | 14 | Ce qui agit : le nom du projet ou de la fonction, dans l'anneau |
+| `sortie` | `{ icone, libelle (20) }` | Ce qu'il obtient : « Post et pub vidéo » |
+| `texte` | 110, facultatif | Une phrase sous le titre (Texte 30 px, `encreDouce`, largeur 760 px, y 352 à 420) |
+
+Composition : trois emplacements alignés sur y = 690. Entrée : tuile 240 px centrée en x = 360. Anneau : cercle de 320 px de diamètre au centre (960), trait 4 px `encre`, 24 graduations, `operateur` en Étiquette (capitales) dans une pastille `clair` posée sur le bord bas de l'anneau (y 850). Sortie : tuile 240 px centrée en x = 1560. Libellés en Texte sous les tuiles (y 840), centrés, largeur 360 px. Un pointillé de carrés de 6 px (pas 18 px) relie les trois emplacements, `encre` à 20 %.
+
+Chronologie :
+- 0,00 à 0,50 : titre mot par mot ; le pointillé se dessine de gauche à droite (t 0,2 à 0,8).
+- 0,30 à 0,80 : la tuile d'entrée arrive de 120 px à gauche en `easeOutExpo` ; son icône se dessine (trait qui se trace, 400 ms) ; le libellé monte de 24 px.
+- 0,80 à 1,10 : l'anneau se trace (trait 300 ms) puis tourne à 6 degrés par seconde pour le reste de la scène ; `operateur` apparaît.
+- 1,20 à 1,70 : la tuile d'entrée glisse vers l'anneau (x de 360 à 960) en rétrécissant à 55 %. Son libellé reste en place à 40 % d'opacité, et un contour pointillé marque la place vide.
+- 1,70 à 2,10 : au centre, la tuile éclate en 36 carrés (grille 6 x 6) qui tourbillonnent d'un quart de tour dans l'anneau (rotation 90 degrés, sortie à x = 960 + 40). Geste `impact` si choisi : micro-secousse de 3 px sur 4 images et décalage chromatique léger sur l'anneau ; sinon rien.
+- 2,10 à 2,70 : les carrés s'envolent vers la droite (x de 1000 à 1560, trajectoires courbes décalées de 8 ms par carré) et se réassemblent en tuile de sortie (240 px). L'icône d'entrée s'efface (trait inversé, 150 ms) pendant que celle de sortie se trace (250 ms) : c'est la continuité d'objet, la même matière qui change de forme.
+- 2,70 à 3,10 : la tuile de sortie se stabilise avec un rebond ; son bord passe en `accentClair` 3 px ; son libellé monte ; une petite coche `accentClair` apparaît sur son coin haut droit.
+- 3,10 à D : pause de lecture. Seul l'anneau tourne.
+
+#### `flux` : trois étapes qui se relient
+
+Durée 4 / 5 / 6,5 s (D = 5), but `comprendre`, 13 à 15 mots de voix.
+
+| Champ | Limite | Rôle |
+|---|---|---|
+| `titre` | MotsAccent 50 | « Deux minutes, trois gestes. » |
+| `noeuds` | exactement 3 : `{ icone, libelle (16), detail (30, facultatif) }` | Les trois étapes, dans l'ordre : « Tu l'ajoutes », « Tu réponds », « Tu reçois » |
+
+Composition : trois nœuds alignés sur y = 650, centres en x = 360, 960 et 1560. Tuile de 200 px par nœud, pastille de numéro (cercle de 40 px, `accentClair`, chiffre blanc en Étiquette) accrochée à son coin haut gauche. Libellé en Texte sous la tuile (y 790), détail en Carte (y 836, 2 lignes au plus, largeur 360 px). Entre les tuiles, un rail de 6 px `encre` à 15 % (x de 480 à 840 et de 1080 à 1440), terminé par un chevron.
+
+Chronologie :
+- 0,00 à 0,50 : titre mot par mot.
+- 0,40 à 0,90 : nœud 1 : montée de 40 px, échelle 0,9 vers 1, icône qui se trace, pastille 1 ; libellé à +150 ms, détail à +250 ms.
+- 1,00 à 1,50 : le rail 1 se dessine (500 ms) avec une impulsion `accentClair` de 80 px qui le parcourt.
+- 1,50 à 2,00 : nœud 2 arrive quand l'impulsion le touche : couronne de 6 carrés qui s'écartent de 30 px puis disparaissent.
+- 2,10 à 2,60 : rail 2, même impulsion. 2,60 à 3,10 : nœud 3 ; il se remplit en `accentClair` avec icône blanche et un rebond (c'est « reçu »).
+- 3,20 à 3,90 : récapitulation : une dernière impulsion traverse les deux rails d'un coup (700 ms) et les trois tuiles gonflent ensemble de 3 % (geste `accent`).
+- 3,90 à D : pause de lecture.
+
+#### `avantapres` : un panneau qui se réécrit
+
+Durée 3,5 / 4,5 / 6 s (D = 4,5), but `comprendre`, 13 à 15 mots de voix.
+
+| Champ | Limite | Rôle |
+|---|---|---|
+| `titre` | MotsAccent 50 | « Avant, puis après. » |
+| `avant` | 12, facultatif (défaut « Avant ») | Étiquette de l'état de départ |
+| `apres` | 12, facultatif (défaut « Après ») | Étiquette de l'état d'arrivée |
+| `paires` | 2 à 3 : `{ avant (28), apres (28) }` | La ligne i de l'état « avant » devient la ligne i de l'état « après » |
+
+Composition : un panneau blanc de 1200 x 520 px (x 360 à 1560, y 420 à 940), rayon 28 px, même ombre que les tuiles. Bandeau de 72 px en haut avec l'étiquette d'état à gauche (Étiquette, capitales). Les lignes (Slogan 44 px, graisse 600) sont empilées à partir de y = 540, une toutes les 120 px, avec une pastille de 28 px à gauche (x 408). État « avant » : fond du panneau `clair` teinté, texte `encreDouce`, pastille `alerteClair` (c'est une pastille, pas un texte). État « après » : fond blanc teinté `accentClair` à 8 %, texte `encre`, pastille `accentClair` avec coche blanche.
+
+Chronologie :
+- 0,00 à 0,50 : titre mot par mot ; le panneau monte de 60 px en échelle 0,96 vers 1 (t 0,30 à 0,80).
+- 0,60 à 1,20 : les lignes de l'état « avant » entrent l'une après l'autre (120 ms d'écart) ; un trait barre chaque ligne à 1,10 (grandeur : 4 px `encreDouce`, 250 ms).
+- 1,20 à 1,90 : lecture de l'état « avant » (0,7 s sans mouvement).
+- 1,90 à 2,80 : un filet vertical `accentClair` de 4 px balaie le panneau de gauche à droite (900 ms, `easeInOutCubic`). Derrière lui, le fond bascule d'un état à l'autre. Quand le filet franchit le début d'une ligne, ses lettres se retournent une à une (rotation verticale de 180 degrés, 18 ms d'écart par lettre, 220 ms par lettre) et deviennent le texte « apres » de la même ligne ; la pastille bascule de `alerteClair` à `accentClair`. L'étiquette d'état se retourne quand le filet la franchit.
+- 2,80 à 3,20 : les coches rebondissent l'une après l'autre (100 ms d'écart).
+- 3,20 à D : pause de lecture.
+- Sortie de scène : le panneau reste immobile, la transition de scène l'emporte.
+
+#### Icônes disponibles
+
+28 identifiants fermés (`ICONES` dans `packages/core/src/pub/types.ts`), valides pour `entree.icone`, `sortie.icone` et `noeuds[].icone`. Une icône inconnue est remplacée par `etoile` avec un avertissement. L'agent frontend dessine chacune en `Path2D` sur grille 24, trait 2 (x4 à l'échelle 96 px), bouts arrondis, un élément rempli en `accentClair`.
+
+| Identifiant | Motif (élément rempli en gras) |
+|---|---|
+| `document` | page au coin plié, trois lignes, **première ligne** |
+| `message` | bulle de dialogue, **trois points** |
+| `video` | rectangle arrondi avec triangle de lecture, **triangle** |
+| `image` | cadre, soleil et colline, **soleil** |
+| `calendrier` | page à anneaux et grille de jours, **un jour** |
+| `horloge` | cercle, deux aiguilles, **aiguille courte** |
+| `personne` | tête et épaules, **tête** |
+| `equipe` | trois têtes et épaules, **tête centrale** |
+| `cadenas` | anse et corps, **trou de serrure** |
+| `bouclier` | écusson, **coche** |
+| `eclair` | éclair, **tout l'éclair** |
+| `etoile` | étoile à cinq branches, **centre** |
+| `coeur` | cœur, **moitié gauche** |
+| `panier` | panier à anse, **anse** |
+| `lien` | deux maillons croisés, **maillon de droite** |
+| `dossier` | chemise à onglet, **onglet** |
+| `courrier` | enveloppe, **rabat** |
+| `telephone` | combiné, **ondes** |
+| `graphique` | axes et trois barres, **barre la plus haute** |
+| `coche` | cercle et coche, **coche** |
+| `nuage` | nuage, **flèche montante** |
+| `engrenage` | roue dentée à huit dents, **moyeu** |
+| `loupe` | verre et manche, **verre** |
+| `crayon` | crayon en biais, **pointe** |
+| `micro` | micro sur pied, **capsule** |
+| `musique` | croche double, **tête de note** |
+| `cle` | clé à panneton, **anneau** |
+| `maison` | toit et porte, **porte** |
+
+Exemples de scènes valides : voir `api-contract.md` 2.1 (section « Scènes d'explication ») et `packages/core/src/pub/nettoyer.test.ts`. La pub de Weekli (`apps/web/dev/pub-weekli.json`) en porte une de chaque.
+
+### 8.18 Anti-répétition et variété
+
+Deux retours de Soufiane sur la première vraie pub (2026-10-25) : elle répétait « c'est gratuit », et d'autres pubs risquent de devenir répétitives. Deux règles en découlent.
+
+**Chaque argument une seule fois.** Un argument (gratuité, sécurité, rapidité, simplicité, code ouvert, absence d'inscription, contrôle de l'utilisateur) est dit dans une seule scène de toute la pub, voix et visuels confondus. Si la gratuité est dans la `preuve`, elle n'est ni dans le badge de l'`appel`, ni dans la voix de l'`appel`, ni dans la `fin`. L'`appel` renvoie à l'action, la `fin` au slogan, pas à la liste des avantages. `nettoyerScriptPub` avertit, sans rien retirer :
+
+| Détecteur | Règle | Avertissement |
+|---|---|---|
+| Idées | Liste fermée de 7 arguments reconnus par leur vocabulaire (sur le texte sans accents : « gratuit », « offert », « chiffré », « deux minutes », « simple », « open source », « sans inscription », « lecture seule », « sans toi »...) | L'argument est présent dans 2 scènes visibles ou plus |
+| Mots | Mot significatif : 5 lettres ou plus, lemme simple (sans accents, minuscule, pluriel `s` ou `x` retiré, `e` final retiré), hors mots outils (liste fixe) et hors mots du nom du projet | Le même lemme est présent dans 3 scènes visibles ou plus |
+
+Exclusions : les scènes `repetition`, `boucle` et `chorus` répètent par construction et ne comptent pas. Dans la `fin`, les phrases déjà dites par la `revelation` (slogan, signature) et le slogan propre de la fin sont retirées avant l'analyse (la fin reprend le slogan). Les scènes masquées, les identifiants et les icônes ne comptent pas. Un mot ou un argument répété à l'intérieur d'une même scène (voix et écran) compte pour une seule scène : la voix redit l'idée de l'écran, c'est voulu (8.2, point 4).
+
+**Variété entre projets.** Deux pubs de projets différents ne doivent pas se ressembler. Pour chaque pub, on fait varier :
+1. la trame (8.13), choisie d'après les réponses ;
+2. l'accroche de l'`ouverture` (repère de temps, question, contraste, conviction, chiffre réel) ;
+3. les scènes d'explication retenues et leur ordre (pas les trois dans chaque pub quand le produit s'en passe) ;
+4. le jeu de gestes (`gestes`, 8.16) : sobre, nerveux ou éditorial ;
+5. les icônes choisies pour désigner les objets du projet.
+
+Pour le script de départ sans IA, `scriptPubDepuisReponses` reçoit une graine déterministe : `graineDepuisRepo(repo)` (FNV-1a 32 bits du nom du repo en minuscules), ou `entree.graine` si l'appelant en fournit une. À réponses égales, deux repos différents donnent deux scripts différents et un même repo redonne exactement le même. Chaque décision lit la graine avec son propre sélecteur, pour que les choix ne soient pas liés :
+
+| Sélecteur | Décision | Choix |
+|---|---|---|
+| 0 | Jeu de gestes | `accent` + `soulignement` + `flou` (sobre), `impact` + `glitch` + `lettres` (nerveux), `surlignage` + `frappe` + `rayons` (éditorial) |
+| 1, 2, 3 | Icônes d'entrée, de sortie et du premier nœud | 4, 3 et 3 icônes au choix |
+| 4, 5, 6 | Mot d'accroche de l'`ouverture`, pour chaque trame | 3 formulations par trame |
+| 7 | Décalage de la rotation des scènes d'explication | 0, 1 ou 2 |
+
+Choix de composition du script de départ (sans IA) : un parcours de 3 scènes d'explication (une de chaque type, rotation selon la graine) et, si au moins une capture est disponible, une seule étape-capture brève intercalée. Le chorus facultatif n'est plus écrit. Claude, qui rédige les scripts en mode MCP ou clé API, applique la même variété sans graine : il regarde les pubs précédentes du même utilisateur (`pubExistante`) et change au moins la trame ou l'accroche, et un type de scène d'explication.
 
 ## 9. Le studio de pub (interface)
 

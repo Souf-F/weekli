@@ -36,6 +36,43 @@ export const BUTS = ["lire", "comprendre", "montrer"] as const;
 export type But = (typeof BUTS)[number];
 export type Carte = { titre: string; detail?: string };
 
+// Icones disponibles pour les scenes d'explication (design.md 8.17) : glyphes geometriques dessines par le moteur
+export const ICONES = [
+	"document",
+	"message",
+	"video",
+	"image",
+	"calendrier",
+	"horloge",
+	"personne",
+	"equipe",
+	"cadenas",
+	"bouclier",
+	"eclair",
+	"etoile",
+	"coeur",
+	"panier",
+	"lien",
+	"dossier",
+	"courrier",
+	"telephone",
+	"graphique",
+	"coche",
+	"nuage",
+	"engrenage",
+	"loupe",
+	"crayon",
+	"micro",
+	"musique",
+	"cle",
+	"maison",
+] as const;
+export type Icone = (typeof ICONES)[number];
+export const ICONE_DEFAUT: Icone = "etoile";
+export type ObjetIcone = { icone: Icone; libelle: string };
+export type NoeudFlux = { icone: Icone; libelle: string; detail?: string };
+export type PaireAvantApres = { avant: string; apres: string };
+
 export type Visuel =
 	| { type: "capture"; capture: string; cadrage?: Cadrage; focus?: Rect }
 	| { type: "liste"; titre: string; elements: string[] };
@@ -58,6 +95,9 @@ export type ScenePub = SceneCommune &
 		| { type: "rupture"; texte: MotsAccent }
 		| { type: "revelation"; slogan: MotsAccent; signature?: string }
 		| { type: "etape"; titre: MotsAccent; texte?: string; filigrane: string; onglet: string; visuel: Visuel }
+		| { type: "transformation"; titre: MotsAccent; entree: ObjetIcone; operateur: string; sortie: ObjetIcone; texte?: string }
+		| { type: "flux"; titre: MotsAccent; noeuds: NoeudFlux[] }
+		| { type: "avantapres"; titre: MotsAccent; avant?: string; apres?: string; paires: PaireAvantApres[] }
 		| { type: "resultat"; titre: MotsAccent; avant: string; tampon: string; apres: string; chute?: MotsAccent }
 		| { type: "preuve"; surtitre: string; elements: string[]; cartes?: { titre: string; texte?: string }[] }
 		| { type: "appel"; question: MotsAccent; badge?: MotsAccent; action: string; bouton: string }
@@ -75,6 +115,9 @@ export const BUT_DEFAUT: Record<TypeScene, But> = {
 	rupture: "lire",
 	revelation: "lire",
 	etape: "comprendre",
+	transformation: "comprendre",
+	flux: "comprendre",
+	avantapres: "comprendre",
 	resultat: "comprendre",
 	preuve: "lire",
 	appel: "lire",

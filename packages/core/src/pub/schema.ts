@@ -1,4 +1,4 @@
-import { GESTES, TRAMES } from "./types";
+import { GESTES, ICONES, TRAMES } from "./types";
 
 // Schema JSON d'un ScriptPub pour la sortie structuree de Claude (mode cle API) et la description des outils MCP.
 // Les bornes (longueurs, nombres d'elements, plages) ne sont pas exprimees ici : nettoyerScriptPub les applique.
@@ -13,6 +13,8 @@ const rect = objet(
 	["x", "y", "largeur", "hauteur"],
 );
 const motsAccent = objet({ texte: chaine, accent: chaine }, ["texte"]);
+const icone = { type: "string", enum: [...ICONES] } as const;
+const objetIcone = objet({ icone, libelle: chaine }, ["icone", "libelle"]);
 const carte = objet({ titre: chaine, detail: chaine }, ["titre"]);
 
 const scene = (type: string, proprietes: Record<string, unknown>, requis: string[]) =>
@@ -105,6 +107,26 @@ export const SCHEMA_SCRIPT_PUB = objet(
 						},
 					},
 					["titre", "filigrane", "onglet", "visuel"],
+				),
+				scene(
+					"transformation",
+					{ titre: motsAccent, entree: objetIcone, operateur: chaine, sortie: objetIcone, texte: chaine },
+					["titre", "entree", "operateur", "sortie"],
+				),
+				scene(
+					"flux",
+					{ titre: motsAccent, noeuds: liste(objet({ icone, libelle: chaine, detail: chaine }, ["icone", "libelle"])) },
+					["titre", "noeuds"],
+				),
+				scene(
+					"avantapres",
+					{
+						titre: motsAccent,
+						avant: chaine,
+						apres: chaine,
+						paires: liste(objet({ avant: chaine, apres: chaine }, ["avant", "apres"])),
+					},
+					["titre", "paires"],
 				),
 				scene("resultat", { titre: motsAccent, avant: chaine, tampon: chaine, apres: chaine, chute: motsAccent }, [
 					"titre",

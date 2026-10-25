@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { LIMITES_PUB } from "./limites";
-import { choisirTrame, type EntreeScriptPub, scriptPubDepuisReponses } from "./modele";
+import { choisirTrame, type EntreeScriptPub, graineDepuisRepo, scriptPubDepuisReponses } from "./modele";
 import { nettoyerScriptPub } from "./nettoyer";
 import type { CaptureRef, ScenePub, ScriptPub } from "./types";
+
+const EXPLICATIONS = ["transformation", "flux", "avantapres"];
 
 const capture = (id: string, legende?: string): CaptureRef => ({
 	id,
@@ -76,6 +78,7 @@ describe("scriptPubDepuisReponses", () => {
 			expect(r.erreurs).toEqual([]);
 			expect(r.script).toEqual(script);
 			expect(script.scenes.length).toBeGreaterThanOrEqual(10);
+			expect(script.gestes).toHaveLength(3);
 			expect(script.scenes.length).toBeLessThanOrEqual(LIMITES_PUB.scenes.max);
 			expect(visibles(script).at(-1)?.type).toBe("fin");
 		});
@@ -96,26 +99,27 @@ describe("scriptPubDepuisReponses", () => {
 		}
 	});
 
-	it("sans capture : aucune etape, et seuls la voix et la duree sont signales trop courtes", () => {
+	it("sans capture : aucune etape, et trois scenes d'explication en motion design", () => {
 		const script = scriptPubDepuisReponses(JEUX.sansCapture);
 		expect(etapes(script)).toEqual([]);
-		const { avertissements } = nettoyerScriptPub(script);
-		expect(avertissements).toHaveLength(2);
-		expect(avertissements.join("\n")).toMatch(/Voix totale.*\n.*Duree totale/);
+		const explications = script.scenes.filter((x) => EXPLICATIONS.some((t) => t === x.type));
+		expect(explications.map((x) => x.type).sort()).toEqual(["avantapres", "flux", "transformation"]);
+		expect(nettoyerScriptPub(script).avertissements).toEqual([]);
 	});
 
-	it("une seule capture donne deux etapes sur deux cadrages", () => {
-		const e = etapes(scriptPubDepuisReponses(JEUX.nomTresLong));
-		expect(e.map((x) => x.visuel)).toEqual([
-			{ type: "capture", capture: "tableau", cadrage: "haut" },
-			{ type: "capture", capture: "tableau", cadrage: "bas" },
-		]);
-		expect(e.map((x) => x.onglet)).toEqual(["Écran 1", "Écran 2"]);
+	it("une capture donne une seule etape breve (but montrer, voix de 5 mots), les autres sont ecartees", () => {
+		for (const nom of ["nomTresLong", "restaurant", "sixCaptures"]) {
+			const e = etapes(scriptPubDepuisReponses(JEUX[nom]));
+			expect(e, nom).toHaveLength(1);
+			expect(e[0]).toMatchObject({ visuel: { type: "capture", cadrage: "haut" }, but: "montrer" });
+			expect(e[0].voix.split(" ")).toHaveLength(LIMITES_PUB.capturesScene.motsVoix);
+		}
 	});
 
-	it("au plus 4 etapes, et le chorus facultatif disparait pour tenir sous 170 mots", () => {
+	it("tient les trois explications meme avec six captures, sans chorus", () => {
 		const script = scriptPubDepuisReponses(JEUX.sixCaptures);
-		expect(etapes(script)).toHaveLength(4);
+		expect(etapes(script)).toHaveLength(1);
+		expect(script.scenes.filter((x) => EXPLICATIONS.some((t) => t === x.type))).toHaveLength(3);
 		expect(script.scenes.some((x) => x.type === "chorus")).toBe(false);
 		expect(script.captures).toHaveLength(6);
 	});
@@ -136,9 +140,9 @@ describe("scriptPubDepuisReponses", () => {
 			texte: "Les réservations arrivent toutes seules.",
 			accent: "toutes seules.",
 		});
-		expect(scene("resultat").voix).toBe(
-			"Le résultat : les réservations arrivent toutes seules et le service reste calme.",
-		);
+		// la promesse est dite une seule fois (revelation) : le resultat ne la redit pas
+		expect(scene("revelation").voix).toContain("Les réservations arrivent toutes seules");
+		expect(JSON.stringify(scene("resultat"))).not.toContain("toutes seules");
 		expect(script.reponses).toEqual(JEUX.restaurant.reponses);
 	});
 
@@ -182,7 +186,7 @@ describe("scriptPubDepuisReponses", () => {
 			],
 		});
 		expect(script.captures.map((c) => c.id)).toEqual(["bonne", "locale"]);
-		expect(etapes(script).map((e) => e.visuel.type === "capture" && e.visuel.capture)).toEqual(["bonne", "locale"]);
+		expect(etapes(script).map((e) => e.visuel.type === "capture" && e.visuel.capture)).toEqual(["bonne"]);
 		expect(nettoyerScriptPub(script).erreurs).toEqual([]);
 	});
 
@@ -211,6 +215,49 @@ describe("scriptPubDepuisReponses", () => {
 			for (const [, texte, accent] of json.matchAll(/"texte":"([^"]*)","accent":"([^"]*)"/g)) {
 				expect(texte.endsWith(accent)).toBe(true);
 			}
+		}
+	});
+});
+
+describe("variete deterministe (graine du nom du repo)", () => {
+	const types = (e: EntreeScriptPub) => scriptPubDepuisReponses(e).scenes.map((x) => x.type).join();
+	const repos = ["tablee", "scanner-ssl", "jardin", "nom-long", "x", "weekli", "atelier", "carnet"];
+
+	it("la graine est stable, et distincte d'un repo a l'autre", () => {
+		expect(graineDepuisRepo("tablee")).toBe(graineDepuisRepo("Tablee"));
+		expect(graineDepuisRepo("tablee")).toBe(graineDepuisRepo("tablee"));
+		expect(new Set(repos.map(graineDepuisRepo)).size).toBe(repos.length);
+	});
+
+	it("memes reponses et meme repo : exactement le meme script", () => {
+		expect(scriptPubDepuisReponses(JEUX.restaurant)).toEqual(scriptPubDepuisReponses({ ...JEUX.restaurant }));
+	});
+
+	it("memes reponses, repos differents : l'ordre des explications, l'accroche ou les gestes changent", () => {
+		const scripts = repos.map((repo) => scriptPubDepuisReponses({ ...JEUX.restaurant, repo }));
+		expect(new Set(scripts.map((s) => s.scenes.map((x) => x.type).join())).size).toBeGreaterThanOrEqual(3);
+		expect(new Set(scripts.map((s) => (s.gestes ?? []).join())).size).toBeGreaterThanOrEqual(2);
+		expect(new Set(scripts.map((s) => (s.scenes[0] as { moment: string }).moment)).size).toBeGreaterThanOrEqual(2);
+		for (const s of scripts) {
+			const r = nettoyerScriptPub(s);
+			expect(r.erreurs).toEqual([]);
+			expect(r.avertissements).toEqual([]);
+			expect(r.script).toEqual(s);
+		}
+	});
+
+	it("une graine explicite l'emporte sur celle du repo", () => {
+		const ordres = new Set([0, 1, 2, 3, 4, 5, 6, 7].map((graine) => types({ ...JEUX.restaurant, graine })));
+		expect(ordres.size).toBe(3);
+		expect(types({ ...JEUX.restaurant, repo: "autre", graine: 4 })).toBe(types({ ...JEUX.restaurant, graine: 4 }));
+	});
+
+	it("chaque pub porte les trois explications au plus une fois chacune, et jamais deux captures", () => {
+		for (const repo of repos) {
+			const s = scriptPubDepuisReponses({ ...JEUX.sixCaptures, repo });
+			const t = s.scenes.map((x) => x.type);
+			for (const x of ["transformation", "flux", "avantapres"]) expect(t.filter((y) => y === x)).toHaveLength(1);
+			expect(etapes(s).length).toBeLessThanOrEqual(LIMITES_PUB.capturesScene.max);
 		}
 	});
 });
@@ -245,8 +292,8 @@ describe("trames narratives", () => {
 	it("applique la regle documentee de choisirTrame", () => {
 		expect(choisirTrame(manifeste.reponses, 0)).toBe("vision-manifeste");
 		expect(choisirTrame(JEUX.restaurant.reponses, 6)).toBe("probleme-qui-revient");
-		expect(choisirTrame(demonstration.reponses, 3)).toBe("probleme-qui-revient");
-		expect(choisirTrame(demonstration.reponses, 4)).toBe("demonstration-directe");
+		expect(choisirTrame(demonstration.reponses, 0)).toBe("probleme-qui-revient");
+		expect(choisirTrame(demonstration.reponses, 1)).toBe("demonstration-directe");
 	});
 
 	it("chaque trame donne un ordre de scenes different, valide et sans avertissement", () => {

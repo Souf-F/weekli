@@ -14,6 +14,10 @@ export const LIMITES_PUB = {
 	scenes: { min: 8, max: 14 },
 	vitesse: { min: 0.85, max: 1.2, defaut: 1 },
 	etapes: { max: 4 },
+	// Une capture est un but "montrer" bref et rare (design.md 8.10 et 8.17)
+	capturesScene: { max: 2, dureeMax: 2.5, motsVoix: 5 },
+	// Un meme argument (mot significatif) ne revient pas dans plus de 2 scenes (design.md 8.18)
+	repetition: { scenesParMot: 3, scenesParIdee: 2, longueurMot: 5 },
 	motsVoix: { min: 120, max: 170 },
 	dureeTotale: { min: 50, max: 65 },
 	tailleJsonOctets: 24 * 1024,
@@ -42,6 +46,9 @@ export const DUREES_SCENE: Record<TypeScene, { min: number; defaut: number; max:
 	rupture: { min: 2.5, defaut: 3.5, max: 4.5 },
 	revelation: { min: 4.5, defaut: 6, max: 7.5 },
 	etape: { min: 3.5, defaut: 4.5, max: 6 },
+	transformation: { min: 3.5, defaut: 4.5, max: 6 },
+	flux: { min: 4, defaut: 5, max: 6.5 },
+	avantapres: { min: 3.5, defaut: 4.5, max: 6 },
 	resultat: { min: 4, defaut: 5, max: 6.5 },
 	preuve: { min: 3.5, defaut: 4.5, max: 6 },
 	appel: { min: 4, defaut: 5, max: 6.5 },

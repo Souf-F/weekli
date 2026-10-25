@@ -116,7 +116,7 @@ export const EXEMPLE: unknown = {
 				texte: "Vos réservations, sans le téléphone.",
 				accent: "sans le téléphone.",
 			},
-			signature: "Le service reste calme.",
+			signature: "Plus de calme, moins de bruit.",
 			voix: "Voici Tablée. Vos réservations, sans le téléphone.",
 		},
 		{
@@ -134,7 +134,7 @@ export const EXEMPLE: unknown = {
 				capture: "accueil",
 				cadrage: "haut",
 			},
-			voix: "Vos clients réservent en ligne, depuis Google ou Instagram, en trente secondes.",
+			voix: "Vos clients réservent en ligne.",
 		},
 		{
 			id: "etape-confirmer",
@@ -173,7 +173,7 @@ export const EXEMPLE: unknown = {
 					hauteur: 0.35,
 				},
 			},
-			voix: "Pendant le service, toute votre salle tient sur un seul écran, à jour en direct.",
+			voix: "Votre salle, d'un coup d'œil.",
 		},
 		{
 			id: "resultat",
@@ -186,7 +186,7 @@ export const EXEMPLE: unknown = {
 			tampon: "Réservé",
 			apres: "Table pleine",
 			chute: {
-				texte: "Samedi prochain : complet.",
+				texte: "Le week-end prochain : complet.",
 				accent: "complet.",
 			},
 			voix: "Résultat : moins d'appels, et plus de tables pleines.",

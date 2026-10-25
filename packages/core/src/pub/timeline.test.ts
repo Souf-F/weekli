@@ -196,3 +196,35 @@ describe("instantTimeline", () => {
 		expect(instantTimeline(tl, tl.duree)?.t).toBe(1);
 	});
 });
+
+describe("scenes d'explication et captures breves", () => {
+	it("applique les durees et transitions par defaut des nouveaux types", () => {
+		const s = base();
+		const modele = { voix: "", titre: { texte: "Un titre." } };
+		s.scenes.splice(
+			7,
+			0,
+			{ ...modele, id: "t", type: "transformation", entree: { icone: "document", libelle: "A" }, operateur: "B", sortie: { icone: "coche", libelle: "C" } },
+			{ ...modele, id: "f", type: "flux", noeuds: [] },
+			{ ...modele, id: "a", type: "avantapres", paires: [] },
+		);
+		const tl = calculerTimeline(s);
+		const par = Object.fromEntries(tl.scenes.map((x) => [x.id, x]));
+		expect(par.t).toMatchObject({ transition: "flou", duree: DUREES_SCENE.transformation.defaut });
+		expect(par.f).toMatchObject({ transition: "coupe", duree: DUREES_SCENE.flux.defaut });
+		expect(par.a).toMatchObject({ transition: "glitch", duree: DUREES_SCENE.avantapres.defaut });
+		expect(tl.scenes.filter((x) => x.etape)).toHaveLength(3);
+	});
+
+	it("une etape portee par une capture dure 2,5 s au plus, une etape en liste garde ses bornes", () => {
+		const s = base();
+		s.voix.mode = "aucune";
+		expect(dureeScene(sceneDe(s, "etape-reserver"), s)).toBe(2.5);
+		expect(dureeScene(sceneDe(s, "etape-confirmer"), s)).toBe(DUREES_SCENE.etape.defaut);
+		const longue = sceneDe(s, "etape-reserver");
+		longue.duree = 6;
+		expect(dureeScene(longue, s)).toBe(2.5);
+		longue.duree = 0.5;
+		expect(dureeScene(longue, s)).toBe(1.8);
+	});
+});

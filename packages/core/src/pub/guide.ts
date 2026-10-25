@@ -1,5 +1,5 @@
 import { DUREES_SCENE, LIMITES_PUB } from "./limites";
-import type { ScriptPub, Trame, TypeScene } from "./types";
+import { ICONE_DEFAUT, ICONES, type ScriptPub, type Trame, type TypeScene } from "./types";
 
 // Guide de redaction d'une pub, lu par Claude : renvoye par l'outil MCP preparer_pub (champs
 // "questions", "catalogue" et "regles") et place dans la consigne du mode cle API.
@@ -38,19 +38,19 @@ export const TRAMES_PUB: readonly DescriptionTrame[] = [
 	{
 		trame: "probleme-qui-revient",
 		titre: "Le problème qui revient",
-		ordre: "ouverture, repetition, boucle, chorus (facultative), rupture, revelation, etape x2 à 4, resultat, preuve (facultative), appel, fin. Environ 56 s, tension sur le premier quart.",
+		ordre: "ouverture, repetition, boucle, chorus (facultative), rupture, revelation, parcours de 2 à 4 scènes (etape, transformation, flux, avantapres), resultat, preuve (facultative), appel, fin. Environ 56 s, tension sur le premier quart.",
 		quand: "Un irritant précis et répété dans le quotidien de la cible (le téléphone qui sonne, la relance oubliée, la tâche refaite chaque semaine). La répétition est le propos : elle doit être vraie dans les réponses.",
 	},
 	{
 		trame: "demonstration-directe",
 		titre: "La démonstration directe",
-		ordre: "ouverture (contraste Avant/Après ou question), revelation, etape x3 à 4, resultat, preuve (facultative), appel, fin. Pas de repetition, de boucle ni de chorus. Environ 50 à 55 s avec 4 étapes.",
-		quand: "Un produit simple à expliquer en le montrant, avec au moins 4 captures utiles : pas besoin de souffrir avant de comprendre. La révélation arrive dès les 6 premières secondes, le reste est l'usage.",
+		ordre: "ouverture (contraste Avant/Après ou question), revelation, parcours de 3 à 4 scènes (etape, transformation, flux, avantapres), resultat, preuve (facultative), appel, fin. Pas de repetition, de boucle ni de chorus. Environ 50 à 55 s avec 4 étapes.",
+		quand: "Un produit qui s'explique par son fonctionnement (une transformation, un flux, un avant et un après) : pas besoin de souffrir avant de comprendre, et pas besoin de captures. La révélation arrive dès les 6 premières secondes, le reste est l'usage.",
 	},
 	{
 		trame: "vision-manifeste",
 		titre: "La vision ou le manifeste",
-		ordre: "ouverture (\"Notre idée\", une citation ou un chiffre réel), rupture (la conviction tapée à l'écran), chorus (facultative, seulement sans capture), revelation, etape x2 à 4, preuve (facultative), resultat, appel, fin. Environ 50 à 58 s.",
+		ordre: "ouverture (\"Notre idée\", une citation ou un chiffre réel), rupture (la conviction tapée à l'écran), chorus (facultative, seulement sans capture), revelation, parcours de 2 à 4 scènes (etape, transformation, flux, avantapres), preuve (facultative), resultat, appel, fin. Environ 50 à 58 s.",
 		quand: "Un projet porté par une conviction (liberté, vie privée, ouvert, respect, mérite) ou un projet personnel ou culturel, quand le problème n'est pas une répétition mais un principe. La preuve vient de l'usage et des engagements réels, pas de la plainte.",
 	},
 ];
@@ -96,27 +96,41 @@ Champs communs à toutes les scènes :
    Champs : slogan (MotsAccent de 60), signature (30, facultative).
    Le nom du projet apparaît seul (il vient de projet.nom, ne le répète pas dans le slogan). Le slogan dit la promesse en une ligne. La signature est une phrase de marque courte, soulignée. La voix commence en général par "Voici" suivi du nom.
 
-7. etape (parcours, fond clair, ${duree("etape")}, 2 à ${LIMITES_PUB.etapes.max} scènes à la suite)
+7. etape (parcours, fond clair, ${duree("etape")}, 0 à ${LIMITES_PUB.etapes.max} scènes)
    Champs : onglet (14), filigrane (14), titre (MotsAccent de 50), texte (110, facultatif), visuel.
    Chaque étape montre un moment d'usage du produit, du point de vue de la cible : réserver, confirmer, servir. Elles sont numérotées automatiquement ("ÉTAPE 01 / 03"). L'onglet est un verbe ou un nom court ; le filigrane est souvent le même mot en capitales. Le titre tient sur deux lignes, l'accent sur la seconde moitié.
    visuel est soit { "type": "capture", "capture": "<id d'une capture du script>", "cadrage": "haut" | "milieu" | "bas" | "complet", "focus": { x, y, largeur, hauteur } (facultatif, fractions de 0 à 1) }, soit { "type": "liste", "titre": (30), "elements": 2 à 4 textes de 40 }.
-   Préfère une capture du site quand elle montre ce que dit l'étape. Une liste ne décrit que des fonctions réelles, lues dans le README ou les captures.
+   Une capture est RARE et BRÈVE : ${LIMITES_PUB.capturesScene.max} au plus par pub, ${s(LIMITES_PUB.capturesScene.dureeMax)} au plus chacune, but "montrer" (posé par le moteur), voix de ${LIMITES_PUB.capturesScene.motsVoix} mots au plus. Les gens n'ont pas le temps de lire un écran et peuvent aller sur le site : la capture sert de clin d'œil, jamais d'explication. Elle est facultative. Pour expliquer, préfère les scènes 8 à 10. Une liste ne décrit que des fonctions réelles, lues dans le README ou les captures.
 
-8. resultat (résultat, fond clair, ${duree("resultat")})
+8. transformation (parcours, fond clair, ${duree("transformation")})
+   Champs : titre (MotsAccent de 50), entree { icone, libelle (20) }, operateur (14), sortie { icone, libelle (20) }, texte (110, facultatif).
+   Un objet entre, passe dans l'opérateur et en ressort transformé : une donnée devient un résultat. "entree" est ce que l'utilisateur apporte ("Une semaine de travail"), "operateur" ce qui agit (le nom du projet ou de la fonction), "sortie" ce qu'il obtient ("Un post prêt"). Les icônes viennent de la liste ICÔNES plus bas. Montre le fonctionnement par l'objet, pas par une phrase.
+
+9. flux (parcours, fond clair, ${duree("flux")})
+   Champs : titre (MotsAccent de 50), noeuds (exactement 3 : icone, libelle (16), detail (30, facultatif)).
+   Trois étapes reliées par un trait qui se dessine : "Vous demandez", "Le projet s'en charge", "Vous recevez". Chaque nœud est une icône et un mot. Le détail précise en une demi-phrase.
+
+10. avantapres (parcours, fond clair, ${duree("avantapres")})
+   Champs : titre (MotsAccent de 50), avant (12, facultatif, défaut "Avant"), apres (12, facultatif, défaut "Après"), paires (2 à 3 : avant (28), apres (28)).
+   Un même panneau passe de l'avant à l'après : chaque ligne se réécrit en face de son équivalent ("Posts à écrire" devient "Post prêt"). À la différence de resultat, qui raconte l'arrivée d'un cas, avantapres compare point par point.
+
+11. resultat (résultat, fond clair, ${duree("resultat")})
    Champs : titre (MotsAccent de 50), avant (24), tampon (12), apres (24), chute (MotsAccent de 70, facultative).
    Une frise de cartes : plusieurs cartes "avant" (le problème), un tampon qui le règle ("Réservé", "Résolu"), une carte "apres" (la situation nouvelle). La chute projette la cible dans la suite : "Samedi prochain : complet.".
 
-9. preuve (preuve, fond sombre, ${duree("preuve")}, facultative)
+12. preuve (preuve, fond sombre, ${duree("preuve")}, facultative)
    Champs : surtitre (30), elements (1 à 4 textes de 30), cartes (0 à 3 : titre 30, texte 60).
    Uniquement des faits vrais : des clients ou des chiffres cités par l'utilisateur ou par le README, ou des engagements réels du projet (gratuit, open source, sans inscription, données gardées dans le navigateur). Sans rien de vérifiable, n'écris pas cette scène.
 
-10. appel (action, fond clair, ${duree("appel")})
+13. appel (action, fond clair, ${duree("appel")})
    Champs : question (MotsAccent de 70), badge (MotsAccent de 30, facultatif), action (20), bouton (30).
    La question renvoie la cible à son problème : "Encore un samedi au téléphone ?". Le badge porte une offre seulement si elle existe vraiment. L'action est un mot ou deux qui tombent lettre par lettre : "Essayez.". Le bouton dit ce qui se passe au clic.
 
-11. fin (fin, fond sombre, ${duree("fin")}, obligatoire et dernière)
+14. fin (fin, fond sombre, ${duree("fin")}, obligatoire et dernière)
    Champs : slogan (40, facultatif), bouton (30, facultatif), liens (1 à 2 textes de 40), mentionWeekli (laisse false).
    Le carton final : logo, nom, slogan, bouton et lien lisible sans "https://" (exemple : "tablee.example").
+
+ICÔNES des scènes d'explication (transformation, flux) : ${ICONES.join(", ")}. Une icône inconnue est remplacée par "${ICONE_DEFAUT}" avec un avertissement. Choisis l'icône qui désigne l'objet (message pour un post, video pour une pub vidéo, calendrier pour un rendez-vous), jamais au hasard.
 
 GESTES ET BUT
 
@@ -135,7 +149,7 @@ But d'une scène (champ but) :
 - lire : un message indispensable. Le moteur laisse une pause immobile d'au moins 1,2 s après l'entrée du texte. Un texte à lire reste court.
 - comprendre : un schéma ou un parcours. La pause laisse voir la relation puis son résultat (environ 0,8 s).
 - montrer : un exemple dense, une capture ou un carton qu'on n'a pas besoin de lire en entier. L'exposition peut être brève (environ 0,5 s) sans que le contenu soit raccourci.
-But par défaut : lire pour ouverture, repetition, chorus, rupture, revelation, preuve et appel ; comprendre pour boucle, etape et resultat ; montrer pour fin. Ne change le but que si l'intention est différente (une étape qui montre une capture dense : montrer).
+But par défaut : lire pour ouverture, repetition, chorus, rupture, revelation, preuve et appel ; comprendre pour boucle, etape, transformation, flux, avantapres et resultat ; montrer pour fin. Une étape portée par une capture prend toujours le but montrer. Ne change le but que si l'intention est différente.
 
 TRAMES NARRATIVES
 
@@ -150,7 +164,7 @@ Dans tous les cas : ${LIMITES_PUB.scenes.min} à ${LIMITES_PUB.scenes.max} scèn
 - chorus (facultative) : 8 à 13 mots
 - rupture : 9 à 11 mots
 - revelation : 10 à 18 mots
-- etape, 3 ou 4 fois (2 au minimum) : 13 à 15 mots chacune
+- etape portée par une capture : 5 mots au plus ; etape avec liste, transformation, flux, avantapres : 13 à 15 mots chacune ; 2 à 4 scènes de parcours en tout
 - resultat : 11 à 16 mots
 - preuve (facultative) : 12 mots
 - appel : 12 à 16 mots
@@ -179,11 +193,19 @@ Rien d'inventé
 - Une offre (gratuit, premier mois offert, essai) n'apparaît dans le badge de l'appel que si l'utilisateur ou le README la mentionne.
 - Les fonctions citées dans les étapes existent vraiment : tu les as lues dans le README ou vues dans une capture.
 
-Captures
+Captures : rares et brèves
+- Une capture du site est facultative. Elle n'apparaît que dans ${LIMITES_PUB.capturesScene.max} scènes au plus, ${String(LIMITES_PUB.capturesScene.dureeMax).replace(".", ",")} s chacune (but montrer), avec une voix de ${LIMITES_PUB.capturesScene.motsVoix} mots. Les gens n'ont pas le temps de lire un écran et peuvent aller sur le site.
+- Pour expliquer comment ça marche, utilise du motion design sans capture : transformation (une donnée devient un résultat), flux (trois étapes reliées par des icônes), avantapres (un panneau qui se réécrit). Une explication par objets animés vaut mieux qu'un écran.
 - Une étape de type capture ne référence que l'id d'une capture présente dans le tableau captures du script.
 - Choisis le cadrage qui montre l'idée de l'étape ("haut" pour un en-tête, "milieu" pour un tableau). Le focus entoure la zone qui prouve le titre.
 - Jamais de capture de terminal, d'éditeur de code ou de GitHub.
-- Sans capture utile, une étape porte une liste de 2 à 4 fonctions réelles, ou tu fais moins d'étapes. Au moins 2 étapes dans tous les cas.
+- Un parcours compte de 2 à 4 scènes parmi etape, transformation, flux et avantapres. Une étape sans capture porte une liste de 2 à 4 fonctions réelles.
+
+Chaque argument une seule fois
+- Un argument (gratuité, sécurité, rapidité, simplicité, code ouvert, absence d'inscription, contrôle de l'utilisateur) n'est dit qu'une seule fois dans toute la pub, voix et visuels confondus. Si "gratuit" est dans la preuve, il n'est ni dans le badge de l'appel, ni dans la voix de l'appel, ni dans la fin.
+- Un même mot significatif (hors nom du projet) ne revient pas dans 3 scènes ou plus. Les scènes de tension (repetition, boucle, chorus) répètent par construction et sont exclues ; la fin reprend le slogan et l'exception.
+- Répartis les arguments : un par scène, chacun dans la scène qui l'incarne le mieux. L'appel renvoie à l'action, la fin au slogan, pas à la liste des avantages.
+- nettoyerScriptPub avertit quand un argument ou un mot revient. Reformule ou supprime une des occurrences.
 
 Lisible sans le son
 - Chaque scène porte son idée par son texte à l'écran, même sans la voix.
@@ -208,6 +230,8 @@ Varier, ne jamais copier une référence
 - Une vidéo de référence (une pub que l'utilisateur aime, un exemple de niveau) donne un niveau d'énergie et de soin, jamais un plan à recopier. Ne reprends ni sa trame, ni ses mots, ni son enchaînement de scènes.
 - Choisis la trame (champ trame) qui sert CE projet : problème qui revient, démonstration directe ou vision. Change l'accroche d'une pub à l'autre : repère de temps, question, chiffre réel, citation, contraste avant/après. Le repère de temps ("Lundi") n'est jamais un passage obligé.
 - Si tes pubs précédentes du même utilisateur partent toutes de la même accroche ou du même ordre de scènes, change l'un des deux.
+- Deux pubs de projets différents ne se ressemblent pas : varie la trame, l'accroche, le type des scènes d'explication (transformation, flux, avantapres) et les gestes selon le projet. Le script de départ du studio tire ces choix d'une graine dérivée du nom du repo : à réponses égales, deux repos donnent deux pubs différentes, et le même repo redonne la même.
+- Ne mets pas les trois scènes d'explication dans chaque pub : prends celles qui montrent le mieux CE produit.
 
 Ton et accents
 - Une seule couleur d'alerte pour les mots du problème (tension), une seule couleur d'accent pour la solution. L'accent porte sur un à quatre mots, en fin de texte, jamais sur toute la phrase.
@@ -222,12 +246,13 @@ Marque
 
 Avant d'enregistrer, vérifie
 1. Une trame choisie, une scène revelation, et fin en dernier.
-2. Entre 2 et ${LIMITES_PUB.etapes.max} étapes, chacune avec une capture existante ou une liste de fonctions réelles.
+2. Un parcours de 2 à 4 scènes (etape, transformation, flux, avantapres), au plus ${LIMITES_PUB.capturesScene.max} captures, chaque étape avec une capture existante ou une liste de fonctions réelles.
 3. Voix totale entre ${LIMITES_PUB.motsVoix.min} et ${LIMITES_PUB.motsVoix.max} mots, aucune phrase de plus de 12 mots.
 4. Aucun mot technique, aucun chiffre de développement, aucune preuve ni offre inventée.
 5. Chaque accent est recopié exactement depuis la fin de son texte.
 6. gestes : 2 ou 3 identifiants distincts, et les transitions écrites dans les scènes en font partie.
 7. Rien dans la voix ne présente une animation comme une démonstration réelle.
+8. Chaque argument (gratuit, sécurité, rapidité...) n'apparaît qu'une fois dans toute la pub.
 Si l'enregistrement renvoie des avertissements, corrige le script et enregistre-le de nouveau.`;
 
 

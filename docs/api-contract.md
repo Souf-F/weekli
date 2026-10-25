@@ -117,12 +117,19 @@ type Trame = "probleme-qui-revient" | "demonstration-directe" | "vision-manifest
 type Geste = "accent" | "surlignage" | "soulignement" | "frappe" | "impact" | "lettres" | "glitch" | "pixels" | "flou" | "rayons";
 type But = "lire" | "comprendre" | "montrer";
 
+// Icones des scenes d'explication (design.md 8.17) ; inconnue : remplacee par "etoile", avertissement
+type Icone =
+  | "document" | "message" | "video" | "image" | "calendrier" | "horloge" | "personne" | "equipe" | "cadenas" | "bouclier"
+  | "eclair" | "etoile" | "coeur" | "panier" | "lien" | "dossier" | "courrier" | "telephone" | "graphique" | "coche"
+  | "nuage" | "engrenage" | "loupe" | "crayon" | "micro" | "musique" | "cle" | "maison";
+type ObjetIcone = { icone: Icone; libelle: string /*20*/ };
+
 type SceneCommune = {
   id: string;                          // /^[a-z0-9-]{1,24}$/, unique
   voix: string;                        // 0 a 220 caracteres, lu par la voix off
   duree?: number;                      // secondes, utilisee seulement sans voix ; bornee par type
   transition?: Transition;             // transition d'entree, defaut selon le type
-  but?: But;                           // regle la pause de lecture (design.md 8.16) ; defaut selon le type (lire, comprendre ou montrer)
+  but?: But;                           // regle la pause de lecture (design.md 8.16) ; defaut selon le type (lire, comprendre ou montrer) ; une etape portee par une capture prend toujours "montrer"
   masquee?: boolean;                   // presente dans le script mais pas rendue
 };
 
@@ -137,6 +144,9 @@ type ScenePub = SceneCommune & (
       visuel:
         | { type: "capture"; capture: string; cadrage?: Cadrage; focus?: { x: number; y: number; largeur: number; hauteur: number } }
         | { type: "liste"; titre: string /*30*/; elements: string[] /*2 a 4, 40*/ } }
+  | { type: "transformation"; titre: MotsAccent /*50*/; entree: ObjetIcone; operateur: string /*14*/; sortie: ObjetIcone; texte?: string /*110*/ }
+  | { type: "flux"; titre: MotsAccent /*50*/; noeuds: { icone: Icone; libelle: string /*16*/; detail?: string /*30*/ }[] /*exactement 3*/ }
+  | { type: "avantapres"; titre: MotsAccent /*50*/; avant?: string /*12, defaut "Avant"*/; apres?: string /*12, defaut "Apres"*/; paires: { avant: string /*28*/; apres: string /*28*/ }[] /*2 a 3*/ }
   | { type: "resultat"; titre: MotsAccent /*50*/; avant: string /*24*/; tampon: string /*12*/; apres: string /*24*/; chute?: MotsAccent /*70*/ }
   | { type: "preuve"; surtitre: string /*30*/; elements: string[] /*1 a 4, 30*/; cartes?: { titre: string /*30*/; texte?: string /*60*/ }[] /*0 a 3*/ }
   | { type: "appel"; question: MotsAccent /*70*/; badge?: MotsAccent /*30*/; action: string /*20*/; bouton: string /*30*/ }
@@ -152,7 +162,15 @@ Règles de structure (avertissement si non respectées, rejet si marqué « reje
 | 8 à 14 scènes | rejet hors bornes, y compris au-dessus de 14 (tronquer risquerait de couper la `fin`) |
 | Au moins une scène `revelation` non masquée (une révélation masquée ne compte pas) | rejet |
 | Dernière scène non masquée de type `fin` | rejet |
-| `etape` : 2 à 4 scènes, numérotées automatiquement dans l'ordre (`ÉTAPE 01 / 04`) | avertissement au-delà de 4, les suivantes sont masquées. Une seule étape : aucun avertissement |
+| `etape` : 0 à 4 scènes, numérotées automatiquement dans l'ordre (`ÉTAPE 01 / 04`) ; un parcours compte 2 à 4 scènes parmi `etape`, `transformation`, `flux` et `avantapres` | avertissement au-delà de 4 étapes, les suivantes sont masquées. Une seule étape : aucun avertissement |
+| Scènes-capture (`etape` dont `visuel.type` vaut `capture`) : 2 au plus par pub (`LIMITES_PUB.capturesScene.max`), facultatives | la troisième et les suivantes passent en `visuel: liste` vide, avertissement qui conseille `transformation`, `flux` ou `avantapres`. Les captures masquées ne comptent pas |
+| Scène-capture : but `montrer`, `duree` ramenée à 2,5 s au plus, voix de 5 mots au plus | but remplacé par `montrer` (avertissement si un autre but était donné) ; `duree` bornée en silence ; voix plus longue : avertissement. `dureeScene` borne ces scènes à 1,8 à 2,5 s |
+| `transformation` : `entree.libelle`, `sortie.libelle` (20), `operateur` (14) obligatoires | rejet si vide |
+| `flux` : exactement 3 `noeuds` avec `libelle` (16) non vide ; au-delà de 3, les premiers sont gardés | rejet si moins de 3 nœuds complets |
+| `avantapres` : 2 à 3 `paires` dont `avant` et `apres` (28) sont non vides ; au-delà de 3, les premières sont gardées ; `avant`/`apres` (12) facultatifs | rejet si moins de 2 paires complètes |
+| `icone` hors de la liste `Icone` | remplacée par `etoile`, avertissement |
+| Un argument (gratuité, sécurité des données, rapidité, simplicité, code ouvert, absence d'inscription, contrôle de l'utilisateur) présent dans 2 scènes visibles ou plus, voix et visuels confondus | avertissement « Repetition : l'argument "gratuite" revient dans 2 scenes (preuve, appel) ». Rien n'est retiré |
+| Un mot significatif (5 lettres ou plus, lemme simple, hors mots outils et nom du projet) présent dans 3 scènes visibles ou plus | avertissement « Repetition : le mot "..." revient dans 3 scenes (...) ». Scènes `repetition`, `boucle`, `chorus` exclues ; la `fin` ne compte pas ses reprises du slogan ou de la signature de la `revelation`. Détail : `design.md` 8.18 |
 | Une capture référencée doit exister dans `captures` | la scène passe en `visuel: liste` vide (`elements: []`, `titre: ""`), avertissement. Le moteur n'affiche alors que le titre de l'étape ; le script de départ (`preparer_pub`, studio) ne doit jamais produire ce cas |
 | Voix totale de 120 à 170 mots | avertissement |
 | Durée totale estimée de 50 à 65 s | avertissement |
@@ -164,12 +182,28 @@ Règles de structure (avertissement si non respectées, rejet si marqué « reje
 | Transition `glitch`, `flou` ou `pixels` d'une scène visible absente de `gestes` (quand `gestes` est présent) | avertissement, rien n'est retiré |
 | `but` hors de `lire`, `comprendre`, `montrer` | champ ignoré (but par défaut du type), avertissement |
 
+Exemples de scènes d'explication (illustratives, `design.md` 8.17) :
+
+```json
+{ "id": "transformation", "type": "transformation", "titre": { "texte": "Ta semaine devient un récit.", "accent": "un récit." },
+  "entree": { "icone": "calendrier", "libelle": "Ta semaine" }, "operateur": "Weekli", "sortie": { "icone": "video", "libelle": "Post et pub vidéo" },
+  "voix": "Ta semaine de code entre d'un côté. De l'autre, un post et une pub vidéo ressortent." }
+{ "id": "flux", "type": "flux", "titre": { "texte": "Deux minutes, trois gestes.", "accent": "trois gestes." },
+  "noeuds": [ { "icone": "lien", "libelle": "Tu l'ajoutes", "detail": "Une seule fois" }, { "icone": "message", "libelle": "Tu réponds", "detail": "Trois questions" }, { "icone": "video", "libelle": "Tu reçois", "detail": "Un post, une pub" } ],
+  "voix": "Tu l'ajoutes une seule fois, sans rien installer. Tu réponds à trois questions, et tout se prépare." }
+{ "id": "avantapres", "type": "avantapres", "titre": { "texte": "Avant, puis après.", "accent": "puis après." }, "avant": "Avant", "apres": "Après",
+  "paires": [ { "avant": "Un post à écrire", "apres": "Un post prêt" }, { "avant": "Une pub à monter", "apres": "Une pub prête" } ],
+  "voix": "Avant, il fallait tout écrire et tout monter soi-même. Après, une phrase suffit pour commencer." }
+```
+
 Autres règles appliquées par `nettoyerScriptPub` :
 
 - `projet.lien` de plus de 120 caractères : rejet (une URL tronquée serait invalide). Même principe pour l'URL d'une capture `site` (500 caractères maximum). La vérification du domaine reste côté serveur.
 - `marque.accent` ou `marque.alerte` invalide : ignoré avec un avertissement. `marque.primaire` invalide : rejet.
 - Accent par défaut : calculé par `paletteDepuisMarque(marque, accentParDefaut?)`. Le paramètre optionnel `accentParDefaut` est la couleur la plus saturée extraite de la capture (fournie par le navigateur) ; il ne sert que si la marque est presque grise (chroma inférieure à 0,03). Sans lui : `#3d4bff`. Détail dans `docs/design.md` 8.4.
 - Durée totale estimée : somme des durées de scène moins les chevauchements de transition (`docs/design.md` 8.8 et 8.13).
+- Schéma de sortie structurée (`SCHEMA_SCRIPT_PUB`) : les trois nouveaux types et l'énumération `Icone` y figurent.
+- Script de départ sans IA : `scriptPubDepuisReponses(entree)` accepte `entree.graine` (entier, facultatif) ; sans elle, `graineDepuisRepo(repo)` (FNV-1a 32 bits du nom du repo en minuscules). À réponses égales, le même repo redonne le même script, deux repos varient le jeu de gestes, l'accroche, l'ordre des scènes d'explication et les icônes (`design.md` 8.18). `choisirTrame(reponses, nbCaptures)` : la démonstration demande au moins une capture (et non plus quatre).
 
 Risques connus :
 

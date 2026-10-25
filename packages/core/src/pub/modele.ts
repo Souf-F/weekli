@@ -1,5 +1,5 @@
 import { ACCENT_GRIS_DEFAUT, COULEUR_HEX, LIMITES_PUB, REGEX_ID } from "./limites";
-import type { CaptureRef, Hex, MotsAccent, ScenePub, ScriptPub, Trame } from "./types";
+import type { CaptureRef, Geste, Hex, Icone, MotsAccent, ScenePub, ScriptPub, Trame } from "./types";
 
 // Ce que le studio connait sans IA : le repo, ses 3 reponses, sa marque et ses captures.
 // `repo` doit suivre NOM_REPO et `lien` etre une URL https (valides cote appelant).
@@ -12,7 +12,30 @@ export type EntreeScriptPub = {
 	marque?: { primaire?: string; accent?: string; alerte?: string };
 	captures?: readonly CaptureRef[];
 	trame?: Trame; // force la trame, sinon choisirTrame
+	graine?: number; // aleas deterministes (entier), sinon derivee du nom du repo : voir graineDepuisRepo
 };
+
+// Graine deterministe derivee du nom du repo (FNV-1a, 32 bits) : memes reponses et memes repos redonnent la meme pub,
+// deux repos differents varient l'accroche, les scenes d'explication, les icones et les gestes (design.md 8.18)
+export function graineDepuisRepo(repo: string): number {
+	let h = 0x811c9dc5;
+	for (const c of repo.toLowerCase()) h = Math.imul(h ^ (c.codePointAt(0) ?? 0), 0x01000193);
+	return h >>> 0;
+}
+
+// Choix stable dans une liste : `sel` distingue les decisions entre elles pour qu'elles ne soient pas toutes liees
+function choisir<T>(graine: number, sel: number, liste: readonly T[]): T {
+	let h = Math.imul(graine ^ Math.imul(sel + 1, 0x9e3779b1), 0x85ebca6b);
+	h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+	return liste[(h >>> 0) % liste.length];
+}
+
+const JEUX_GESTES: readonly (readonly Geste[])[] = [
+	["accent", "soulignement", "flou"], // sobre
+	["impact", "glitch", "lettres"], // nerveux
+	["surlignage", "frappe", "rayons"], // editorial
+];
+const EXPLICATIONS = ["transformation", "flux", "avantapres"] as const;
 
 const CONTROLES = /[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u2064\ufeff]/g;
 // Tirets moyen et long, construits par leur code pour ne jamais les ecrire dans le source
@@ -108,77 +131,39 @@ function lienAffiche(lien: string): string {
 	}
 }
 
-// Parcours generique : sans IA, on ne connait pas les etapes du produit, seulement ses ecrans.
-// Chaque voix reste sous le plafond de sa scene (duree maximale a 170 mots par minute, design.md 8.9)
-const ETAPES = [
-	{
-		titre: "Vous arrivez, tout est clair.",
-		accent: 3,
-		voix: "Vous arrivez, et tout est clair dès le premier écran, sans la moindre explication.",
-	},
-	{
-		titre: "L'essentiel, d'un coup d'œil.",
-		accent: 3,
-		voix: "L'essentiel tient sur un seul écran. Vous trouvez ce qu'il faut, sans rien chercher.",
-	},
-	{
-		titre: "Chaque chose à sa place.",
-		accent: 3,
-		voix: "Chaque chose est à sa place, et vous avancez à votre rythme, sans effort.",
-	},
-	{
-		titre: "Et c'est réglé.",
-		accent: 2,
-		voix: "Quelques instants plus tard, tout est réglé, et vous passez à la suite.",
-	},
-];
-
-function scenesEtapes(captures: CaptureRef[], cible: string): ScenePub[] {
-	// Une seule capture : deux etapes sur deux cadrages, pour garder un parcours de 2 a 4 etapes
-	const plan =
-		captures.length === 1
-			? [
-					{ capture: captures[0], cadrage: "haut" as const },
-					{ capture: captures[0], cadrage: "bas" as const },
-				]
-			: captures
-					.slice(0, LIMITES_PUB.etapes.max)
-					.map((capture, i) => ({ capture, cadrage: i === 0 ? ("haut" as const) : ("milieu" as const) }));
-	return plan.map(({ capture, cadrage }, i) => {
-		const legende = tient(propre(capture.legende), 14);
-		const onglet = legende ?? `Écran ${i + 1}`;
-		const modele = ETAPES[i];
-		return {
-			id: `etape-${i + 1}`,
-			type: "etape",
-			onglet,
-			filigrane: tient(onglet.toLocaleUpperCase("fr-FR"), 14) ?? `ÉCRAN ${i + 1}`,
-			titre: accentue(modele.titre, modele.accent),
-			texte: i === 0 && cible ? tient(`Pensé pour ${minuscule(cible)}.`, 110) : undefined,
-			visuel: { type: "capture", capture: capture.id, cadrage },
-			voix: modele.voix,
-		};
-	});
+// Sans IA, on ne connait pas les etapes du produit, seulement ses ecrans. Une capture est un clin d'oeil bref (une seule
+// ici, 2 au plus pour un auteur, design.md 8.17) : voix de 5 mots, jamais une explication.
+function sceneCapture(capture: CaptureRef, cible: string): ScenePub {
+	const legende = tient(propre(capture.legende), 14);
+	const onglet = legende ?? "Écran";
+	return {
+		id: "etape-1",
+		type: "etape",
+		onglet,
+		filigrane: tient(onglet.toLocaleUpperCase("fr-FR"), 14) ?? "ÉCRAN",
+		titre: accentue("Tout est clair, d'un coup d'œil.", 3),
+		texte: cible ? tient(`Pensé pour ${minuscule(cible)}.`, 110) : undefined,
+		visuel: { type: "capture", capture: capture.id, cadrage: "haut" },
+		but: "montrer",
+		voix: "Tout est clair dès l'arrivée.",
+	};
 }
 
 // Choix de la trame (design.md 8.13), sans IA, sur les reponses en minuscules sans accents. Premiere regle qui s'applique :
 // 1. une conviction (croire, meriter, devoir, liberte, vie privee, open source...) dans le probleme ou la promesse : vision-manifeste ;
-// 2. un probleme qui revient (toujours, encore, chaque, perd, retard, oubli...) ou moins de 4 captures : probleme-qui-revient ;
-// 3. sinon : demonstration-directe.
-// La demonstration n'a pas de tension pour faire la duree : elle exige 4 captures (4 etapes) pour tenir 50 s, et sans capture
-// il n'y a rien a montrer (le script tomberait sous 8 scenes).
+// 2. un probleme qui revient (toujours, encore, chaque, perd, retard, oubli...) ou aucune capture : probleme-qui-revient ;
+// 3. sinon : demonstration-directe (portee par les scenes d'explication en motion design).
 const sansAccents = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 const CONVICTION =
 	/\b(croi[ts]|croyons|croire|conviction|merite|meritent|devrai(?:t|ent)|liberte|libre|vie privee|open source|independan|ethique|respect)/;
 const RECURRENCE =
 	/\b(toujours|encore|chaque|tous les|toutes les|sans cesse|revient|reviennent|repet|a nouveau|meme|sonne|perd|perdent|perdu|oubli|retard)/;
 
-const CAPTURES_DEMONSTRATION = 4;
+// La demonstration n'a pas de tension pour faire la duree : elle veut au moins une capture (un clin d'oeil bref) en plus
+// des 3 scenes d'explication. Sans capture, le probleme qui revient tient la duree.
+const CAPTURES_DEMONSTRATION = 1;
 
-export function choisirTrame(
-	reponses: ScriptPub["reponses"],
-	nbCaptures: number,
-): Trame {
+export function choisirTrame(reponses: ScriptPub["reponses"], nbCaptures: number): Trame {
 	if (CONVICTION.test(sansAccents(`${reponses.probleme} ${reponses.promesse}`))) return "vision-manifeste";
 	if (RECURRENCE.test(sansAccents(reponses.probleme)) || nbCaptures < CAPTURES_DEMONSTRATION) return "probleme-qui-revient";
 	return "demonstration-directe";
@@ -209,13 +194,65 @@ export function scriptPubDepuisReponses(entree: EntreeScriptPub): ScriptPub {
 			tient(promesseCourte, 59) ??
 			"Tout devient simple",
 	);
+	// Un nom tres long est lu en entier une seule fois (la revelation) : ailleurs la voix dit "le projet"
+	const nomDit = mots(nom).length <= 5 ? nom : "le projet";
 	const bouton = tient(`Découvrir ${nom}`, 30) ?? "Découvrir le projet";
 	const lien = propre(entree.lien);
 	const captures = capturesUtilisables(entree.captures ?? []);
-	const etapes = scenesEtapes(captures, cible);
+	const graine = Number.isInteger(entree.graine) ? (entree.graine as number) >>> 0 : graineDepuisRepo(entree.repo);
+	const etapes = captures.slice(0, 1).map((c) => sceneCapture(c, cible));
 
 	const demande = entree.trame ?? choisirTrame(reponses, captures.length);
 	const trame: Trame = demande === "demonstration-directe" && !captures.length ? "probleme-qui-revient" : demande;
+
+	// Scenes d'explication en motion design, sans capture (design.md 8.17). Seule la premiere reprend le probleme de
+	// l'utilisateur, les autres restent generiques : un meme mot ne revient pas dans plus de deux scenes (8.18).
+	const operateur = tient(nom, 14) ?? "Le projet";
+	const probleme24 = tient(majuscule(probleme1), 20);
+	const explication = (type: (typeof EXPLICATIONS)[number], i: number): ScenePub => {
+		const premiere = i === 0 && trame === "probleme-qui-revient";
+		if (type === "transformation")
+			return {
+				id: "transformation",
+				type,
+				titre: accentue("Du besoin au résultat.", 2),
+				entree: {
+					icone: choisir<Icone>(graine, 1, ["document", "dossier", "courrier", "calendrier"]),
+					libelle: (premiere && probleme24) || "Votre besoin",
+				},
+				operateur,
+				sortie: { icone: choisir<Icone>(graine, 2, ["coche", "etoile", "coeur"]), libelle: "Un résultat concret" },
+				voix: "Votre besoin entre d'un côté. De l'autre, un résultat concret ressort, prêt à servir dès maintenant.",
+			};
+		if (type === "flux")
+			return {
+				id: "flux",
+				type,
+				titre: accentue("Trois gestes, et c'est fait.", 3),
+				noeuds: [
+					{ icone: choisir<Icone>(graine, 3, ["message", "personne", "loupe"]), libelle: "Vous demandez" },
+					{ icone: "engrenage", libelle: operateur, detail: "s'en charge" },
+					{ icone: "coche", libelle: "Vous recevez" },
+				],
+				voix: "Vous demandez. Le projet s'en charge. Vous recevez ce qu'il fallait, et vous passez enfin à autre chose.",
+			};
+		return {
+			id: "avantapres",
+			type,
+			titre: accentue("Avant, puis après.", 2),
+			paires: [
+				{ avant: (premiere && tient(majuscule(probleme1), 28)) || "Le même casse-tête", apres: "Une vraie solution" },
+				{ avant: "Des heures perdues", apres: "Des heures retrouvées" },
+			],
+			voix: "Avant, le même casse-tête revient sans cesse, jour après jour. Après, une vraie solution prend enfin sa place.",
+		};
+	};
+	const nbExplications = EXPLICATIONS.length;
+	const decalage = choisir(graine, 7, [0, 1, 2]);
+	const choisies = Array.from({ length: nbExplications }, (_, i) => EXPLICATIONS[(decalage + i) % EXPLICATIONS.length]);
+	// Les captures s'intercalent entre les explications : un clin d'oeil bref, jamais une explication
+	const parcours: ScenePub[] = choisies.flatMap((type, i) => [explication(type, i), ...(etapes[i] ? [etapes[i]] : [])]);
+
 
 	const revelation = (suite: string): ScenePub => ({
 		id: "revelation",
@@ -223,18 +260,20 @@ export function scriptPubDepuisReponses(entree: EntreeScriptPub): ScriptPub {
 		slogan: accentue(slogan, 2),
 		voix: voix(`Voici ${nom}.`, slogan, suite),
 	});
+	// Le slogan (promesse) est deja dit par la revelation, et par la rupture dans la vision : le resultat ne le redit pas
+	// (chaque argument une seule fois, design.md 8.18). Il porte le probleme (avant) et une phrase generique.
+	const vision = trame === "vision-manifeste";
 	const resultat: ScenePub = {
 		id: "resultat",
 		type: "resultat",
-		titre: accentue(tient(phrase(promesse1), 50) ?? "Le problème est réglé.", 2),
+		titre: accentue(vision ? "Le changement se voit." : "C'est réglé, pour de bon.", 3),
 		avant: tient(majuscule(probleme1), 24) ?? "Le même problème",
 		tampon: "Réglé",
-		apres: "L'esprit libre",
+		apres: "L'esprit tranquille",
 		chute: accentue("La prochaine fois, rien à refaire.", 3),
-		voix: voix(
-			`Le résultat : ${minuscule(tientEnMots(promesse1, 13) ?? "le problème est réglé")}.`,
-			mots(promesse1).length <= 8 ? "Vous passez enfin à autre chose." : undefined,
-		),
+		voix: vision
+			? "Le changement se voit dès le premier jour. Et il reste, semaine après semaine."
+			: "Le problème est réglé, pour de bon. Vous passez enfin à autre chose, l'esprit léger.",
 	};
 	// Jamais de preuve inventee : livree masquee, a remplir par l'utilisateur
 	const preuve: ScenePub = {
@@ -259,7 +298,7 @@ export function scriptPubDepuisReponses(entree: EntreeScriptPub): ScriptPub {
 		slogan: tient(slogan, 40),
 		bouton,
 		liens: [lienAffiche(lien)],
-		voix: voix(`${nom}.`, slogan, "Le lien est juste en dessous. À tout de suite."),
+		voix: voix(`${majuscule(nomDit)}.`, slogan, "Le lien est juste en dessous. À tout de suite."),
 	};
 
 	// Trame 1 : le probleme qui revient (tension longue, puis rupture et revelation)
@@ -267,7 +306,7 @@ export function scriptPubDepuisReponses(entree: EntreeScriptPub): ScriptPub {
 		{
 			id: "ouverture",
 			type: "ouverture",
-			moment: "Chaque jour",
+			moment: choisir(graine, 4, ["Chaque jour", "Cette semaine", "Comme hier"]),
 			detail: tient(majuscule(cible), 30),
 			voix: cible
 				? `Pour ${minuscule(cible)}, chaque journée se ressemble.`
@@ -289,28 +328,20 @@ export function scriptPubDepuisReponses(entree: EntreeScriptPub): ScriptPub {
 			carte: { titre: tient(majuscule(probleme2), 30) ?? "Toujours en attente" },
 			voix: "Jour après jour, le même problème revient. Et au fond, rien ne change vraiment.",
 		},
-		// Facultative (design.md 8.13) : retiree avec 4 etapes pour rester sous 170 mots
-		etapes.length < LIMITES_PUB.etapes.max && {
-			id: "chorus",
-			type: "chorus",
-			titre: accentue("Tout le monde le sait.", 2),
-			chute: accentue("Personne ne le règle.", 3),
-			bulles: ["Encore ?", "Pas le temps.", "On verra demain.", "Comme d'habitude."],
-			voix: "Tout le monde en parle, chaque semaine. Pourtant, personne ne le règle vraiment.",
-		},
+		// Le chorus (facultatif, design.md 8.13) est ecrit par l'auteur, jamais par le script de depart : 3 scenes d'explication suffisent
 		{
 			id: "rupture",
 			type: "rupture",
-			texte: accentue("Et si tout devenait simple, pour de vrai ?", 4),
-			voix: "Et si tout devenait simple, enfin, et pour de vrai ?",
+			texte: accentue("Et si tout changeait, pour de vrai ?", 4),
+			voix: "Et si tout changeait, enfin, et pour de vrai ?",
 		},
-		revelation("Conçu pour vous simplifier la vie, chaque jour."),
-		...etapes,
+		revelation("Conçu pour vous, dès le premier jour."),
+		...parcours,
 		resultat,
 		preuve,
 		appel("Ce problème vous parle ?", 2, [
-			`Essayez ${nom}, dès aujourd'hui.`,
-			"C'est simple, et vous verrez la différence.",
+			`Essayez ${nomDit}, dès aujourd'hui.`,
+			"Vous verrez la différence dès le premier essai.",
 		]),
 		fin,
 	];
@@ -320,20 +351,20 @@ export function scriptPubDepuisReponses(entree: EntreeScriptPub): ScriptPub {
 		{
 			id: "ouverture",
 			type: "ouverture",
-			moment: "Avant",
+			moment: choisir(graine, 5, ["Avant", "Hier encore", "Jusqu'ici"]),
 			detail: tient(majuscule(probleme1), 30),
 			voix: voix(
 				`Avant, ${minuscule(tientEnMots(probleme1, 9) ?? "tout prenait du temps")}.`,
 				"Voyons concrètement ce qui change, étape par étape.",
 			),
 		},
-		revelation("Voici comment ça se passe, pas à pas, du premier écran jusqu'au résultat."),
-		...etapes,
+		revelation("Voici comment ça marche, pas à pas, de votre demande jusqu'à la livraison."),
+		...parcours,
 		resultat,
 		preuve,
 		appel("Prêt à voir la différence ?", 3, [
-			`Essayez ${nom}, c'est simple.`,
-			"Un premier pas suffit pour que tout change, et vous le sentirez vite.",
+			`Essayez ${nomDit}.`,
+			"Un premier pas suffit pour que tout change, et vous le sentirez très bientôt.",
 		]),
 		fin,
 	];
@@ -342,14 +373,14 @@ export function scriptPubDepuisReponses(entree: EntreeScriptPub): ScriptPub {
 	const conviction =
 		tient(`Notre conviction : ${minuscule(promesse1)}.`, 80) ??
 		tient(`Notre conviction : ${minuscule(promesseCourte)}.`, 80) ??
-		"Notre conviction : tout peut rester simple.";
+		"Notre conviction : chacun mérite mieux.";
 	const visionManifeste = (): (ScenePub | false)[] => [
 		{
 			id: "ouverture",
 			type: "ouverture",
-			moment: "Notre idée",
+			moment: choisir(graine, 6, ["Notre idée", "Notre pari", "Un parti pris"]),
 			detail: tient(majuscule(cible), 30),
-			voix: cible ? `Une idée simple, pensée pour ${minuscule(cible)}.` : "Une idée simple, pensée pour vous.",
+			voix: cible ? `Une idée, pensée pour ${minuscule(cible)}.` : "Une idée, pensée pour vous.",
 		},
 		{
 			id: "rupture",
@@ -360,21 +391,12 @@ export function scriptPubDepuisReponses(entree: EntreeScriptPub): ScriptPub {
 				"Et nous l'avons construit pour ça, rien d'autre.",
 			),
 		},
-		// Sans capture il n'y a pas d'etape : le chorus facultatif garde le script au-dessus de 8 scenes
-		!etapes.length && {
-			id: "chorus",
-			type: "chorus",
-			titre: accentue("Trop de gens s'y résignent.", 2),
-			chute: accentue("Nous refusons de nous y faire.", 3),
-			bulles: ["Ça a toujours été comme ça.", "On fait avec.", "Pas le choix."],
-			voix: "Trop de gens s'y résignent, comme si c'était normal. Nous, nous refusons de nous y faire.",
-		},
-		revelation("Né de cette conviction, pensé pour être utile dès le premier jour, et simple à vivre."),
-		...etapes,
+		revelation("Né de cette conviction, utile dès le premier jour."),
+		...parcours,
 		preuve,
 		resultat,
 		appel("On commence ensemble ?", 2, [
-			`Rejoignez ${nom}, dès aujourd'hui.`,
+			`Rejoignez ${nomDit}, dès aujourd'hui.`,
 			"Vous verrez ce que cette idée change, concrètement, dans votre quotidien.",
 		]),
 		fin,
@@ -400,6 +422,7 @@ export function scriptPubDepuisReponses(entree: EntreeScriptPub): ScriptPub {
 		voix: { mode: "synthese", vitesse: LIMITES_PUB.vitesse.defaut, prononciation: {} },
 		musique: "energique",
 		trame,
+		gestes: [...choisir(graine, 0, JEUX_GESTES)],
 		captures,
 		scenes: scenes.filter((s): s is ScenePub => s !== false).map(sansVides),
 	};

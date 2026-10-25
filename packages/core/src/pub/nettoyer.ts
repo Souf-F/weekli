@@ -1,12 +1,17 @@
 import { COULEUR_HEX, DUREES_SCENE, LIMITES_PUB, REGEX_ID, REGEX_NOM_REPO, TRANSITIONS } from "./limites";
-import { calculerTimeline } from "./timeline";
+import { avertissementsRepetition } from "./repetition";
+import { calculerTimeline, estCapture } from "./timeline";
 import type {
 	Cadrage,
 	CaptureRef,
 	Carte,
 	Geste,
 	Hex,
+	Icone,
 	MotsAccent,
+	NoeudFlux,
+	ObjetIcone,
+	PaireAvantApres,
 	Rect,
 	ResultatNettoyage,
 	ScenePub,
@@ -14,7 +19,7 @@ import type {
 	Trame,
 	Visuel,
 } from "./types";
-import { BUTS, GESTES, GESTES_PUB, TRAMES } from "./types";
+import { BUTS, GESTES, GESTES_PUB, ICONE_DEFAUT, ICONES, TRAMES } from "./types";
 
 type Rec = Record<string, unknown>;
 type Rapport = { erreurs: string[]; avertissements: string[] };
@@ -98,7 +103,16 @@ function outils(prefixe: string, r: Rapport) {
 		}
 		return sans({ titre, detail: optionnel(e?.detail, 40) });
 	};
-	return { err, avert, requis, optionnel, motsAccent, liste, carte };
+	const icone = (v: unknown, nom: string): Icone => {
+		const trouvee = ICONES.find((i) => i === v);
+		if (!trouvee) avert(`l'icone de "${nom}" est inconnue, "${ICONE_DEFAUT}" est utilisee (connues : ${ICONES.join(", ")})`);
+		return trouvee ?? ICONE_DEFAUT;
+	};
+	const objetIcone = (v: unknown, nom: string): ObjetIcone => {
+		const e = rec(v);
+		return { icone: icone(e?.icone, nom), libelle: requis(e?.libelle, 20, `${nom}.libelle`) };
+	};
+	return { err, avert, requis, optionnel, motsAccent, liste, carte, objetIcone, icone };
 }
 
 function rect(v: unknown): Rect | undefined {
@@ -135,7 +149,7 @@ function visuel(v: unknown, captures: Set<string>, o: ReturnType<typeof outils>)
 
 // Champs propres a chaque type de scene (design.md 8.9, bornes de api-contract.md 2.1)
 function corps(e: Rec, captures: Set<string>, o: ReturnType<typeof outils>): Rec | null {
-	const { requis, optionnel, motsAccent, liste, carte } = o;
+	const { requis, optionnel, motsAccent, liste, carte, objetIcone, icone } = o;
 	switch (e.type) {
 		case "ouverture":
 			return { moment: requis(e.moment, 14, "moment"), detail: optionnel(e.detail, 30) };
@@ -171,6 +185,44 @@ function corps(e: Rec, captures: Set<string>, o: ReturnType<typeof outils>): Rec
 				onglet: requis(e.onglet, 14, "onglet"),
 				visuel: visuel(e.visuel, captures, o),
 			};
+		case "transformation":
+			return {
+				titre: motsAccent(e.titre, 50, "titre"),
+				entree: objetIcone(e.entree, "entree"),
+				operateur: requis(e.operateur, 14, "operateur"),
+				sortie: objetIcone(e.sortie, "sortie"),
+				texte: optionnel(e.texte, 110),
+			};
+		case "flux": {
+			const noeuds = (Array.isArray(e.noeuds) ? e.noeuds : [])
+				.slice(0, 3)
+				.map((n): NoeudFlux | null => {
+					const x = rec(n);
+					const libelle = texte(x?.libelle, 16);
+					return libelle ? sans({ icone: icone(x?.icone, "noeuds"), libelle, detail: optionnel(x?.detail, 30) }) : null;
+				})
+				.filter((n): n is NoeudFlux => n !== null);
+			if (noeuds.length < 3) o.err(`"noeuds" demande 3 elements`);
+			return { titre: motsAccent(e.titre, 50, "titre"), noeuds };
+		}
+		case "avantapres": {
+			const paires = (Array.isArray(e.paires) ? e.paires : [])
+				.slice(0, 3)
+				.map((p): PaireAvantApres | null => {
+					const x = rec(p);
+					const avant = texte(x?.avant, 28);
+					const apres = texte(x?.apres, 28);
+					return avant && apres ? { avant, apres } : null;
+				})
+				.filter((p): p is PaireAvantApres => p !== null);
+			if (paires.length < 2) o.err(`"paires" demande au moins 2 elements complets (avant et apres)`);
+			return {
+				titre: motsAccent(e.titre, 50, "titre"),
+				avant: optionnel(e.avant, 12),
+				apres: optionnel(e.apres, 12),
+				paires,
+			};
+		}
 		case "resultat":
 			return {
 				titre: motsAccent(e.titre, 50, "titre"),
@@ -297,6 +349,31 @@ function nettoyerTrame(brut: unknown, o: ReturnType<typeof outils>): Trame | und
 	return trame;
 }
 
+// Une capture est un but "montrer" bref et rare (design.md 8.17) : 2 scenes au plus, 2,5 s au plus, voix de 5 mots.
+// Au-dela de 2, la scene passe en liste vide (comme une capture inconnue) ; le but et la duree sont ramenes a la regle.
+function limiterCaptures(scenes: ScenePub[], r: Rapport): void {
+	const { max, dureeMax, motsVoix } = LIMITES_PUB.capturesScene;
+	let n = 0;
+	for (const s of scenes) {
+		if (s.masquee || s.type !== "etape" || !estCapture(s)) continue;
+		if (++n > max) {
+			s.visuel = { type: "liste", titre: "", elements: [] };
+			r.avertissements.push(
+				`Scene "${s.id}" : ${max} captures au maximum par pub (elles sont rares et breves), la scene passe en liste vide. Remplace-la par une scene d'explication (transformation, flux, avantapres)`,
+			);
+			continue;
+		}
+		if (s.but && s.but !== "montrer")
+			r.avertissements.push(`Scene "${s.id}" : une capture est un but "montrer", "${s.but}" est remplace`);
+		s.but = "montrer";
+		if (s.duree !== undefined) s.duree = Math.min(s.duree, dureeMax);
+		if (mots(s.voix) > motsVoix)
+			r.avertissements.push(
+				`Scene "${s.id}" : une capture dure ${String(dureeMax).replace(".", ",")} s au plus, sa voix tient en ${motsVoix} mots (elle en compte ${mots(s.voix)})`,
+			);
+	}
+}
+
 const CODE = /[`$]|(?<![\p{L}\p{N}_])(?:npm|git|commit|const|function)(?![\p{L}\p{N}_])/iu;
 const CLES_TECHNIQUES = new Set(["id", "type", "capture", "transition"]);
 const contientCode = (v: unknown): boolean =>
@@ -368,6 +445,8 @@ export function nettoyerScriptPub(entree: unknown): ResultatNettoyage {
 		r.avertissements.push(`Scene "${s.id}" : au-dela de ${LIMITES_PUB.etapes.max} etapes, la scene est masquee`);
 	}
 
+	limiterCaptures(scenes, r);
+
 	const visibles = scenes.filter((s) => !s.masquee);
 	if (!visibles.some((s) => s.type === "revelation")) o.err(`une scene "revelation" est obligatoire`);
 	if (visibles.at(-1)?.type !== "fin") o.err(`la derniere scene non masquee doit etre de type "fin"`);
@@ -376,6 +455,8 @@ export function nettoyerScriptPub(entree: unknown): ResultatNettoyage {
 	for (const s of visibles) {
 		if (contientCode(s)) r.avertissements.push(`Scene "${s.id}" : la pub ne montre pas de code`);
 	}
+
+	r.avertissements.push(...avertissementsRepetition(visibles, nom));
 
 	const gestes = nettoyerGestes(e.gestes, o);
 	if (gestes) {

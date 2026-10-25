@@ -1,16 +1,36 @@
 import { describe, expect, it } from "vitest";
 import { EXEMPLE } from "./exemple.fixture";
 import { nettoyerScriptPub } from "./nettoyer";
-import type { ScenePub, ScriptPub } from "./types";
+import { SCHEMA_SCRIPT_PUB } from "./schema";
+import { calculerTimeline, dureeScene } from "./timeline";
+import { BUT_DEFAUT, type ScenePub, type ScriptPub } from "./types";
 
 type Brut = Record<string, any>;
 const copie = (): Brut => structuredClone(EXEMPLE) as Brut;
 const scene = (b: Brut, id: string) => b.scenes.find((s: Brut) => s.id === id);
 
-// Script de reference, voix allongee pour tenir dans 120 a 170 mots et 50 a 65 s
+// Phrases d'appoint toutes differentes : une meme phrase repetee declencherait l'avertissement de repetition
+const APPOINTS = [
+	"Rien n'échappe à personne ici, vraiment.",
+	"Chaque détail compte beaucoup ce soir.",
+	"Personne ne s'y perd jamais longtemps.",
+	"Les équipes respirent enfin, tranquillement.",
+	"Aucune mauvaise surprise ne les attend.",
+	"L'ambiance change dès les premières minutes.",
+	"Les habitués sourient devant leur assiette.",
+	"Les soirées s'allongent avec bonheur.",
+	"Les plats sortent chauds, à la bonne cadence.",
+	"La cuisine suit sans jamais ralentir.",
+	"Les verres tintent joyeusement jusqu'au dessert.",
+	"Chacun trouve sa place sans détour.",
+];
+
+// Script de reference, voix allongee pour tenir dans 120 a 170 mots et 50 a 65 s (sauf les captures, brèves)
 function bon(): Brut {
 	const b = copie();
-	for (const s of b.scenes) s.voix += " Tout est prevu ici.";
+	b.scenes.forEach((s: Brut, i: number) => {
+		if (s.visuel?.type !== "capture") s.voix += ` ${APPOINTS[i % APPOINTS.length]}`;
+	});
 	return b;
 }
 const valide = (b: Brut): ScriptPub => {
@@ -304,7 +324,7 @@ describe("avertissements (api-contract.md 2.1)", () => {
 	});
 
 	it("signale une duree estimee sous 50 s", () => {
-		const r = avertit(copie(), "Duree totale estimee de 45 s : vise 50 a 65 s");
+		const r = avertit(copie(), "Duree totale estimee de 39 s : vise 50 a 65 s");
 		expect(r.avertissements).toHaveLength(2);
 	});
 
@@ -521,5 +541,266 @@ describe("trame", () => {
 		b.trame = "Stepwize";
 		const r = avertit(b, `"trame" doit valoir`);
 		expect(r.script).not.toHaveProperty("trame");
+	});
+});
+
+const remplace = (b: Brut, id: string, nouvelle: Brut) => {
+	b.scenes[b.scenes.findIndex((s: Brut) => s.id === id)] = nouvelle;
+};
+const transformation = (id = "transformation"): Brut => ({
+	id,
+	type: "transformation",
+	titre: { texte: "Une semaine devient un post.", accent: "un post." },
+	entree: { icone: "calendrier", libelle: "Une semaine entière" },
+	operateur: "Claude",
+	sortie: { icone: "message", libelle: "Un post prêt" },
+	voix: "Votre semaine entre d'un côté. Un post ressort de l'autre.",
+});
+const flux = (id = "flux"): Brut => ({
+	id,
+	type: "flux",
+	titre: { texte: "Trois gestes seulement.", accent: "seulement." },
+	noeuds: [
+		{ icone: "personne", libelle: "Vous demandez" },
+		{ icone: "engrenage", libelle: "On s'en charge", detail: "à votre place" },
+		{ icone: "coche", libelle: "Vous recevez" },
+	],
+	voix: "Vous demandez, on s'en charge, vous recevez.",
+});
+const avantapres = (id = "avantapres"): Brut => ({
+	id,
+	type: "avantapres",
+	titre: { texte: "Hier, puis demain.", accent: "puis demain." },
+	paires: [
+		{ avant: "Posts à écrire", apres: "Post prêt" },
+		{ avant: "Vidéo à monter", apres: "Pub prête" },
+	],
+	voix: "Hier, tout restait à faire. Demain, tout est prêt.",
+});
+
+describe("scenes d'explication en motion design", () => {
+	it("accepte transformation, flux et avantapres sans erreur ni avertissement de format", () => {
+		const b = bon();
+		remplace(b, "etape-confirmer", transformation());
+		remplace(b, "resultat", flux());
+		b.scenes.splice(-2, 0, avantapres());
+		const r = nettoyerScriptPub(b);
+		expect(r.erreurs).toEqual([]);
+		expect(r.avertissements.filter((a) => !/Voix totale|Duree totale/.test(a))).toEqual([]);
+		const types = (r.script?.scenes as ScenePub[]).map((s) => s.type);
+		expect(types).toEqual(expect.arrayContaining(["transformation", "flux", "avantapres"]));
+		expect(r.script?.scenes.find((s) => s.id === "transformation")).toMatchObject({
+			entree: { icone: "calendrier", libelle: "Une semaine entière" },
+			operateur: "Claude",
+		});
+	});
+
+	it("remplace une icone inconnue par l'icone par defaut, avec un avertissement", () => {
+		const b = bon();
+		const t = transformation();
+		t.entree.icone = "licorne";
+		remplace(b, "etape-confirmer", t);
+		const r = avertit(b, `l'icone de "entree" est inconnue, "etoile" est utilisee`);
+		expect((r.script?.scenes.find((s) => s.id === "transformation") as any).entree.icone).toBe("etoile");
+	});
+
+	it("borne les textes, les noeuds et les paires", () => {
+		const b = bon();
+		const t = transformation();
+		t.entree.libelle = "Un libellé beaucoup trop long pour tenir";
+		t.operateur = "Un operateur bien trop long";
+		remplace(b, "etape-confirmer", t);
+		const f = flux();
+		f.noeuds.push({ icone: "etoile", libelle: "Quatrième" });
+		remplace(b, "resultat", f);
+		const a = avantapres();
+		a.paires.push({ avant: "Un", apres: "Deux" }, { avant: "Trois", apres: "Quatre" }, { avant: "Cinq", apres: "Six" });
+		a.avant = "Un etiquette beaucoup trop longue";
+		b.scenes.splice(-2, 0, a);
+		const s = valide(b);
+		const par = (id: string) => s.scenes.find((x) => x.id === id) as any;
+		expect(Array.from(par("transformation").entree.libelle).length).toBeLessThanOrEqual(20);
+		expect(Array.from(par("transformation").operateur).length).toBeLessThanOrEqual(14);
+		expect(par("flux").noeuds).toHaveLength(3);
+		expect(par("avantapres").paires).toHaveLength(3);
+		expect(Array.from(par("avantapres").avant).length).toBeLessThanOrEqual(12);
+	});
+
+	it("rejette les champs obligatoires manquants", () => {
+		const t = transformation();
+		delete t.sortie.libelle;
+		const b = bon();
+		remplace(b, "etape-confirmer", t);
+		rejet(b, "sortie.libelle");
+		const c = bon();
+		remplace(c, "etape-confirmer", { ...flux(), noeuds: flux().noeuds.slice(0, 2) });
+		rejet(c, `"noeuds" demande 3 elements`);
+		const d = bon();
+		remplace(d, "etape-confirmer", { ...avantapres(), paires: [{ avant: "Seul", apres: "" }, { avant: "Un", apres: "Deux" }] });
+		rejet(d, `"paires" demande au moins 2 elements`);
+		const e = bon();
+		const sansOperateur = transformation();
+		delete sansOperateur.operateur;
+		remplace(e, "etape-confirmer", sansOperateur);
+		rejet(e, `"operateur"`);
+	});
+
+	it("les trois types sont dans le schema de sortie structuree", () => {
+		const json = JSON.stringify(SCHEMA_SCRIPT_PUB);
+		for (const t of ["transformation", "flux", "avantapres"]) expect(json).toContain(`"enum":["${t}"]`);
+		expect(json).not.toContain('"licorne"');
+		expect(json).toContain('"calendrier"');
+	});
+
+	it("leur but par defaut est comprendre et ils ne comptent pas comme des etapes", () => {
+		const b = bon();
+		remplace(b, "etape-confirmer", transformation());
+		const tl = calculerTimeline(valide(b));
+		expect(tl.scenes.filter((s) => s.etape)).toHaveLength(2);
+		expect(BUT_DEFAUT.transformation).toBe("comprendre");
+		expect(BUT_DEFAUT.flux).toBe("comprendre");
+		expect(BUT_DEFAUT.avantapres).toBe("comprendre");
+	});
+});
+
+describe("captures rares et breves", () => {
+	const capture = (id: string, capt: string): Brut => ({
+		id,
+		type: "etape",
+		onglet: "Vue",
+		filigrane: "VUE",
+		titre: { texte: "Un coup d'œil.", accent: "d'œil." },
+		visuel: { type: "capture", capture: capt, cadrage: "haut" },
+		voix: "Un simple coup d'œil.",
+	});
+
+	it("pose le but montrer et plafonne la duree d'une capture a 2,5 s", () => {
+		const b = bon();
+		scene(b, "etape-reserver").duree = 6;
+		scene(b, "etape-servir").but = "lire";
+		const r = avertit(b, `une capture est un but "montrer", "lire" est remplace`);
+		const s = r.script as ScriptPub;
+		const e = s.scenes.filter((x) => x.type === "etape" && x.visuel.type === "capture");
+		expect(e.map((x) => x.but)).toEqual(["montrer", "montrer"]);
+		expect(e[0].duree).toBe(2.5);
+		expect(e.every((x) => dureeScene(x, s) <= 2.5)).toBe(true);
+	});
+
+	it("passe la troisieme capture en liste vide et conseille une explication", () => {
+		const b = bon();
+		b.scenes.splice(9, 0, capture("etape-extra", "accueil"));
+		const r = avertit(b, "2 captures au maximum par pub");
+		expect(r.avertissements.join("\n")).toContain("transformation, flux, avantapres");
+		const extra = r.script?.scenes.find((x) => x.id === "etape-extra") as any;
+		expect(extra.visuel).toEqual({ type: "liste", titre: "", elements: [] });
+	});
+
+	it("ne compte pas une capture masquee, ni une etape en liste", () => {
+		const b = bon();
+		const extra = capture("etape-extra", "accueil");
+		extra.masquee = true;
+		b.scenes.splice(9, 0, extra);
+		const r = nettoyerScriptPub(b);
+		expect(r.avertissements.join("\n")).not.toContain("captures au maximum");
+	});
+
+	it("signale une voix trop longue pour 2,5 s", () => {
+		const b = bon();
+		scene(b, "etape-reserver").voix = "Vos clients réservent en ligne depuis leur téléphone.";
+		avertit(b, "sa voix tient en 5 mots (elle en compte 8)");
+	});
+
+	it("une capture est facultative : un script sans capture est valide", () => {
+		const b = bon();
+		b.captures = [];
+		remplace(b, "etape-reserver", transformation());
+		remplace(b, "etape-servir", flux());
+		const r = nettoyerScriptPub(b);
+		expect(r.erreurs).toEqual([]);
+		expect(r.avertissements.filter((a) => /capture/i.test(a))).toEqual([]);
+	});
+});
+
+describe("anti-repetition des arguments", () => {
+	const ajoute = (b: Brut, ids: string[], phrase: string) => {
+		for (const id of ids) scene(b, id).voix += ` ${phrase}`;
+	};
+
+	it("avertit quand la gratuite est dite dans deux scenes, voix et visuels confondus", () => {
+		const b = bon();
+		ajoute(b, ["rupture"], "C'est gratuit.");
+		scene(b, "appel").badge = { texte: "Gratuit pour tous", accent: "pour tous" };
+		const r = nettoyerScriptPub(b);
+		expect(r.avertissements.join("\n")).toContain(`l'argument "gratuite" revient dans 2 scenes (rupture, appel)`);
+		expect(r.avertissements.join("\n")).toContain("Chaque argument ne se dit qu'une fois");
+	});
+
+	it("n'avertit pas quand l'argument est dit une seule fois, dans la voix et l'ecran de la meme scene", () => {
+		const b = bon();
+		ajoute(b, ["etape-confirmer"], "Vos données sont chiffrées.");
+		scene(b, "etape-confirmer").texte = "Tout est chiffré, de bout en bout.";
+		expect(nettoyerScriptPub(b).avertissements).toEqual([]);
+	});
+
+	it("reconnait la securite, la rapidite, la simplicite, le code ouvert, l'absence de compte et le controle", () => {
+		const cas: [string, string][] = [
+			["securite des donnees", "Vos données sont chiffrées."],
+			["rapidite", "C'est prêt en cinq secondes."],
+			["simplicite", "Tout est très simple."],
+			["code ouvert", "Le projet est open source."],
+			["absence d'inscription", "Sans inscription."],
+			["controle de l'utilisateur", "Rien ne part sans toi."],
+		];
+		for (const [nom, phrase] of cas) {
+			const b = bon();
+			ajoute(b, ["rupture", "appel"], phrase);
+			expect(nettoyerScriptPub(b).avertissements.join("\n"), nom).toContain(`l'argument "${nom}" revient dans 2 scenes`);
+		}
+	});
+
+	it("avertit quand un meme mot significatif revient dans trois scenes, pas deux", () => {
+		const b = bon();
+		ajoute(b, ["rupture", "resultat"], "Un cadeau turquoise.");
+		expect(nettoyerScriptPub(b).avertissements).toEqual([]);
+		ajoute(b, ["appel"], "Un autre cadeau turquoise.");
+		const r = nettoyerScriptPub(b);
+		expect(r.avertissements.join("\n")).toContain('le mot "turquoise" revient dans 3 scenes (rupture, resultat, appel)');
+	});
+
+	it("reconnait le pluriel et le feminin comme le meme mot", () => {
+		const b = bon();
+		ajoute(b, ["rupture"], "Une belle ardoise.");
+		ajoute(b, ["resultat"], "Des ardoises partout.");
+		ajoute(b, ["appel"], "Votre ardoise.");
+		expect(nettoyerScriptPub(b).avertissements.join("\n")).toContain('le mot "ardoise" revient dans 3 scenes');
+	});
+
+	it("ignore les mots outils, les mots courts et le nom du projet", () => {
+		const b = bon();
+		ajoute(b, ["rupture", "resultat", "appel"], "Avec vous, pour tout, chaque fois. Tablée aussi.");
+		expect(nettoyerScriptPub(b).avertissements.filter((a) => a.startsWith("Repetition"))).toEqual([]);
+	});
+
+	it("exclut les scenes de tension, qui repetent par construction", () => {
+		const b = bon();
+		ajoute(b, ["repetition", "boucle", "chorus", "rupture"], "Un cadeau turquoise chiffré.");
+		expect(nettoyerScriptPub(b).avertissements).toEqual([]);
+	});
+
+	it("laisse la fin reprendre le slogan, mais pas un argument nouveau repete", () => {
+		const b = bon();
+		scene(b, "revelation").slogan = { texte: "Open source pour tous, toujours.", accent: "toujours." };
+		scene(b, "fin").slogan = "Open source pour tous, toujours.";
+		scene(b, "fin").voix = "Tablée. Open source pour tous, toujours.";
+		expect(nettoyerScriptPub(b).avertissements).toEqual([]);
+		scene(b, "fin").voix = "Tablée. Open source pour tous, toujours. Et son code ouvert.";
+		expect(nettoyerScriptPub(b).avertissements.join("\n")).toContain(`l'argument "code ouvert" revient dans 2 scenes (revelation, fin)`);
+	});
+
+	it("ne compte pas les scenes masquees", () => {
+		const b = bon();
+		ajoute(b, ["rupture", "resultat"], "Vos données sont chiffrées.");
+		scene(b, "resultat").masquee = true;
+		expect(nettoyerScriptPub(b).avertissements.join("\n")).not.toContain("securite des donnees");
 	});
 });

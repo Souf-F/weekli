@@ -1,4 +1,4 @@
-import { DECALAGE_VOIX, DUREES_SCENE, DUREES_TRANSITION, MARGE_VOIX, MOTS_PAR_MINUTE } from "./limites";
+import { DECALAGE_VOIX, DUREES_SCENE, DUREES_TRANSITION, LIMITES_PUB, MARGE_VOIX, MOTS_PAR_MINUTE } from "./limites";
 import type { ScenePub, ScriptPub, Transition, TypeScene } from "./types";
 
 export type SceneTimeline = {
@@ -23,6 +23,9 @@ const TRANSITION_DEFAUT: Record<TypeScene, Transition> = {
 	rupture: "glitch",
 	revelation: "pixels",
 	etape: "coupe",
+	transformation: "flou",
+	flux: "coupe",
+	avantapres: "glitch",
 	resultat: "flou",
 	preuve: "pixels",
 	appel: "glitch",
@@ -32,11 +35,20 @@ const TRANSITION_DEFAUT: Record<TypeScene, Transition> = {
 const borne = (n: number, min: number, max: number) => Math.min(Math.max(n, min), max);
 const mots = (s: string) => s.split(/\s+/).filter(Boolean).length;
 
+// Bornes d'un type de scene ; une etape portee par une capture reste breve (design.md 8.17)
+export const estCapture = (s: ScenePub) => s.type === "etape" && s.visuel.type === "capture";
+export function bornesScene(scene: ScenePub): { min: number; defaut: number; max: number } {
+	const d = DUREES_SCENE[scene.type];
+	if (!estCapture(scene)) return d;
+	const max = LIMITES_PUB.capturesScene.dureeMax;
+	return { min: 1.8, defaut: max, max };
+}
+
 export const dureeVoixEstimee = (voix: string, vitesse: number) => (mots(voix) * 60) / (MOTS_PAR_MINUTE * vitesse);
 
 // Duree d'une scene : la voix fixe le tempo (voix + marge, bornee par type), sinon `duree` du script ou defaut du type
 export function dureeScene(scene: ScenePub, script: ScriptPub, voixMesuree?: number): number {
-	const { min, defaut, max } = DUREES_SCENE[scene.type];
+	const { min, defaut, max } = bornesScene(scene);
 	const voix = script.voix.mode === "aucune" ? 0 : (voixMesuree ?? dureeVoixEstimee(scene.voix, script.voix.vitesse));
 	return voix > 0 ? borne(voix + MARGE_VOIX, min, max) : borne(scene.duree ?? defaut, min, max);
 }
