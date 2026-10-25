@@ -44,15 +44,15 @@
 	--ombre-bouton: 0 14px 30px -12px rgba(42, 28, 19, 0.6);
 
 	/* Polices */
-	--serif: "Instrument Serif", "Times New Roman", serif;
+	--serif: "Fraunces", Georgia, serif;
 	--sans: "Geist", system-ui, sans-serif;
 	--mono: "JetBrains Mono", ui-monospace, monospace;
 
 	/* Echelle typographique (taille / interligne) */
-	--t-affiche: clamp(3rem, 5.6vw, 5rem);
-	--lh-affiche: 1.02;
-	--t-titre: clamp(2.25rem, 4vw, 3.5rem);
-	--lh-titre: 1.05;
+	--t-affiche: clamp(2.6rem, 5vw, 4.4rem);
+	--lh-affiche: 1.06;
+	--t-titre: clamp(2rem, 3.6vw, 3.1rem);
+	--lh-titre: 1.1;
 	--t-sous-titre: 1.5rem;
 	--lh-sous-titre: 1.2;
 	--t-corps-grand: 1.15rem;

@@ -41,15 +41,20 @@ h1,
 h2,
 h3 {
 	margin: 0;
-	font-weight: 400;
+	font-weight: 500;
 }
 h1 {
 	font-size: var(--t-titre);
 }
 h1,
-h2 {
+h2,
+h3 {
 	font-family: var(--serif);
-	letter-spacing: -0.01em;
+	font-optical-sizing: auto;
+}
+h1,
+h2 {
+	letter-spacing: -0.02em;
 	line-height: var(--lh-titre);
 }
 h2 {
@@ -63,7 +68,7 @@ h2 em {
 h3 {
 	font-size: var(--t-corps-grand);
 	font-weight: 600;
-	letter-spacing: -0.01em;
+	letter-spacing: -0.005em;
 	line-height: var(--lh-sous-titre);
 }
 /* Cible tactile minimale de 24 px (WCAG 2.2) pour les cases a cocher */
