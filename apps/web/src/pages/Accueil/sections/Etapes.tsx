@@ -4,10 +4,10 @@ import s from "./Section.module.css";
 import styles from "./Etapes.module.css";
 
 const ETAPES = [
-	{ titre: "Connecte GitHub", texte: "Dans Claude via le connecteur, ou sur le site en un clic. Lecture seule." },
-	{ titre: "Choisis ta semaine", texte: "Weekli récupère tes commits et retire le bruit." },
-	{ titre: "Claude rédige", texte: "Il repère les deux ou trois sujets qui méritent d'être racontés." },
-	{ titre: "Tu publies", texte: "Tu relis, tu ajustes, tu copies. Rien ne part sans ton accord." },
+	{ titre: "Ajoute le connecteur", texte: "Une adresse à coller dans Claude, puis ton GitHub en lecture seule. Repos publics uniquement." },
+	{ titre: "Raconte ton projet", texte: "Pour qui, quel problème, quelle promesse : trois questions, Claude lit le reste dans ton README." },
+	{ titre: "Claude écrit", texte: "Tes posts de la semaine, le script de la pub avec sa voix off, et le post qui l'accompagne." },
+	{ titre: "Tu ajustes et tu publies", texte: "Tu relis, tu retouches les scènes dans le studio, tu exportes la vidéo. Rien ne part sans ton accord." },
 ];
 
 export function Etapes() {
@@ -32,7 +32,7 @@ export function Etapes() {
 	return (
 		<section className={s.section} id="comment">
 			<EnTete surTitre="Comment ça marche">
-				Du commit au post.
+				De ton projet à sa pub.
 				<br />
 				<em>Sans friction.</em>
 			</EnTete>

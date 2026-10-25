@@ -1,56 +1,56 @@
-# Handoff frontend-senior : F2, passe de cohérence du site
+# Handoff frontend-senior : contrastes, polices de titres, accueil
 
-Date : 2026-10-24. Rien n'est commité.
+Date : 2026-10-25. Rien n'est commité.
 
-## Vérifié, non refait
+## 1. Contrastes
 
-- Polices : 8 `woff2` locaux dans `apps/web/public/fonts/`, `styles/fonts.css`, `font-display: swap`, préchargement des deux polices principales dans `index.html`. Aucun lien Google dans `index.html`.
-- CSP de `public/_headers` : `style-src 'self'; font-src 'self'`, aucune mention de Google. Le fichier n'a pas été touché.
+Méthode : script maison dans le navigateur (ratio réel de chaque texte visible, calculé sur les pixels du canvas du mesh, le voile, les fonds en verre et les fonds pleins, plusieurs positions de scroll) + Lighthouse 12 accessibilité (Chrome avec `--force-prefers-reduced-motion`, sinon les blocs `.revele` à opacité 0 sont ignorés et le score est faussement parfait). Vite sur 127.0.0.1, API simulée en local.
 
-## Fichiers modifiés (tous sous `apps/web/src`)
+Causes : texte secondaire et accents moka posés directement sur les taches sombres du mesh (jusqu'à #8a7064 en bas de page).
 
-- `styles/tokens.css` : échelle typographique (`--t-*` et `--lh-*`, valeurs de design.md section 3), `--mesure` 68ch, `--espace-1` à `--espace-9`, `--focus`, rayons, durées (`--duree-rapide`, `--duree-ui`, `--duree-section`), `--ease` et `--ease-out`, `--surface` pleine pour le marketing, voiles et ombres nommés. Les tokens existants (`--verre*`, `--bord-verre`, `--ombre`, `--filet`) sont conservés, rien n'est renommé (le Studio en dépend).
-- `styles/global.css` : titres sur l'échelle, `:focus-visible` global (anneau `--focus`, contour transparent pour le mode contraste forcé), apparitions en `--duree-section`, `scroll-behavior` coupé avec `prefers-reduced-motion`.
-- Tous les `.module.css` de `components/` (Bouton, Logo, MeshBackground), `layouts/AppLayout`, `pages/Accueil/sections` (Section, Hero, Bandeau, Chiffres, DeuxModes, Etapes, Fonctionnalites, Installer, Navigation, Pied), `pages/Tableau` (Panneau, Tableau, CartePost, PanneauActivite), `pages/Historique` (2), `pages/Captures`, `pages/Reglages` (3), `pages/Legal` : tailles, interlignes, espacements, rayons, durées, couleurs en dur remplacés par les tokens. Restent en dur seulement des dimensions de mise en page (largeurs max, hauteurs de scroll, tailles de puces).
-- Verre : conservé uniquement sur la barre, la carte de connexion et les panneaux de l'app (`AppLayout`, `Panneau`, filtres de l'Historique), et sur la maquette du hero avec ses trois étiquettes flottantes. Retiré partout ailleurs : `Section.panneau` (Deux modes, Étapes, Installer), cartes de Fonctionnalités, Bandeau, pastille du hero, barre de navigation au scroll, bouton `contour`, pages légales. Ces éléments passent sur `--surface` plein.
-- Focus : les `outline: none` locaux (CartePost, CarteBrouillon, confirmation de suppression) et les contours ad hoc ont été retirés au profit du `--focus` global. Marge interne ajoutée aux zones à défilement (liste des dépôts, navigation mobile) pour que l'anneau ne soit pas rogné.
-- Mono : `JetBrains Mono` réservé aux noms d'outils et au code (design.md section 3). Surtitres, badges, notes et compteurs passent en Geist 500, capitales, `--suivi-etiquette`.
-- Textes : `Bandeau.tsx` (« Motion design » devient « Pub vidéo »), `Fonctionnalites.tsx` (carte « Lecture des diffs » sans « histoire », carte « Captures et pub vidéo »).
-- `Chiffres.tsx` : voir ci-dessous. `README.md` de `src` : ligne `tokens.css` mise à jour.
+Corrections (tokens et voile, direction artistique conservée) :
+- `--texte-doux` #6a5a4f vers #4d4036.
+- Nouveau `--moka-texte` #523726 pour tout texte moka (surtitres, mots en italique, badges, tags). `--moka` reste pour fonds et bordures.
+- Nouveau `--voile-mesh` (platine 56 %) posé entre le canvas et le contenu (`html::after` dans global.css).
+- Pied de page de l'accueil en espresso.
 
-## Section Chiffres (design.md section 2, point 8)
+| Texte | Avant | Après |
+|---|---|---|
+| Pied : « GitHub », « Projet open source… » | 1,85 à 2,2 | 6,4 et plus |
+| Pied : liens légaux | 2,2 à 2,7 | 5,4 et plus |
+| Surtitre « Comment ça marche » | 2,66 | 5,45 |
+| Surtitre « Deux modes » | 2,96 | 5,56 |
+| Titre en italique « Deux façons… » | 3,07 (grand, seuil 3) | 5,0 et plus |
+| Intro du hero | 3,67 | 6,0 et plus |
+| Note du hero (capitales) | 3,49 | 6,0 et plus |
+| Surtitre « Fonctionnalités » | 3,88 | 5,5 et plus |
+| Résultats d'outil dans la maquette (verre) | 4,18 | 5,2 et plus |
 
-| Chiffre | Source dans le dépôt |
-|---|---|
-| 6 outils MCP | six `registerTool` dans `apps/server/src/mcp/agent.ts` (activite_github, details_repo, details_commit, sauver_brouillons, lister_brouillons, capturer_site) |
-| 0 € à payer | `docs/brief.md` (budget 0 €, aucun service payant), `LICENSE` MIT |
-| 0 clé API stockée | aucun appel Anthropic dans `apps/server`; la clé reste dans le navigateur (`lib/reglages.ts`), CSP `connect-src` vers `api.anthropic.com` |
-| 90 jours | `apps/server/src/lib/conservation.ts`, test `donnees.test.ts` (7 776 000 s) |
+Après : minimum mesuré 5,45 sur l'accueil (mobile et desktop), aucun texte actif sous 4,5 sur app, historique, captures, réglages, studio et pages légales. Seuls restent les boutons désactivés (opacité 0,5, exemptés WCAG 1.4.3).
+Autres corrections d'accessibilité trouvées par Lighthouse : cases à cocher à 24 px (target-size), titres de cartes de l'historique en h2 (heading-order), filigrane de l'affiche en contenu généré.
 
-Anciens chiffres retirés : « 2 modes » et « 0 publication sans toi » (vrais mais sans intérêt de preuve), « 100 % lecture seule » (imprécis : Weekli écrit des brouillons, c'est GitHub qui est en lecture seule, scope `read:user`).
-La note sous les chiffres est corrigée : « ta clé API ne quitte jamais ton navigateur » était inexact (elle part vers Anthropic), elle dit maintenant « directement vers Anthropic, jamais vers nos serveurs ». PKCE, cookie HttpOnly et durée de 8 h vérifiés dans `routes/auth.ts` et `lib/session.ts`.
+Lighthouse accessibilité (final) : accueil 100, confidentialité 100, mentions légales 100, app 100, réglages 100, captures 100, studio 100, historique 100 (après le correctif h2, à relancer si doute).
 
-## Mesures
+## 2. Polices de titres (rien d'appliqué au site)
 
-- Navigateur (Vite sur 127.0.0.1:5173, volet navigateur) : `performance.getEntriesByType("resource")` sur l'accueil, 52 ressources, 0 hors origine. Polices chargées : Instrument Serif, Geist 400/500/600, JetBrains Mono. Lighthouse confirme : seules les requêtes vers `127.0.0.1` et des `data:`.
-- Lighthouse 12 (Chrome headless), accueil : **accessibilité 100** (serveur de dev et build de production), bonnes pratiques 100, SEO 91 (seul point : `robots.txt` invalide, fichier absent de `public/`, hors zone), performance 70 sur le build de production (FCP/LCP 0,77, TBT 0,28 ; le fond WebGL pèse sur le TBT). Non optimisé ici.
-- 375 px : pas de défilement horizontal sur l'accueil (scrollWidth 375). Pages de l'app non vues dans le navigateur (connexion GitHub impossible sans le Worker) : vérifiées par le typecheck, la compilation CSS et la relecture.
-- `npm run typecheck` vert, `npm run build` vert, `npm test` vert (core 137 tests, serveur 84 tests). Un échec transitoire de parsing de `packages/core/src/pub/nettoyer.ts` a été vu pendant le travail (fichier en cours d'écriture par un autre agent), disparu ensuite.
+Page : `apps/web/dev/polices.html` (+ `.css`, `.ts`), à `http://127.0.0.1:5173/dev/polices.html`, boutons pour voir une colonne seule. Image : `docs/reviews/polices.png`.
+Fichiers woff2 (npm pack de @fontsource, v5.3.0, subset latin) copiés uniquement dans `apps/web/dev/polices/` avec leurs licences OFL 1.1.
+- Option 1 : Fraunces (variable, axe opsz, italique). Serif chaleureux, garde la voix éditoriale.
+- Option 2 : Bricolage Grotesque (variable). Grotesque serrée et vive, proche du rythme de la pub. Pas d'italique : mots clés en moka seulement.
+- Option 3 : Young Serif (400). Serif d'affiche épais, très lisible. Pas d'italique non plus.
+Si le choix est fait : copier le woff2 dans `public/fonts/`, ajouter le `@font-face` à `fonts.css`, changer `--serif` dans `tokens.css`, ajuster `--t-affiche` (les options 2 et 3 sont plus larges, échelle 0,88 testée) et ajouter `font-style: normal` aux `em` pour 2 et 3.
 
-## Limites et points à trancher
+## 3. Accueil
 
-- `apps/web/README.md` (hors zone) dit encore « vidéo verticale 1080 × 1350 » et « aperçu animé » : à aligner sur la pub 16:9 avec la tâche vidéo.
-- « Prêt en deux minutes » (Installer) vient de la user story US-M1, non mesuré. Design.md prévoit un chiffre « 2 minutes » en dernière position : je ne l'ai pas mis dans Chiffres tant qu'il n'est pas chronométré.
-- Le « 6 » est écrit en dur : si un outil MCP est ajouté ou retiré (le fichier `agent.ts` est en cours de modification par d'autres tâches), mettre à jour `Chiffres.tsx`.
-- Section « La pub de ton projet » (V1, design.md section 5) non créée : hors F2.
-- Les titres globaux `h1` (`--t-titre`) et `h2` (`--t-sous-titre`) s'appliquent aussi au Studio, qui n'a pas été retouché : à vérifier à sa refonte.
-- Le hero garde ses étiquettes flottantes en verre (considérées comme faisant partie de la maquette).
-- Fiabilité : le fond du bouton `contour` est désormais plein (`--surface`), son aspect change légèrement dans l'app.
+- Hero : « Ton projet raconté, pub et post compris. », connecteur Claude en bouton principal, maquette sur `preparer_pub` / `sauver_pub` et le post du projet (« Aujourd'hui je vous présente… »).
+- Nouvelle section `PubProjet` (#pub, après le bandeau) : emplacement F13 repéré par `data-emplacement="pub-demo"` dans `PubProjet.tsx` (commentaire en tête), affiche 16:9 en CSS en attendant la vidéo, trois étapes et l'extrait du post.
+- Fonctionnalités : pub vidéo, voix off, post du projet, style, lecture seule, activité filtrée.
+- Deux modes : Claude en panneau espresso élargi et recommandé, clé API en bonus (nouvelle variante de bouton `clair`).
+- Étapes et installer réécrits. Bandeau sans marque tierce (Cloudflare et OAuth retirés). Aucune mention de la référence ni de Stepwize. Claude, GitHub et LinkedIn restent cités car ils font le produit.
+- Chiffre des outils : `NB_OUTILS = 13` dans `pages/Accueil/donnees.ts` (comptage des `registerTool` dans `apps/server/src/mcp/outils-*.ts` : 4 GitHub, 4 pub, 2 brouillons, 2 style, 1 capture). Les 14 à 15 attendus ne sont pas dans le code : à trancher (outil manquant, ou chiffre du brief à corriger). Le code est la vérité, donc 13.
 
-## Commits proposés
+## Vérifications
+`npm run typecheck` et `npm run build` (apps/web) verts. Aucun tiret long dans les fichiers modifiés.
 
-1. `style(web): add type scale, spacing, focus and motion tokens` (`styles/tokens.css`, `styles/global.css`)
-2. `refactor(web): apply design tokens to components and app pages` (CSS de `components/`, `layouts/`, `pages/Tableau`, `Historique`, `Captures`, `Reglages`, `Legal`)
-3. `refactor(home): apply design tokens and plain surfaces to marketing sections` (CSS de `pages/Accueil/sections`)
-4. `fix(home): rewrite numbers section with figures sourced in the repo` (`Chiffres.tsx`)
-5. `docs(web): align copy with the project ad brief` (`Bandeau.tsx`, `Fonctionnalites.tsx`, `src/README.md`)
+## Limites
+Audit de contraste fait sur le mesh à des instants et scrolls échantillonnés, pas sur toutes les positions possibles (marge visée au moins 0,9 point). L'app a été auditée avec une API simulée.

@@ -1,0 +1,137 @@
+.grille {
+	display: grid;
+	grid-template-columns: 1.5fr 1fr;
+	gap: var(--espace-7);
+	align-items: start;
+}
+.figure {
+	margin: 0;
+}
+
+/* Affiche de la pub : fond sombre de marque, typographie cinetique figee sur un instant */
+.affiche {
+	position: relative;
+	aspect-ratio: 16 / 9;
+	display: flex;
+	align-items: center;
+	padding: 0 8%;
+	overflow: hidden;
+	border-radius: var(--rayon-l);
+	background: var(--espresso);
+	color: var(--platine);
+	box-shadow: var(--ombre);
+	container-type: inline-size;
+}
+.filigrane {
+	position: absolute;
+	right: 4%;
+	bottom: -14%;
+	font: 800 62cqi / 1 var(--sans);
+	letter-spacing: -0.06em;
+	color: var(--platine);
+	opacity: 0.07;
+}
+/* Mot en filigrane : decor pur, donc en contenu genere (hors arbre d'accessibilite) */
+.filigrane::before {
+	content: "01";
+}
+.etape,
+.duree {
+	position: absolute;
+	font-size: max(var(--t-etiquette), 2cqi);
+	font-weight: 500;
+	letter-spacing: var(--suivi-etiquette);
+	text-transform: uppercase;
+	color: var(--lavande-pro);
+}
+.etape {
+	top: 7%;
+	left: 8%;
+}
+.duree {
+	bottom: 9%;
+	left: 8%;
+}
+.mots {
+	position: relative;
+	margin: 0;
+	font: 800 8.6cqi / 1.02 var(--sans);
+	letter-spacing: -0.04em;
+}
+.mots mark {
+	padding: 0 0.12em;
+	border-radius: 0.1em;
+	background: var(--moka-clair);
+	color: var(--espresso);
+}
+.progres {
+	position: absolute;
+	inset: auto 0 0;
+	height: 4px;
+	background: linear-gradient(90deg, var(--lavande-pro) 28%, var(--filet-sombre) 28%);
+}
+.legende {
+	margin-top: var(--espace-3);
+	font-size: var(--t-petit);
+	line-height: var(--lh-petit);
+	color: var(--texte-doux);
+}
+
+.colonne {
+	display: grid;
+	gap: var(--espace-6);
+}
+.etapes {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	display: grid;
+	gap: var(--espace-5);
+}
+.etapes li {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	column-gap: var(--espace-4);
+}
+.num {
+	grid-row: span 2;
+	font-family: var(--serif);
+	font-size: var(--t-sous-titre);
+	line-height: var(--lh-sous-titre);
+	color: var(--moka-texte);
+	font-variant-numeric: tabular-nums;
+}
+.etapes p {
+	margin: var(--espace-1) 0 0;
+	font-size: var(--t-petit);
+	line-height: var(--lh-petit);
+	color: var(--texte-doux);
+}
+.post {
+	margin: 0;
+	padding: var(--espace-4) var(--espace-5);
+	border: 1px solid var(--filet);
+	border-left: 3px solid var(--moka);
+	border-radius: var(--rayon-m);
+	background: var(--surface);
+}
+.postEtiquette {
+	font-size: var(--t-etiquette);
+	font-weight: 500;
+	letter-spacing: var(--suivi-etiquette);
+	text-transform: uppercase;
+	color: var(--moka-texte);
+}
+.post p {
+	margin: var(--espace-2) 0 0;
+	font-family: var(--serif);
+	font-size: var(--t-corps-grand);
+	line-height: var(--lh-corps-grand);
+}
+
+@media (max-width: 980px) {
+	.grille {
+		grid-template-columns: 1fr;
+		gap: var(--espace-6);
+	}
+}

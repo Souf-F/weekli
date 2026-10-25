@@ -49,7 +49,7 @@ export function CarteBrouillon({ brouillon: b, surModifie, surSupprime }: Props)
 				<span className={styles.badge}>{b.publie ? "Publié" : "À publier"}</span>
 				<time dateTime={b.cree}>{date(b.cree)}</time>
 			</header>
-			<h3 className={styles.titre}>{b.titre || "Sans titre"}</h3>
+			<h2 className={styles.titre}>{b.titre || "Sans titre"}</h2>
 			<p className={styles.meta}>
 				{b.format} {b.source && `· ${b.source}`}
 			</p>
