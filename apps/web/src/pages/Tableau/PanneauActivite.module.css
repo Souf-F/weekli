@@ -55,6 +55,6 @@
 	white-space: nowrap;
 }
 .sha {
-	color: var(--moka);
+	color: var(--moka-texte);
 	font-size: var(--t-etiquette);
 }

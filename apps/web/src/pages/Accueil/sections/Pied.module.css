@@ -9,7 +9,7 @@
 	flex-wrap: wrap;
 	border-top: 1px solid var(--filet);
 	font-size: var(--t-petit);
-	color: var(--texte-doux);
+	color: var(--espresso);
 }
 .pied p {
 	margin: 0;
@@ -23,5 +23,6 @@
 	transition: color var(--duree-ui);
 }
 .liens a:hover {
-	color: var(--espresso);
+	color: var(--moka-texte);
+	text-decoration: underline;
 }

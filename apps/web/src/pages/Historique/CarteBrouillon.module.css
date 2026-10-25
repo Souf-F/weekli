@@ -21,7 +21,7 @@
 	padding: var(--espace-1) var(--espace-3);
 	border-radius: var(--rayon-pilule);
 	background: var(--voile-moka);
-	color: var(--moka);
+	color: var(--moka-texte);
 	font-weight: 500;
 }
 .publie .badge {
@@ -35,7 +35,7 @@
 	font-weight: 400;
 	font-size: var(--t-sous-titre);
 	line-height: var(--lh-sous-titre);
-	color: var(--moka);
+	color: var(--moka-texte);
 }
 .meta {
 	margin: 0 0 var(--espace-2);

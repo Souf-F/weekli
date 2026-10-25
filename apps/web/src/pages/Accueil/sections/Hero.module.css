@@ -103,7 +103,7 @@
 	border-radius: var(--rayon-pilule);
 	background: var(--voile-moka);
 	font-size: var(--t-petit);
-	color: var(--moka);
+	color: var(--moka-texte);
 }
 .corps {
 	display: flex;
@@ -135,7 +135,7 @@
 	font-family: var(--serif);
 	font-style: italic;
 	font-size: var(--t-corps-grand);
-	color: var(--moka);
+	color: var(--moka-texte);
 }
 .suite {
 	color: var(--texte-doux);
@@ -143,7 +143,7 @@
 .tags {
 	font-size: var(--t-etiquette);
 	font-weight: 500;
-	color: var(--moka);
+	color: var(--moka-texte);
 }
 .outil {
 	display: flex;
@@ -154,7 +154,7 @@
 	border-radius: var(--rayon-s);
 	background: var(--voile-lavande);
 	font-size: var(--t-petit);
-	color: var(--moka);
+	color: var(--moka-texte);
 }
 .outil code {
 	color: var(--espresso);
@@ -185,7 +185,7 @@
 	font-family: var(--serif);
 	font-size: var(--t-sous-titre);
 	font-weight: 400;
-	color: var(--moka);
+	color: var(--moka-texte);
 }
 .f1 {
 	top: calc(-1 * var(--espace-7));
@@ -199,7 +199,7 @@
 	bottom: calc(-1 * var(--espace-5));
 	left: var(--espace-7);
 	font-weight: 500;
-	color: var(--moka);
+	color: var(--moka-texte);
 }
 
 @media (max-width: 980px) {

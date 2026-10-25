@@ -55,7 +55,7 @@
 	white-space: nowrap;
 }
 .capture a {
-	color: var(--moka);
+	color: var(--moka-texte);
 	font-weight: 500;
 }
 

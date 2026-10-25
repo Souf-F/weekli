@@ -15,7 +15,7 @@
 	line-height: var(--lh-etiquette);
 	letter-spacing: var(--suivi-etiquette);
 	text-transform: uppercase;
-	color: var(--moka);
+	color: var(--moka-texte);
 }
 .titre {
 	font-size: var(--t-titre);

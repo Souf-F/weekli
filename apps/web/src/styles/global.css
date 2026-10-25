@@ -23,6 +23,16 @@ body {
 		radial-gradient(40% 40% at 90% 95%, var(--moka-clair), transparent), var(--lavande);
 }
 
+/* Voile entre le mesh (canvas fixe, z-index -1) et le contenu */
+html::after {
+	content: "";
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	background: var(--voile-mesh);
+	pointer-events: none;
+}
+
 a {
 	color: inherit;
 	text-decoration: none;
@@ -48,13 +58,21 @@ h2 {
 }
 h1 em,
 h2 em {
-	color: var(--moka);
+	color: var(--moka-texte);
 }
 h3 {
 	font-size: var(--t-corps-grand);
 	font-weight: 600;
 	letter-spacing: -0.01em;
 	line-height: var(--lh-sous-titre);
+}
+/* Cible tactile minimale de 24 px (WCAG 2.2) pour les cases a cocher */
+input[type="checkbox"] {
+	width: var(--espace-5);
+	height: var(--espace-5);
+	margin: 0;
+	accent-color: var(--moka);
+	vertical-align: middle;
 }
 code {
 	font-family: var(--mono);

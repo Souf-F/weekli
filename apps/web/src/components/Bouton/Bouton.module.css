@@ -46,6 +46,17 @@
 	background: var(--blanc);
 }
 
+/* Pour les panneaux espresso */
+.clair {
+	background: var(--platine);
+	color: var(--espresso);
+	border-color: var(--platine);
+}
+.clair:hover:not(:disabled) {
+	background: var(--blanc);
+	border-color: var(--blanc);
+}
+
 .petit {
 	padding: var(--espace-2) var(--espace-4);
 	font-size: var(--t-petit);

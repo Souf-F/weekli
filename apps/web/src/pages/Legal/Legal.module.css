@@ -48,7 +48,7 @@
 	margin-top: var(--espace-2);
 }
 .texte a {
-	color: var(--moka);
+	color: var(--moka-texte);
 	text-decoration: underline;
 	text-underline-offset: 3px;
 }

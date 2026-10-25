@@ -16,7 +16,7 @@
 }
 .piste span:nth-child(even) {
 	font-style: italic;
-	color: var(--moka);
+	color: var(--moka-texte);
 }
 @keyframes defile {
 	to {

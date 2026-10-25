@@ -28,7 +28,7 @@
 	font-weight: 400;
 	font-size: var(--t-sous-titre);
 	line-height: var(--lh-sous-titre);
-	color: var(--moka);
+	color: var(--moka-texte);
 }
 .texte {
 	width: 100%;
