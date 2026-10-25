@@ -93,6 +93,7 @@ type ScriptPub = {
     prononciation: Record<string, string>; // 20 entrees max, cle et valeur 40 caracteres
   };
   musique: "energique" | "calme" | "aucune";
+  trame?: Trame;                       // trame narrative (design.md 8.13) ; indicative, n'impose aucun ordre ; inconnue : ignoree avec avertissement ; absent : aucune
   gestes?: Geste[];                    // 2 a 3 gestes distincts parmi la bibliotheque (design.md 8.16) ; absent : defauts du catalogue
   captures: CaptureRef[];              // 0 a 6
   scenes: ScenePub[];                  // 8 a 14
@@ -112,6 +113,7 @@ type MotsAccent = { texte: string; accent?: string }; // accent : partie de text
 
 type Transition = "coupe" | "glitch" | "flou" | "pixels";
 
+type Trame = "probleme-qui-revient" | "demonstration-directe" | "vision-manifeste";
 type Geste = "accent" | "surlignage" | "soulignement" | "frappe" | "impact" | "lettres" | "glitch" | "pixels" | "flou" | "rayons";
 type But = "lire" | "comprendre" | "montrer";
 
@@ -146,6 +148,7 @@ Règles de structure (avertissement si non respectées, rejet si marqué « reje
 
 | Règle | Effet |
 |---|---|
+| `trame` hors des trois valeurs | ignorée, avertissement |
 | 8 à 14 scènes | rejet hors bornes, y compris au-dessus de 14 (tronquer risquerait de couper la `fin`) |
 | Au moins une scène `revelation` non masquée (une révélation masquée ne compte pas) | rejet |
 | Dernière scène non masquée de type `fin` | rejet |

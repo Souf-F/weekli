@@ -304,7 +304,7 @@ describe("avertissements (api-contract.md 2.1)", () => {
 	});
 
 	it("signale une duree estimee sous 50 s", () => {
-		const r = avertit(copie(), "Duree totale estimee de 43 s : vise 50 a 65 s");
+		const r = avertit(copie(), "Duree totale estimee de 45 s : vise 50 a 65 s");
 		expect(r.avertissements).toHaveLength(2);
 	});
 
@@ -502,5 +502,24 @@ describe("gestes et but", () => {
 		const scenes = r.script?.scenes as ScenePub[];
 		expect(scenes.find((s) => s.id === "fin")?.but).toBe("montrer");
 		expect(scenes.find((s) => s.id === "rupture")).not.toHaveProperty("but");
+	});
+});
+
+describe("trame", () => {
+	it("garde une trame connue et laisse le champ absent sans avertissement", () => {
+		const b = bon();
+		expect(nettoyerScriptPub(b).script).not.toHaveProperty("trame");
+		b.trame = "vision-manifeste";
+		const r = nettoyerScriptPub(b);
+		expect(r.erreurs).toEqual([]);
+		expect(r.script?.trame).toBe("vision-manifeste");
+		expect(r.avertissements).toEqual([]);
+	});
+
+	it("ignore une trame inconnue avec un avertissement", () => {
+		const b = bon();
+		b.trame = "Stepwize";
+		const r = avertit(b, `"trame" doit valoir`);
+		expect(r.script).not.toHaveProperty("trame");
 	});
 });

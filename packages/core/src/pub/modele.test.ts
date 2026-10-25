@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { LIMITES_PUB } from "./limites";
-import { type EntreeScriptPub, scriptPubDepuisReponses } from "./modele";
+import { choisirTrame, type EntreeScriptPub, scriptPubDepuisReponses } from "./modele";
 import { nettoyerScriptPub } from "./nettoyer";
 import type { CaptureRef, ScenePub, ScriptPub } from "./types";
 
@@ -214,3 +214,80 @@ describe("scriptPubDepuisReponses", () => {
 		}
 	});
 });
+
+describe("trames narratives", () => {
+	const quatre = ["a", "b", "c", "d"].map((id) => capture(id, `Écran ${id}`));
+	const manifeste: EntreeScriptPub = {
+		...JEUX.sixCaptures,
+		reponses: {
+			pourQui: "Les artisans indépendants.",
+			probleme: "Leurs outils les enferment.",
+			promesse: "Nous croyons que chacun mérite des outils libres.",
+		},
+		captures: quatre,
+	};
+	const demonstration: EntreeScriptPub = { ...JEUX.sixCaptures, captures: quatre };
+	const types = (e: EntreeScriptPub) => scriptPubDepuisReponses(e).scenes.map((s) => s.type);
+
+	it("choisit au moins deux trames differentes sur des reponses variees", () => {
+		const choix = [JEUX.restaurant, JEUX.sansCapture, demonstration, manifeste].map(
+			(e) => scriptPubDepuisReponses(e).trame,
+		);
+		expect(choix).toEqual([
+			"probleme-qui-revient",
+			"probleme-qui-revient",
+			"demonstration-directe",
+			"vision-manifeste",
+		]);
+		expect(new Set(choix).size).toBeGreaterThanOrEqual(2);
+	});
+
+	it("applique la regle documentee de choisirTrame", () => {
+		expect(choisirTrame(manifeste.reponses, 0)).toBe("vision-manifeste");
+		expect(choisirTrame(JEUX.restaurant.reponses, 6)).toBe("probleme-qui-revient");
+		expect(choisirTrame(demonstration.reponses, 3)).toBe("probleme-qui-revient");
+		expect(choisirTrame(demonstration.reponses, 4)).toBe("demonstration-directe");
+	});
+
+	it("chaque trame donne un ordre de scenes different, valide et sans avertissement", () => {
+		const ordres = new Set<string>();
+		for (const e of [JEUX.restaurant, demonstration, manifeste]) {
+			const script = scriptPubDepuisReponses({ ...e, captures: e.captures?.length ? e.captures : quatre });
+			const r = nettoyerScriptPub(script);
+			expect(r.erreurs).toEqual([]);
+			expect(r.script).toEqual(script);
+			expect(r.avertissements, script.trame).toEqual([]);
+			ordres.add(script.scenes.map((s) => s.type).join());
+		}
+		expect(ordres.size).toBe(3);
+	});
+
+	it("la demonstration et le manifeste sautent la tension de la trame du probleme", () => {
+		for (const e of [demonstration, manifeste]) {
+			const t = types(e);
+			for (const x of ["repetition", "boucle"] as const) expect(t).not.toContain(x);
+		}
+		expect(types(demonstration).slice(0, 2)).toEqual(["ouverture", "revelation"]);
+		expect(types(manifeste).slice(0, 3)).toEqual(["ouverture", "rupture", "revelation"]);
+		expect(types(JEUX.restaurant)).toContain("boucle");
+	});
+
+	it("une trame forcee est respectee, sauf la demonstration sans capture", () => {
+		expect(scriptPubDepuisReponses({ ...JEUX.restaurant, trame: "vision-manifeste" }).trame).toBe("vision-manifeste");
+		const sans = scriptPubDepuisReponses({ ...JEUX.sansCapture, trame: "demonstration-directe" });
+		expect(sans.trame).toBe("probleme-qui-revient");
+		for (const trame of ["probleme-qui-revient", "vision-manifeste"] as const) {
+			const s = scriptPubDepuisReponses({ ...JEUX.sansCapture, trame });
+			expect(nettoyerScriptPub(s).erreurs).toEqual([]);
+		}
+	});
+
+	it("n'invente aucune preuve et n'emploie ni tiret ni repere Stepwize force", () => {
+		for (const e of [demonstration, manifeste]) {
+			const json = JSON.stringify(scriptPubDepuisReponses(e));
+			expect(json).not.toMatch(new RegExp(`[${String.fromCharCode(0x2013, 0x2014)}]`));
+			expect(json).not.toContain("Lundi");
+		}
+	});
+});
+

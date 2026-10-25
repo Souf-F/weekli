@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { CATALOGUE_PUB, QUESTIONS_PUB, REGLES_POST_PROJET, REGLES_PUB } from "./guide";
+import { CATALOGUE_PUB, QUESTIONS_PUB, REGLES_POST_PROJET, REGLES_PUB, TRAMES_PUB } from "./guide";
 import { DUREES_SCENE } from "./limites";
-import type { TypeScene } from "./types";
+import { TRAMES, type TypeScene } from "./types";
 
 const TIRETS = new RegExp(`[${String.fromCharCode(0x2013, 0x2014)}]`);
 
@@ -43,5 +43,13 @@ describe("guide de redaction", () => {
 		expect(REGLES_POST_PROJET).toContain("Aujourd'hui je vous présente");
 		expect(REGLES_POST_PROJET).toMatch(/Jamais de commit, de code, de terminal/);
 		expect(REGLES_POST_PROJET).toMatch(/pose la question avant de rédiger/);
+	});
+
+	it("decrit les trois trames et impose de varier sans copier une reference", () => {
+		expect(TRAMES_PUB.map((t) => t.trame)).toEqual([...TRAMES]);
+		for (const t of TRAMES) expect(CATALOGUE_PUB).toContain(t);
+		expect(REGLES_PUB).toMatch(/Varier, ne jamais copier une référence/);
+		expect(REGLES_PUB).toMatch(/jamais un passage obligé/);
+		expect(CATALOGUE_PUB).toMatch(/une question courte, un chiffre réel/);
 	});
 });

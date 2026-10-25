@@ -3,7 +3,7 @@
 Mis à jour le 2026-10-24. Deux objets distincts :
 
 - **Le site Weekli** (sections 1 à 7) : on garde l'existant (mesh WebGL, café et platine, maquette 3D) et on fait une passe de cohérence.
-- **La pub vidéo générée pour le projet de l'utilisateur** (sections 8 et 9) : grammaire tirée de la référence imposée `~/Desktop/Stepwize_pub_audit_gratuit.mp4`, aux couleurs **du projet de l'utilisateur**, jamais à celles de Weekli.
+- **La pub vidéo générée pour le projet de l'utilisateur** (sections 8 et 9) : grammaire de pub de marque (niveau d'énergie et de soin de la vidéo `~/Desktop/Stepwize_pub_audit_gratuit.mp4`, qui reste une référence de niveau et non un modèle de narration), aux couleurs **du projet de l'utilisateur**, jamais à celles de Weekli.
 
 ## 1. Concept
 
@@ -115,7 +115,9 @@ Ordre révisé : le connecteur Claude reste en tête (priorité 1), la pub vidé
 
 ## 8. Grammaire de la pub vidéo
 
-### 8.1 Analyse de la référence Stepwize
+### 8.1 Analyse d'une référence de niveau (Stepwize)
+
+Cette vidéo est UN exemple du style dynamique voulu : elle fixe le niveau d'énergie, de finition et de rythme. Ce n'est pas une narration à recopier. L'analyse ci-dessous sert à comprendre des procédés (mots qui claquent, alternance de fonds, cartes d'interface), réutilisables dans n'importe quelle trame (8.13).
 
 Vidéo de 58,2 s, 1920 × 1080, 30 i/s, H.264 et AAC, musique continue sous une voix off. Images extraites à 1 i/s et regardées une par une.
 
@@ -181,7 +183,7 @@ Deux ambiances (`marque.typo`), polices déjà hébergées par le site :
 
 | Ambiance | Affichage | Accent | Texte et étiquettes | Pour |
 |---|---|---|---|---|
-| `nette` (défaut) | Geist 800, `letter-spacing: -0.045em` | Même police, couleur d'accent | Geist 500, étiquettes Geist 600 capitales `+0.14em` | Outils, services, B2B : le ton Stepwize |
+| `nette` (défaut) | Geist 800, `letter-spacing: -0.045em` | Même police, couleur d'accent | Geist 500, étiquettes Geist 600 capitales `+0.14em` | Outils, services, B2B |
 | `editoriale` | Instrument Serif 400 | Instrument Serif italique | Geist 500 et 600 | Projets culturels, artisanaux, personnels |
 
 Échelle à 1080p :
@@ -239,7 +241,7 @@ Durées en secondes : minimum, défaut, maximum. La durée réelle suit la voix 
 
 | Type | Acte | Fond | Durées | Champs (voir `api-contract.md` 2.1) | Animation |
 |---|---|---|---|---|---|
-| `ouverture` | Tension | Sombre | 1,8 / 2,5 / 3,5 | `moment`, `detail?` | Un cercle fin se dessine (t 0 à 0,4) avec graduations ; `moment` en Affiche apparaît en échelle 0,9 vers 1 (t 0,15) ; `detail` en Slogan couleur `accentSombre` (t 0,4). Le cercle tourne lentement |
+| `ouverture` | Tension | Sombre | 1,8 / 2,5 / 3,5 | `moment`, `detail?` (accroche : repère de temps, question, chiffre réel, citation ou contraste Avant/Après, voir 8.13) | Un cercle fin se dessine (t 0 à 0,4) avec graduations ; `moment` en Affiche apparaît en échelle 0,9 vers 1 (t 0,15) ; `detail` en Slogan couleur `accentSombre` (t 0,4). Le cercle tourne lentement |
 | `repetition` | Tension | Sombre | 2,5 / 3,5 / 5 | `lignes[2..3]`, `impact`, `carte?` | Chaque ligne en Grand, partie accentuée en `alerteSombre`, une ligne chasse l'autre (montée de 40 px). La carte (blanche, 420 px) glisse à droite sur la première ligne. Dernier quart : `impact` en Impact plein écran `alerteSombre`, fond légèrement rougi, puis mur de 24 cartes identiques derrière, à 30 % |
 | `boucle` | Tension | Sombre | 3 / 4 / 5,5 | `phrase`, `reperes[2..4]`, `carte` | Phrase mot à mot en haut ; 5 à 7 copies de la carte flottent en profondeur (échelles 0,6 à 1,1, flou selon la profondeur) ; une pastille en bas affiche les repères qui se succèdent ; à chaque repère, une carte avance au premier plan |
 | `chorus` | Tension | Sombre | 3 / 4 / 5,5 | `titre`, `chute`, `bulles[3..6]` | `titre` au centre en Grand, bulles blanches (22 px) qui apparaissent autour en ressort, puis tombent en tournant ; `chute` remplace le titre, accent en `alerteSombre` |
@@ -264,7 +266,7 @@ L'interface de l'utilisateur ne peut pas être redessinée : on la montre par se
 | Entrée | Montée de 60 px, échelle 0,94 vers 1, opacité, 500 ms, `easeOutExpo` |
 | Vie | Lent Ken Burns : échelle 1 vers 1,05 et glissement vers le centre du `focus` (ou du cadre) sur toute la scène |
 | Focus | Si `focus` est donné : à t 0,45, l'extérieur du rectangle s'assombrit à 35 %, un cadre `accentClair` de 3 px se dessine autour, la carte zoome légèrement vers lui (1,05 vers 1,12) |
-| Vignettes | Si deux captures sont disponibles, la seconde apparaît en petite carte (360 px) décalée en bas à gauche de la première, avec 150 ms de retard (effet de profondeur à la Stepwize) |
+| Vignettes | Si deux captures sont disponibles, la seconde apparaît en petite carte (360 px) décalée en bas à gauche de la première, avec 150 ms de retard (effet de profondeur) |
 | Sans capture | `visuel: liste` : carte blanche titrée, 2 à 4 lignes avec case, les cases se cochent une à une (`accentClair`), barre de progression qui se remplit. Cas limite : une scène `etape` dont la capture est inconnue passe en liste vide (`elements: []`) ; le moteur affiche alors seulement le titre de l'étape, sans carte. Le script de départ ne produit jamais ce cas : chaque `etape` y porte soit une capture existante, soit une liste de 2 à 4 éléments |
 | Interdits | Capture brute plein écran, capture d'un terminal, d'un éditeur de code ou de GitHub |
 
@@ -282,7 +284,27 @@ L'interface de l'utilisateur ne peut pas être redessinée : on la montre par se
 - La voix ne lit pas l'écran : elle dit l'idée, l'écran en garde les mots clés.
 - Musique générée (`energique` par défaut) : 112 bpm, coupes et impacts calés sur les temps ; silence de 0,4 s sur la rupture, impact grave sur la révélation, montée finale sur l'appel. La musique baisse de 9 dB sous la voix.
 
-### 8.13 Structure type de 60 secondes
+### 8.13 Trames narratives et structure type
+
+Chaque pub suit l'une de trois **trames**, inscrite dans le champ `trame` du script (facultatif). Une trame est un ordre de scènes avec ses durées, pas un modèle de texte : accroches, mots et rythme viennent du projet. Règle : **varier, ne jamais copier une référence**. Deux pubs successives ne doivent ni partir de la même accroche ni suivre le même ordre. Le moteur et les types de scènes ne changent pas.
+
+**Accroches possibles** (scène `ouverture`) : repère de temps du quotidien (« Samedi »), question courte, chiffre réel (seulement s'il vient de l'utilisateur ou du README), citation (seulement si l'utilisateur la fournit), contraste « Avant / Après », conviction (« Notre idée »). Le repère de temps est une option parmi d'autres, jamais un passage obligé.
+
+| Trame | Ordre des scènes | Durée | Quand l'utiliser |
+|---|---|---|---|
+| `probleme-qui-revient` | `ouverture` 2,5, `repetition` 3,5, `boucle` 4, `chorus` 4 (facultative), `rupture` 3,5, `revelation` 6, `etape` x2 à 4 (4,5), `resultat` 5, `preuve` 4,5 (facultative), `appel` 5, `fin` 4 | 55 à 60 s | Un irritant précis et répété dans le quotidien de la cible. La répétition est le propos et doit être vraie dans les réponses. Tension sur le premier quart. |
+| `demonstration-directe` | `ouverture` 2,5 (contraste Avant/Après ou question), `revelation` 6, `etape` x3 à 4 (4,5), `resultat` 5, `preuve` 4,5 (facultative), `appel` 5, `fin` 4 | 50 à 55 s avec 4 étapes | Un produit simple, expliqué en le montrant, avec au moins 4 captures utiles. Pas de tension longue : la révélation tombe avant 6 s, le reste est l'usage. |
+| `vision-manifeste` | `ouverture` 2,5 (« Notre idée », citation ou chiffre réel), `rupture` 3,5 (la conviction tapée), `chorus` 4 (seulement sans capture), `revelation` 6, `etape` x2 à 4 (4,5), `preuve` 4,5 (facultative), `resultat` 5, `appel` 5, `fin` 4 | 50 à 58 s | Un projet porté par une conviction (liberté, vie privée, ouvert, respect) ou un projet personnel ou culturel : le propos est un principe, pas une répétition. La preuve vient de l'usage et des engagements réels. |
+
+**Choix de la trame par `scriptPubDepuisReponses`** (heuristique sans IA, `choisirTrame`, sur les réponses en minuscules sans accents) :
+
+1. Mot de conviction (croire, mériter, devoir, liberté, libre, vie privée, open source, indépendant, éthique, respect) dans le problème ou la promesse : `vision-manifeste`.
+2. Sinon, mot de répétition dans le problème (toujours, encore, chaque, revient, même, perd, oubli, retard, sonne...) ou moins de 4 captures : `probleme-qui-revient`.
+3. Sinon : `demonstration-directe`.
+
+Une trame passée dans l'entrée (`trame`) l'emporte, sauf `demonstration-directe` sans capture (rien à montrer, moins de 8 scènes), remplacée par `probleme-qui-revient`. Claude, qui rédige le script en mode MCP ou clé API, choisit lui-même la trame d'après les 3 réponses et la même table ; l'heuristique ne sert qu'au script de départ du studio.
+
+#### Structure de la trame `probleme-qui-revient`
 
 La durée d'une scène inclut sa zone de chevauchement avec la précédente (8.8). La durée totale est donc la somme des durées moins la somme des chevauchements : avec toutes les scènes facultatives et 4 étapes, 60 s de durées cumulées donnent 55,9 s de pub. Le cumul net ci-dessous soustrait les chevauchements. Il reste dans la fenêtre d'avertissement de 50 à 65 s.
 
@@ -354,7 +376,7 @@ Dans cet exemple, la scène `preuve` est absente : le projet fictif n'a aucune p
 
 ### 8.16 Discipline de production
 
-Décision de Soufiane (2026-10-25) : on garde l'énergie et la structure narrative de Stepwize ainsi que la voix Vivienne, et on adopte, pour la discipline, la méthode d'un skill de motion design externe (matériau de lecture, rien n'en est exécuté). Cette section prime sur 8.7 et 8.8 quand elles se contredisent.
+Décision de Soufiane (2026-10-25) : on garde le niveau d'énergie de la référence ainsi que la voix Vivienne (la structure narrative, elle, varie selon la trame, 8.13), et on adopte, pour la discipline, la méthode d'un skill de motion design externe (matériau de lecture, rien n'en est exécuté). Cette section prime sur 8.7 et 8.8 quand elles se contredisent.
 
 **Identité et mouvement tirés du projet.** Couleurs, logo, nom et lien viennent du projet de l'utilisateur (8.4, 8.11). La typographie suit `marque.typo` : `nette` pour une interface rigoureuse, `editoriale` pour un univers plus humain. Le caractère du mouvement suit la même clé : `nette` donne des transformations sobres (ressorts amortis, peu de rebond), `editoriale` un rythme plus organique (rebonds plus marqués, décalages plus longs). Un dépassement ne coupe jamais un mot ni ne sort une carte du cadre.
 
@@ -434,7 +456,7 @@ Style : panneaux de l'app (verre autorisé, section 2), l'aperçu sur fond `--es
 
 | Référence | Ce qu'on lui emprunte |
 |---|---|
-| Pub Stepwize (imposée) | Narration complète, cartes d'interface, filigrane, surlignage, pixels et rayons |
+| Pub Stepwize (référence de niveau, pas de narration) | Niveau d'énergie et de finition, cartes d'interface, filigrane, surlignage, pixels et rayons |
 | Films produit de Linear | Interfaces simplifiées en cartes, lumière douce, mouvements courts |
 | Keynotes Apple (typographie cinétique) | Un mot à la fois, silence avant la révélation |
 | Génériques de Saul Bass | Formes simples qui portent une histoire, rythme calé sur la musique |

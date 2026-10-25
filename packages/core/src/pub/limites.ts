@@ -30,6 +30,8 @@ export const ACCENT_GRIS_DEFAUT = "#3d4bff";
 // Debit de la voix a vitesse 1 (api-contract.md 3.5) et marge ajoutee a la voix (architecture.md section 7)
 export const MOTS_PAR_MINUTE = 170;
 export const MARGE_VOIX = 0.35;
+// Delai entre le debut d'une scene et le debut de sa voix
+export const DECALAGE_VOIX = 0.15;
 
 // Durees en secondes par type de scene (design.md 8.9)
 export const DUREES_SCENE: Record<TypeScene, { min: number; defaut: number; max: number }> = {

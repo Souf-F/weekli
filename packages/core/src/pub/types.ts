@@ -81,6 +81,10 @@ export const BUT_DEFAUT: Record<TypeScene, But> = {
 	fin: "montrer",
 };
 
+// Trames narratives (design.md 8.13) : l'ordre des scenes est choisi selon le projet, jamais copie d'une reference
+export const TRAMES = ["probleme-qui-revient", "demonstration-directe", "vision-manifeste"] as const;
+export type Trame = (typeof TRAMES)[number];
+
 export type ScriptPub = {
 	version: 1;
 	titre: string;
@@ -96,6 +100,7 @@ export type ScriptPub = {
 	};
 	voix: { mode: "synthese" | "importee" | "aucune"; vitesse: number; prononciation: Record<string, string> };
 	musique: "energique" | "calme" | "aucune";
+	trame?: Trame;
 	gestes?: Geste[];
 	captures: CaptureRef[];
 	scenes: ScenePub[];

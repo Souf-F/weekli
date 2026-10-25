@@ -51,3 +51,14 @@ Le code commité fait foi (`apps/server/src/mcp/`, `routes/api.ts`, `lib/donnees
 - **Image zéro et miniature PNG** livrées avec le MP4 ; **honnêteté** (jamais une animation présentée comme démonstration réelle, réel et illustratif distingués) ; **contrôles finaux** (images aux raccords, crête vraie sous -1,5 dBTP, pas de noirs involontaires). Ces trois points sont des règles de moteur et de guide, sans champ de script.
 - **Post du projet** : la trame décrite dans `tasks.md` (point 7) est écrite dans `REGLES_POST_PROJET` (`packages/core/src/pub/guide.ts`), distincte de `REGLES_PUB`, pour l'outil `proposer_post_projet` (B16).
 - **Avertissement, pas rejet** : tous les cas `gestes` et `but` invalides donnent un avertissement et un repli, jamais un rejet, pour ne pas bloquer un script produit par Claude.
+
+## 2026-10-25 : trames narratives, la référence n'est plus un modèle
+
+- **Correction de Soufiane** : la vidéo Stepwize est un exemple du style dynamique qu'il aime, pas une narration à recopier. Toutes les pubs auraient suivi la même trame (repère « Lundi », répétition, boucle, « Et si », révélation) et se ressembleraient. La vidéo reste une référence de niveau et d'énergie seulement ; les mentions de modèle à suivre sont retirées de `design.md` (le modèle de pub devient « référence de niveau »).
+- **Trois trames** (`design.md` 8.13) : `probleme-qui-revient` (l'ancienne), `demonstration-directe` (révélation avant 6 s puis l'usage) et `vision-manifeste` (une conviction, puis la preuve par l'usage). Le repère de temps devient une accroche parmi d'autres (question, chiffre réel, citation, contraste Avant/Après).
+- **Champ `trame`** facultatif sur `ScriptPub` (types, schéma, `nettoyerScriptPub` : valeur inconnue ignorée avec avertissement). Aucun script existant ne change ; le moteur et les types de scènes sont inchangés.
+- **Guide** : section TRAMES NARRATIVES dans `CATALOGUE_PUB`, règle « varier, ne jamais copier une référence » dans `REGLES_PUB`.
+- **`scriptPubDepuisReponses`** choisit la trame (`choisirTrame`, heuristique documentée en 8.13) et écrit `trame` dans le script. Écart assumé : la démonstration exige 4 captures, sinon elle ne tient pas 50 s.
+- **`calculerTimeline`** : la voix d'une scène, décalée de 0,15 s (`DECALAGE_VOIX`), doit finir avant le début du chevauchement de la suivante ; sinon la scène est allongée (au-delà de son maximum de type si besoin). Effet : les durées estimées montent d'environ 0,3 s par scène avec une transition longue.
+- **Restent à aligner** (hors zone de cette mission) : `specs.md` (US-P4), `architecture.md` (ADR du moteur) et `brief.md` parlent encore de « niveau Stepwize » ; c'est cohérent avec « référence de niveau » mais `brief.md` ligne 42 dit « ce style » : à reformuler par l'orchestrateur.
+

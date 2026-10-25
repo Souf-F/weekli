@@ -1,4 +1,4 @@
-import { GESTES } from "./types";
+import { GESTES, TRAMES } from "./types";
 
 // Schema JSON d'un ScriptPub pour la sortie structuree de Claude (mode cle API) et la description des outils MCP.
 // Les bornes (longueurs, nombres d'elements, plages) ne sont pas exprimees ici : nettoyerScriptPub les applique.
@@ -56,6 +56,7 @@ export const SCHEMA_SCRIPT_PUB = objet(
 			["mode", "vitesse", "prononciation"],
 		),
 		musique: { type: "string", enum: ["energique", "calme", "aucune"] },
+		trame: { type: "string", enum: [...TRAMES] },
 		gestes: liste({ type: "string", enum: [...GESTES] }),
 		captures: liste(
 			objet(

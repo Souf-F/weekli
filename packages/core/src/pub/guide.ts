@@ -1,5 +1,5 @@
 import { DUREES_SCENE, LIMITES_PUB } from "./limites";
-import type { ScriptPub, TypeScene } from "./types";
+import type { ScriptPub, Trame, TypeScene } from "./types";
 
 // Guide de redaction d'une pub, lu par Claude : renvoye par l'outil MCP preparer_pub (champs
 // "questions", "catalogue" et "regles") et place dans la consigne du mode cle API.
@@ -31,9 +31,37 @@ const duree = (t: TypeScene) => {
 	return `${s(d.min)} à ${s(d.max)}, ${s(d.defaut)} par défaut`;
 };
 
+export type DescriptionTrame = { trame: Trame; titre: string; ordre: string; quand: string };
+
+// Source : docs/design.md 8.13. L'ordre cite les types de scene ; (x) marque une scene facultative.
+export const TRAMES_PUB: readonly DescriptionTrame[] = [
+	{
+		trame: "probleme-qui-revient",
+		titre: "Le problème qui revient",
+		ordre: "ouverture, repetition, boucle, chorus (facultative), rupture, revelation, etape x2 à 4, resultat, preuve (facultative), appel, fin. Environ 56 s, tension sur le premier quart.",
+		quand: "Un irritant précis et répété dans le quotidien de la cible (le téléphone qui sonne, la relance oubliée, la tâche refaite chaque semaine). La répétition est le propos : elle doit être vraie dans les réponses.",
+	},
+	{
+		trame: "demonstration-directe",
+		titre: "La démonstration directe",
+		ordre: "ouverture (contraste Avant/Après ou question), revelation, etape x3 à 4, resultat, preuve (facultative), appel, fin. Pas de repetition, de boucle ni de chorus. Environ 50 à 55 s avec 4 étapes.",
+		quand: "Un produit simple à expliquer en le montrant, avec au moins 4 captures utiles : pas besoin de souffrir avant de comprendre. La révélation arrive dès les 6 premières secondes, le reste est l'usage.",
+	},
+	{
+		trame: "vision-manifeste",
+		titre: "La vision ou le manifeste",
+		ordre: "ouverture (\"Notre idée\", une citation ou un chiffre réel), rupture (la conviction tapée à l'écran), chorus (facultative, seulement sans capture), revelation, etape x2 à 4, preuve (facultative), resultat, appel, fin. Environ 50 à 58 s.",
+		quand: "Un projet porté par une conviction (liberté, vie privée, ouvert, respect, mérite) ou un projet personnel ou culturel, quand le problème n'est pas une répétition mais un principe. La preuve vient de l'usage et des engagements réels, pas de la plainte.",
+	},
+];
+
+const TRAMES_TEXTE = TRAMES_PUB.map(
+	(t, i) => `${i + 1}. ${t.trame} : ${t.titre}\n   Ordre : ${t.ordre}\n   Quand : ${t.quand}`,
+).join("\n");
+
 export const CATALOGUE_PUB = `CATALOGUE DES SCÈNES
 
-La pub suit les actes d'une publicité de marque : tension, rupture, révélation, parcours, résultat, preuve, appel, fin. Chaque scène a un type fixe, des champs à remplir et une voix off. Le moteur gère l'animation, les fonds, les couleurs et les transitions : tu n'écris que des textes.
+La pub suit les actes d'une publicité de marque (tension, rupture, révélation, parcours, résultat, preuve, appel, fin), dans l'ordre que choisit sa trame narrative (section TRAMES NARRATIVES). Chaque scène a un type fixe, des champs à remplir et une voix off. Le moteur gère l'animation, les fonds, les couleurs et les transitions : tu n'écris que des textes.
 
 Notation : (30) est le nombre maximal de caractères. Un texte plus long est coupé au dernier mot entier, donc écris court. Un champ MotsAccent est un objet { texte, accent } : "accent" est la fin du texte à colorer ou surligner, recopiée caractère pour caractère, ponctuation comprise. Exemple : { "texte": "Même problème.", "accent": "problème." }. Dans les scènes de tension, l'accent prend la couleur d'alerte ; ailleurs, la couleur de la marque.
 
@@ -41,13 +69,12 @@ Champs communs à toutes les scènes :
 - id : identifiant unique, minuscules, chiffres et tirets, 24 caractères au plus (exemple : "etape-reserver").
 - voix : la phrase dite par la voix off pendant la scène (${LIMITES_PUB.voix}). C'est elle qui fixe la durée de la scène.
 - transition (facultatif) : "coupe", "glitch", "flou" ou "pixels". Laisse le défaut sauf raison précise.
-- but (facultatif) : "lire", "comprendre" ou "montrer". Il règle la pause de lecture de la scène (voir la section Gestes et but). Laisse-le vide pour le but par défaut du type.
 - but (facultatif) : "lire", "comprendre" ou "montrer". Il règle la pause de lecture de la scène (section GESTES ET BUT plus bas). Sans but, le moteur prend celui du type.
 - masquee (facultatif) : true pour garder une scène dans le script sans la rendre.
 
 1. ouverture (tension, fond sombre, ${duree("ouverture")})
    Champs : moment (14), detail (30, facultatif).
-   Un repère de temps du quotidien de la cible, en un ou deux mots : "Lundi", "Samedi", "8 h 30". Le détail précise la scène : "20:30 · plein service". La voix pose le décor en une phrase.
+   L'accroche du film, en un ou deux mots à l'écran. Plusieurs formes, à choisir selon le projet : un repère de temps du quotidien de la cible ("Samedi", "8 h 30"), une question courte, un chiffre réel (seulement s'il vient de l'utilisateur ou du README), une citation (seulement si l'utilisateur la fournit), un contraste "Avant" / "Après", ou une conviction ("Notre idée"). Le repère de temps n'est qu'une option parmi d'autres, jamais un passage obligé. Le détail précise la scène : "20:30 · plein service". La voix pose le décor en une phrase.
 
 2. repetition (tension, fond sombre, ${duree("repetition")})
    Champs : lignes (2 à 3 MotsAccent de 30), impact (14), carte (facultative : titre 30, detail 40).
@@ -110,9 +137,13 @@ But d'une scène (champ but) :
 - montrer : un exemple dense, une capture ou un carton qu'on n'a pas besoin de lire en entier. L'exposition peut être brève (environ 0,5 s) sans que le contenu soit raccourci.
 But par défaut : lire pour ouverture, repetition, chorus, rupture, revelation, preuve et appel ; comprendre pour boucle, etape et resultat ; montrer pour fin. Ne change le but que si l'intention est différente (une étape qui montre une capture dense : montrer).
 
-STRUCTURE TYPE DE 60 SECONDES
+TRAMES NARRATIVES
 
-${LIMITES_PUB.scenes.min} à ${LIMITES_PUB.scenes.max} scènes dans cet ordre, environ 145 mots de voix au total :
+Champ trame du script (facultatif) : "probleme-qui-revient", "demonstration-directe" ou "vision-manifeste". Choisis la trame qui convient au projet et à ses 3 réponses, puis écris les scènes dans l'ordre de cette trame. Les trames sont des ordres de scènes, pas des modèles à recopier : les textes, les accroches et le rythme viennent du projet. Deux pubs successives ne doivent pas se ressembler.
+
+${TRAMES_TEXTE}
+
+Dans tous les cas : ${LIMITES_PUB.scenes.min} à ${LIMITES_PUB.scenes.max} scènes, environ 145 mots de voix au total (${LIMITES_PUB.motsVoix.min} à ${LIMITES_PUB.motsVoix.max}), une revelation, fin en dernier, et les mots de voix répartis selon les plages ci-dessous :
 - ouverture : 5 à 8 mots de voix
 - repetition : 6 à 12 mots
 - boucle : 12 à 14 mots
@@ -173,10 +204,15 @@ Honnêteté : réel et illustratif
 - Seules les captures du site sont du réel. Ne leur prête pas d'actions que tu n'as pas vues (une capture montre un écran, pas un résultat obtenu).
 - Les fonctions citées sont réelles (README ou captures) ; les situations, les cartes du problème et les bulles de la cible sont illustratives. Ne mélange pas les deux dans une même phrase de voix.
 
+Varier, ne jamais copier une référence
+- Une vidéo de référence (une pub que l'utilisateur aime, un exemple de niveau) donne un niveau d'énergie et de soin, jamais un plan à recopier. Ne reprends ni sa trame, ni ses mots, ni son enchaînement de scènes.
+- Choisis la trame (champ trame) qui sert CE projet : problème qui revient, démonstration directe ou vision. Change l'accroche d'une pub à l'autre : repère de temps, question, chiffre réel, citation, contraste avant/après. Le repère de temps ("Lundi") n'est jamais un passage obligé.
+- Si tes pubs précédentes du même utilisateur partent toutes de la même accroche ou du même ordre de scènes, change l'un des deux.
+
 Ton et accents
 - Une seule couleur d'alerte pour les mots du problème (tension), une seule couleur d'accent pour la solution. L'accent porte sur un à quatre mots, en fin de texte, jamais sur toute la phrase.
 - Phrases affirmatives, concrètes, au présent. Pas de superlatifs creux ("révolutionnaire", "ultime"), pas de points d'exclamation en série.
-- La tension occupe le premier quart de la pub : nomme le problème avant le produit.
+- Trame du problème qui revient : la tension occupe le premier quart, nomme le problème avant le produit. Trame de démonstration ou de vision : la révélation arrive tôt, l'ouverture ne dure que quelques secondes.
 
 Marque
 - Les couleurs, le logo, le nom et le lien sont ceux du projet de l'utilisateur, jamais ceux de Weekli. Laisse mentionWeekli à false sauf demande explicite.
@@ -185,7 +221,7 @@ Marque
 - logo : "monogramme" (initiale du nom), sauf si l'utilisateur importe une image dans le studio.
 
 Avant d'enregistrer, vérifie
-1. Une scène revelation, et fin en dernier.
+1. Une trame choisie, une scène revelation, et fin en dernier.
 2. Entre 2 et ${LIMITES_PUB.etapes.max} étapes, chacune avec une capture existante ou une liste de fonctions réelles.
 3. Voix totale entre ${LIMITES_PUB.motsVoix.min} et ${LIMITES_PUB.motsVoix.max} mots, aucune phrase de plus de 12 mots.
 4. Aucun mot technique, aucun chiffre de développement, aucune preuve ni offre inventée.

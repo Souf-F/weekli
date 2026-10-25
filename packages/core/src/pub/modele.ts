@@ -1,5 +1,5 @@
 import { ACCENT_GRIS_DEFAUT, COULEUR_HEX, LIMITES_PUB, REGEX_ID } from "./limites";
-import type { CaptureRef, Hex, MotsAccent, ScenePub, ScriptPub } from "./types";
+import type { CaptureRef, Hex, MotsAccent, ScenePub, ScriptPub, Trame } from "./types";
 
 // Ce que le studio connait sans IA : le repo, ses 3 reponses, sa marque et ses captures.
 // `repo` doit suivre NOM_REPO et `lien` etre une URL https (valides cote appelant).
@@ -11,6 +11,7 @@ export type EntreeScriptPub = {
 	slogan?: string;
 	marque?: { primaire?: string; accent?: string; alerte?: string };
 	captures?: readonly CaptureRef[];
+	trame?: Trame; // force la trame, sinon choisirTrame
 };
 
 const CONTROLES = /[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u2064\ufeff]/g;
@@ -160,6 +161,29 @@ function scenesEtapes(captures: CaptureRef[], cible: string): ScenePub[] {
 	});
 }
 
+// Choix de la trame (design.md 8.13), sans IA, sur les reponses en minuscules sans accents. Premiere regle qui s'applique :
+// 1. une conviction (croire, meriter, devoir, liberte, vie privee, open source...) dans le probleme ou la promesse : vision-manifeste ;
+// 2. un probleme qui revient (toujours, encore, chaque, perd, retard, oubli...) ou moins de 4 captures : probleme-qui-revient ;
+// 3. sinon : demonstration-directe.
+// La demonstration n'a pas de tension pour faire la duree : elle exige 4 captures (4 etapes) pour tenir 50 s, et sans capture
+// il n'y a rien a montrer (le script tomberait sous 8 scenes).
+const sansAccents = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+const CONVICTION =
+	/\b(croi[ts]|croyons|croire|conviction|merite|meritent|devrai(?:t|ent)|liberte|libre|vie privee|open source|independan|ethique|respect)/;
+const RECURRENCE =
+	/\b(toujours|encore|chaque|tous les|toutes les|sans cesse|revient|reviennent|repet|a nouveau|meme|sonne|perd|perdent|perdu|oubli|retard)/;
+
+const CAPTURES_DEMONSTRATION = 4;
+
+export function choisirTrame(
+	reponses: ScriptPub["reponses"],
+	nbCaptures: number,
+): Trame {
+	if (CONVICTION.test(sansAccents(`${reponses.probleme} ${reponses.promesse}`))) return "vision-manifeste";
+	if (RECURRENCE.test(sansAccents(reponses.probleme)) || nbCaptures < CAPTURES_DEMONSTRATION) return "probleme-qui-revient";
+	return "demonstration-directe";
+}
+
 // Retire les champs facultatifs vides, comme le JSON enregistre
 const sansVides = (s: ScenePub): ScenePub =>
 	Object.fromEntries(Object.entries(s).filter(([, v]) => v !== undefined)) as ScenePub;
@@ -190,7 +214,56 @@ export function scriptPubDepuisReponses(entree: EntreeScriptPub): ScriptPub {
 	const captures = capturesUtilisables(entree.captures ?? []);
 	const etapes = scenesEtapes(captures, cible);
 
-	const scenes: (ScenePub | false)[] = [
+	const demande = entree.trame ?? choisirTrame(reponses, captures.length);
+	const trame: Trame = demande === "demonstration-directe" && !captures.length ? "probleme-qui-revient" : demande;
+
+	const revelation = (suite: string): ScenePub => ({
+		id: "revelation",
+		type: "revelation",
+		slogan: accentue(slogan, 2),
+		voix: voix(`Voici ${nom}.`, slogan, suite),
+	});
+	const resultat: ScenePub = {
+		id: "resultat",
+		type: "resultat",
+		titre: accentue(tient(phrase(promesse1), 50) ?? "Le problème est réglé.", 2),
+		avant: tient(majuscule(probleme1), 24) ?? "Le même problème",
+		tampon: "Réglé",
+		apres: "L'esprit libre",
+		chute: accentue("La prochaine fois, rien à refaire.", 3),
+		voix: voix(
+			`Le résultat : ${minuscule(tientEnMots(promesse1, 13) ?? "le problème est réglé")}.`,
+			mots(promesse1).length <= 8 ? "Vous passez enfin à autre chose." : undefined,
+		),
+	};
+	// Jamais de preuve inventee : livree masquee, a remplir par l'utilisateur
+	const preuve: ScenePub = {
+		id: "preuve",
+		type: "preuve",
+		masquee: true,
+		surtitre: "Nos engagements",
+		elements: ["À compléter"],
+		voix: "",
+	};
+	const appel = (question: string, accentMots: number, voixAppel: string[]): ScenePub => ({
+		id: "appel",
+		type: "appel",
+		question: accentue(question, accentMots),
+		action: "Essayez.",
+		bouton,
+		voix: voix(question, ...voixAppel),
+	});
+	const fin: ScenePub = {
+		id: "fin",
+		type: "fin",
+		slogan: tient(slogan, 40),
+		bouton,
+		liens: [lienAffiche(lien)],
+		voix: voix(`${nom}.`, slogan, "Le lien est juste en dessous. À tout de suite."),
+	};
+
+	// Trame 1 : le probleme qui revient (tension longue, puis rupture et revelation)
+	const problemeQuiRevient = (): (ScenePub | false)[] => [
 		{
 			id: "ouverture",
 			type: "ouverture",
@@ -231,55 +304,83 @@ export function scriptPubDepuisReponses(entree: EntreeScriptPub): ScriptPub {
 			texte: accentue("Et si tout devenait simple, pour de vrai ?", 4),
 			voix: "Et si tout devenait simple, enfin, et pour de vrai ?",
 		},
-		{
-			id: "revelation",
-			type: "revelation",
-			slogan: accentue(slogan, 2),
-			voix: voix(`Voici ${nom}.`, slogan, "Conçu pour vous simplifier la vie, chaque jour."),
-		},
+		revelation("Conçu pour vous simplifier la vie, chaque jour."),
 		...etapes,
-		{
-			id: "resultat",
-			type: "resultat",
-			titre: accentue(tient(phrase(promesse1), 50) ?? "Le problème est réglé.", 2),
-			avant: tient(majuscule(probleme1), 24) ?? "Le même problème",
-			tampon: "Réglé",
-			apres: "L'esprit libre",
-			chute: accentue("La prochaine fois, rien à refaire.", 3),
-			voix: voix(
-				`Le résultat : ${minuscule(tientEnMots(promesse1, 13) ?? "le problème est réglé")}.`,
-				mots(promesse1).length <= 8 ? "Vous passez enfin à autre chose." : undefined,
-			),
-		},
-		{
-			id: "preuve",
-			type: "preuve",
-			masquee: true,
-			surtitre: "Nos engagements",
-			elements: ["À compléter"],
-			voix: "",
-		},
-		{
-			id: "appel",
-			type: "appel",
-			question: accentue("Ce problème vous parle ?", 2),
-			action: "Essayez.",
-			bouton,
-			voix: voix(
-				"Ce problème vous parle ?",
-				`Essayez ${nom}, dès aujourd'hui.`,
-				"C'est simple, et vous verrez la différence.",
-			),
-		},
-		{
-			id: "fin",
-			type: "fin",
-			slogan: tient(slogan, 40),
-			bouton,
-			liens: [lienAffiche(lien)],
-			voix: voix(`${nom}.`, slogan, "Le lien est juste en dessous. À tout de suite."),
-		},
+		resultat,
+		preuve,
+		appel("Ce problème vous parle ?", 2, [
+			`Essayez ${nom}, dès aujourd'hui.`,
+			"C'est simple, et vous verrez la différence.",
+		]),
+		fin,
 	];
+
+	// Trame 2 : la demonstration directe (un contraste avant/apres en accroche, puis le produit en action)
+	const demonstrationDirecte = (): (ScenePub | false)[] => [
+		{
+			id: "ouverture",
+			type: "ouverture",
+			moment: "Avant",
+			detail: tient(majuscule(probleme1), 30),
+			voix: voix(
+				`Avant, ${minuscule(tientEnMots(probleme1, 9) ?? "tout prenait du temps")}.`,
+				"Voyons concrètement ce qui change, étape par étape.",
+			),
+		},
+		revelation("Voici comment ça se passe, pas à pas, du premier écran jusqu'au résultat."),
+		...etapes,
+		resultat,
+		preuve,
+		appel("Prêt à voir la différence ?", 3, [
+			`Essayez ${nom}, c'est simple.`,
+			"Un premier pas suffit pour que tout change, et vous le sentirez vite.",
+		]),
+		fin,
+	];
+
+	// Trame 3 : la vision ou manifeste (une conviction, la revelation qui l'incarne, puis la preuve par l'usage)
+	const conviction =
+		tient(`Notre conviction : ${minuscule(promesse1)}.`, 80) ??
+		tient(`Notre conviction : ${minuscule(promesseCourte)}.`, 80) ??
+		"Notre conviction : tout peut rester simple.";
+	const visionManifeste = (): (ScenePub | false)[] => [
+		{
+			id: "ouverture",
+			type: "ouverture",
+			moment: "Notre idée",
+			detail: tient(majuscule(cible), 30),
+			voix: cible ? `Une idée simple, pensée pour ${minuscule(cible)}.` : "Une idée simple, pensée pour vous.",
+		},
+		{
+			id: "rupture",
+			type: "rupture",
+			texte: accentue(conviction, 3),
+			voix: voix(
+				`${conviction.replace(/^Notre conviction : /, "Nous croyons que ")}`,
+				"Et nous l'avons construit pour ça, rien d'autre.",
+			),
+		},
+		// Sans capture il n'y a pas d'etape : le chorus facultatif garde le script au-dessus de 8 scenes
+		!etapes.length && {
+			id: "chorus",
+			type: "chorus",
+			titre: accentue("Trop de gens s'y résignent.", 2),
+			chute: accentue("Nous refusons de nous y faire.", 3),
+			bulles: ["Ça a toujours été comme ça.", "On fait avec.", "Pas le choix."],
+			voix: "Trop de gens s'y résignent, comme si c'était normal. Nous, nous refusons de nous y faire.",
+		},
+		revelation("Né de cette conviction, pensé pour être utile dès le premier jour, et simple à vivre."),
+		...etapes,
+		preuve,
+		resultat,
+		appel("On commence ensemble ?", 2, [
+			`Rejoignez ${nom}, dès aujourd'hui.`,
+			"Vous verrez ce que cette idée change, concrètement, dans votre quotidien.",
+		]),
+		fin,
+	];
+
+	const scenes = { "probleme-qui-revient": problemeQuiRevient, "demonstration-directe": demonstrationDirecte, "vision-manifeste": visionManifeste }[trame]();
 
 	const accent = couleur(entree.marque?.accent);
 	const alerte = couleur(entree.marque?.alerte);
@@ -298,6 +399,7 @@ export function scriptPubDepuisReponses(entree: EntreeScriptPub): ScriptPub {
 		},
 		voix: { mode: "synthese", vitesse: LIMITES_PUB.vitesse.defaut, prononciation: {} },
 		musique: "energique",
+		trame,
 		captures,
 		scenes: scenes.filter((s): s is ScenePub => s !== false).map(sansVides),
 	};

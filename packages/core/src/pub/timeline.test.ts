@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { EXEMPLE } from "./exemple.fixture";
-import { DUREES_SCENE, DUREES_TRANSITION } from "./limites";
+import { DECALAGE_VOIX, DUREES_SCENE, DUREES_TRANSITION } from "./limites";
 import { nettoyerScriptPub } from "./nettoyer";
 import { calculerTimeline, dureeScene, dureeVoixEstimee, instantTimeline } from "./timeline";
 import type { ScenePub, ScriptPub } from "./types";
@@ -10,6 +10,29 @@ const sceneDe = (s: ScriptPub, id: string) => s.scenes.find((x) => x.id === id) 
 const somme = (n: number[]) => n.reduce((a, b) => a + b, 0);
 
 describe("calculerTimeline", () => {
+	it("allonge la scene pour que sa voix, decalee, finisse avant le chevauchement suivant", () => {
+		const script = base();
+		const i = script.scenes.findIndex((x) => x.id === "revelation");
+		script.scenes[i + 1].transition = "pixels";
+		const tl = calculerTimeline(script);
+		tl.scenes.forEach((s, k) => {
+			const suivante = tl.scenes[k + 1];
+			if (!suivante) return;
+			const voix = dureeVoixEstimee(sceneDe(script, s.id).voix, script.voix.vitesse);
+			expect(s.debut + DECALAGE_VOIX + voix).toBeLessThanOrEqual(suivante.debut + 1e-9);
+		});
+		// cas limite : voix qui remplit la scene, suivie d'un chevauchement de 0,6 s
+		const serre = base();
+		const r = serre.scenes.findIndex((x) => x.id === "revelation");
+		serre.scenes[r].voix = Array(18).fill("mot").join(" ");
+		serre.scenes[r + 1].transition = "pixels";
+		const t = calculerTimeline(serre);
+		const rev = t.scenes.find((x) => x.id === "revelation");
+		const apres = t.scenes[t.scenes.indexOf(rev as never) + 1];
+		const v = dureeVoixEstimee(serre.scenes[r].voix, 1);
+		expect((rev?.debut ?? 0) + DECALAGE_VOIX + v).toBeLessThanOrEqual(apres.debut + 1e-9);
+	});
+
 	it("place chaque scene a la fin de la precedente moins sa transition", () => {
 		const tl = calculerTimeline(base());
 		expect(tl.scenes).toHaveLength(12);
@@ -125,7 +148,7 @@ describe("duree d'une scene", () => {
 		const s = base();
 		const estime = calculerTimeline(s);
 		const mesure = calculerTimeline(s, { "etape-servir": 5.5 });
-		expect(mesure.scenes.find((x) => x.id === "etape-servir")?.duree).toBeCloseTo(5.85);
+		expect(mesure.scenes.find((x) => x.id === "etape-servir")?.duree).toBeCloseTo(6.15);
 		expect(mesure.duree).not.toBeCloseTo(estime.duree);
 		expect(calculerTimeline(s, { absent: 9 }).duree).toBe(estime.duree);
 	});

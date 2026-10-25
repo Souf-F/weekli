@@ -1,4 +1,4 @@
-import { DUREES_SCENE, DUREES_TRANSITION, MARGE_VOIX, MOTS_PAR_MINUTE } from "./limites";
+import { DECALAGE_VOIX, DUREES_SCENE, DUREES_TRANSITION, MARGE_VOIX, MOTS_PAR_MINUTE } from "./limites";
 import type { ScenePub, ScriptPub, Transition, TypeScene } from "./types";
 
 export type SceneTimeline = {
@@ -48,12 +48,25 @@ export function calculerTimeline(script: ScriptPub, voixMesurees: Readonly<Recor
 	const totalEtapes = visibles.filter(({ s }) => s.type === "etape").length;
 	let etapes = 0;
 	let fin = 0;
-	const scenes = visibles.map(({ s, index }, rang): SceneTimeline => {
+	const rangs = visibles.map(({ s }) => {
 		const numero = s.type === "etape" ? ++etapes : 0;
-		const transition = s.transition ?? (numero > 1 ? "coupe" : numero === 1 ? "flou" : TRANSITION_DEFAUT[s.type]);
+		return { numero, transition: s.transition ?? (numero > 1 ? "coupe" : numero === 1 ? "flou" : TRANSITION_DEFAUT[s.type]) };
+	});
+	const voixDe = ({ s }: { s: ScenePub }) =>
+		script.voix.mode === "aucune"
+			? 0
+			: Object.hasOwn(voixMesurees, s.id)
+				? voixMesurees[s.id]
+				: dureeVoixEstimee(s.voix, script.voix.vitesse);
+	const scenes = visibles.map(({ s, index }, rang): SceneTimeline => {
+		const { numero, transition } = rangs[rang];
 		const chevauchement = rang === 0 ? 0 : DUREES_TRANSITION[transition];
 		const debut = Math.max(fin - chevauchement, 0);
-		const duree = dureeScene(s, script, Object.hasOwn(voixMesurees, s.id) ? voixMesurees[s.id] : undefined);
+		let duree = dureeScene(s, script, Object.hasOwn(voixMesurees, s.id) ? voixMesurees[s.id] : undefined);
+		// La voix (decalee) doit finir avant le debut du chevauchement de la scene suivante : sinon on allonge
+		const suivante = rangs[rang + 1];
+		const voix = voixDe(visibles[rang]);
+		if (suivante && voix > 0) duree = Math.max(duree, DECALAGE_VOIX + voix + DUREES_TRANSITION[suivante.transition]);
 		fin = debut + duree;
 		return {
 			id: s.id,

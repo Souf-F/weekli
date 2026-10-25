@@ -11,9 +11,10 @@ import type {
 	ResultatNettoyage,
 	ScenePub,
 	ScriptPub,
+	Trame,
 	Visuel,
 } from "./types";
-import { BUTS, GESTES, GESTES_PUB } from "./types";
+import { BUTS, GESTES, GESTES_PUB, TRAMES } from "./types";
 
 type Rec = Record<string, unknown>;
 type Rapport = { erreurs: string[]; avertissements: string[] };
@@ -288,6 +289,14 @@ function nettoyerGestes(brut: unknown, o: ReturnType<typeof outils>): Geste[] | 
 	return valides.slice(0, GESTES_PUB.max);
 }
 
+// Trame narrative : indicative (elle n'impose aucun ordre), une valeur inconnue est ignoree avec un avertissement
+function nettoyerTrame(brut: unknown, o: ReturnType<typeof outils>): Trame | undefined {
+	if (brut === undefined) return undefined;
+	const trame = TRAMES.find((t) => t === brut);
+	if (!trame) o.avert(`"trame" doit valoir ${TRAMES.join(", ")}, le champ est ignore`);
+	return trame;
+}
+
 const CODE = /[`$]|(?<![\p{L}\p{N}_])(?:npm|git|commit|const|function)(?![\p{L}\p{N}_])/iu;
 const CLES_TECHNIQUES = new Set(["id", "type", "capture", "transition"]);
 const contientCode = (v: unknown): boolean =>
@@ -378,6 +387,8 @@ export function nettoyerScriptPub(entree: unknown): ResultatNettoyage {
 		}
 	}
 
+	const trame = nettoyerTrame(e.trame, o);
+
 	const script: ScriptPub = {
 		version: 1,
 		titre,
@@ -401,6 +412,7 @@ export function nettoyerScriptPub(entree: unknown): ResultatNettoyage {
 			prononciation,
 		},
 		musique: e.musique === "calme" || e.musique === "aucune" ? e.musique : "energique",
+		...(trame ? { trame } : {}),
 		...(gestes ? { gestes } : {}),
 		captures,
 		scenes,
