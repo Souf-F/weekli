@@ -4,6 +4,7 @@ import type {
 	Cadrage,
 	CaptureRef,
 	Carte,
+	Geste,
 	Hex,
 	MotsAccent,
 	Rect,
@@ -12,6 +13,7 @@ import type {
 	ScriptPub,
 	Visuel,
 } from "./types";
+import { BUTS, GESTES, GESTES_PUB } from "./types";
 
 type Rec = Record<string, unknown>;
 type Rapport = { erreurs: string[]; avertissements: string[] };
@@ -222,6 +224,8 @@ function nettoyerScene(brut: unknown, i: number, ids: Set<string>, captures: Set
 	const avant = r.erreurs.length;
 	const champs = corps(e, captures, outils(`Scene ${i + 1} (${id})`, r));
 	if (!champs || r.erreurs.length > avant) return null;
+	if (e.but !== undefined && !BUTS.some((b) => b === e.but))
+		o.avert(`"but" doit valoir ${BUTS.join(", ")}, la valeur par defaut du type est utilisee`);
 	const type = e.type as keyof typeof DUREES_SCENE;
 	const duree = nombre(e.duree);
 	return sans({
@@ -230,6 +234,7 @@ function nettoyerScene(brut: unknown, i: number, ids: Set<string>, captures: Set
 		voix: texte(e.voix, LIMITES_PUB.voix),
 		duree: duree === null ? undefined : borne(duree, DUREES_SCENE[type].min, DUREES_SCENE[type].max),
 		transition: TRANSITIONS.find((t) => t === e.transition),
+		but: BUTS.find((b) => b === e.but),
 		masquee: e.masquee === true ? true : undefined,
 		...sans(champs),
 	}) as ScenePub;
@@ -266,6 +271,22 @@ function nettoyerCaptures(brut: unknown, r: Rapport): CaptureRef[] {
 
 const COULEUR_OU_RIEN = (v: unknown) =>
 	typeof v === "string" && COULEUR_HEX.test(v) ? (v.toLowerCase() as Hex) : undefined;
+
+// Gestes choisis pour la pub : 2 ou 3 identifiants connus, sans doublon. Sinon le champ est ignore (le moteur
+// applique alors les gestes par defaut de chaque scene) et un avertissement l'explique.
+function nettoyerGestes(brut: unknown, o: ReturnType<typeof outils>): Geste[] | undefined {
+	if (brut === undefined) return undefined;
+	const valides = [...new Set((Array.isArray(brut) ? brut : []).filter((g): g is Geste => GESTES.some((x) => x === g)))];
+	const lus = Array.isArray(brut) ? brut.length : 0;
+	if (valides.length < lus) o.avert(`"gestes" : identifiants inconnus ou en double retires (connus : ${GESTES.join(", ")})`);
+	if (valides.length < GESTES_PUB.min) {
+		o.avert(`"gestes" demande ${GESTES_PUB.min} a ${GESTES_PUB.max} gestes distincts, le champ est ignore`);
+		return undefined;
+	}
+	if (valides.length > GESTES_PUB.max)
+		o.avert(`"gestes" : plus de ${GESTES_PUB.max} gestes, seuls les ${GESTES_PUB.max} premiers sont gardes`);
+	return valides.slice(0, GESTES_PUB.max);
+}
 
 const CODE = /[`$]|(?<![\p{L}\p{N}_])(?:npm|git|commit|const|function)(?![\p{L}\p{N}_])/iu;
 const CLES_TECHNIQUES = new Set(["id", "type", "capture", "transition"]);
@@ -347,6 +368,16 @@ export function nettoyerScriptPub(entree: unknown): ResultatNettoyage {
 		if (contientCode(s)) r.avertissements.push(`Scene "${s.id}" : la pub ne montre pas de code`);
 	}
 
+	const gestes = nettoyerGestes(e.gestes, o);
+	if (gestes) {
+		for (const s of visibles) {
+			if (s.transition && s.transition !== "coupe" && !gestes.includes(s.transition))
+				r.avertissements.push(
+					`Scene "${s.id}" : la transition "${s.transition}" ne fait pas partie des gestes choisis (${gestes.join(", ")})`,
+				);
+		}
+	}
+
 	const script: ScriptPub = {
 		version: 1,
 		titre,
@@ -370,6 +401,7 @@ export function nettoyerScriptPub(entree: unknown): ResultatNettoyage {
 			prononciation,
 		},
 		musique: e.musique === "calme" || e.musique === "aucune" ? e.musique : "energique",
+		...(gestes ? { gestes } : {}),
 		captures,
 		scenes,
 	};

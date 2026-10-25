@@ -453,3 +453,54 @@ describe("nettoyage des textes", () => {
 		expect(visuel?.type === "capture" && visuel.focus && visuel.focus.x + visuel.focus.largeur).toBeCloseTo(1);
 	});
 });
+
+describe("gestes et but", () => {
+	it("garde 2 ou 3 gestes connus, sans doublon", () => {
+		const b = bon();
+		b.gestes = ["accent", "impact", "accent", "rayons"];
+		const r = nettoyerScriptPub(b);
+		expect(r.script?.gestes).toEqual(["accent", "impact", "rayons"]);
+		expect(r.avertissements.join("\n")).toContain("en double");
+	});
+
+	it("laisse le champ absent sans avertissement", () => {
+		const r = nettoyerScriptPub(bon());
+		expect(r.script).not.toHaveProperty("gestes");
+		expect(r.avertissements).toEqual([]);
+	});
+
+	it("retire les identifiants inconnus, tronque au-dela de 3 et ignore moins de 2", () => {
+		const b = bon();
+		b.gestes = ["accent", "confettis", "impact", "lettres", "rayons"];
+		const r = avertit(b, "inconnus");
+		expect(r.script?.gestes).toEqual(["accent", "impact", "lettres"]);
+		expect(r.avertissements.join("\n")).toContain("seuls les 3 premiers");
+
+		b.gestes = ["accent"];
+		expect(avertit(b, "le champ est ignore").script).not.toHaveProperty("gestes");
+		b.gestes = "accent";
+		expect(avertit(b, "le champ est ignore").script).not.toHaveProperty("gestes");
+	});
+
+	it("avertit quand une transition choisie ne fait pas partie des gestes", () => {
+		const b = bon();
+		b.gestes = ["accent", "impact"];
+		scene(b, "fin").transition = "pixels";
+		scene(b, "etape-reserver").transition = "coupe";
+		const r = avertit(b, `la transition "pixels" ne fait pas partie des gestes`);
+		expect(r.avertissements.filter((a) => a.includes("transition"))).toHaveLength(1);
+		scene(b, "fin").transition = "flou";
+		b.gestes = ["accent", "flou"];
+		expect(nettoyerScriptPub(b).avertissements).toEqual([]);
+	});
+
+	it("garde le but d'une scene et ignore une valeur inconnue", () => {
+		const b = bon();
+		scene(b, "fin").but = "montrer";
+		scene(b, "rupture").but = "danser";
+		const r = avertit(b, `"but" doit valoir lire, comprendre, montrer`);
+		const scenes = r.script?.scenes as ScenePub[];
+		expect(scenes.find((s) => s.id === "fin")?.but).toBe("montrer");
+		expect(scenes.find((s) => s.id === "rupture")).not.toHaveProperty("but");
+	});
+});

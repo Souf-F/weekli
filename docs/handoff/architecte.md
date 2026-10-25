@@ -1,33 +1,23 @@
-# Handoff architecte : alignement des docs sur B11, F1 et l'effacement
+# Handoff architecte : discipline de production de la pub (gestes, but, honnêteté)
 
-Date : 2026-10-25. Docs seulement, aucun code touché, rien commité. Le code commité fait foi.
+Date : 2026-10-25. Rien commité. Source : skill de motion design externe, lu comme matériau, aucun nom propre repris.
 
-## docs/api-contract.md
+## Fait
+- docs/design.md : nouvelle section 8.16 (identité et mouvement tirés du projet, gestes, but, image zéro et miniature, honnêteté, contrôles finaux). Elle prime sur 8.7 et 8.8 en cas de contradiction.
+- docs/api-contract.md 2.1 : types `Geste` et `But`, champs `gestes?` (script) et `but?` (scène), 5 lignes de validation.
+- packages/core/src/pub : `types.ts` (GESTES, GESTES_PUB, BUTS, BUT_DEFAUT, champs), `schema.ts`, `nettoyer.ts` (nettoyerGestes, filtre du but, avertissement de transition hors gestes), `guide.ts` (section GESTES ET BUT dans CATALOGUE_PUB, règles gestes et honnêteté dans REGLES_PUB, nouvelle constante REGLES_POST_PROJET), `index.ts` (export de REGLES_POST_PROJET, hors liste de zone mais nécessaire).
+- Tests : 5 cas dans nettoyer.test.ts, 2 dans guide.test.ts. `npx vitest run` dans packages/core : 200 verts, tsc propre.
+- docs/changelog.md (entrée 2026-10-25) et docs/tasks.md (impacts F10, B9/B11, B16).
 
-- **1.2** : règle `contenu_non_fiable` détaillée (texte libre du repo dans un objet, champs sûrs à la racine, API du site à plat).
-- **2** : `PubResume.scenes` = scènes visibles ; types définis dans `@weekli/core`.
-- **3.1** : étape 5 non tentée après un échec KV, sessions et cookie gardés, `500` pour relancer.
-- **4.1** : formes réelles de `activite_github`, `details_repo`, `details_commit` ; paragraphe sur le masquage des secrets (formats connus, sans motif générique, marqueur `[secret masque]`).
-- **4.2** : `lister_repos` (description sous `contenu_non_fiable`, exemple), `preparer_pub` (`pubExistante`, `marqueConnue`, `capturesDisponibles`, questions accentuées, revérification des domaines, message de repo introuvable), `sauver_pub` (message de la limite de 20 renvoyant vers le site, validation avant limite, forme du `lien`), `lister_pubs`.
+## Règles de validation (avertissement, jamais rejet)
+- gestes : inconnus ou doublons retirés ; plus de 3 : 3 premiers gardés ; moins de 2 ou non liste : champ ignoré ; transition glitch, flou ou pixels hors gestes : avertissement.
+- but hors lire, comprendre, montrer : ignoré. But par défaut par type dans `BUT_DEFAUT`.
 
-## docs/architecture.md
+## Pour le moteur (F10)
+- Appliquer seulement les gestes choisis, repli neutre sinon (table dans design.md 8.16). Sans `gestes`, comportement actuel.
+- Pause de lecture 1,2 / 0,8 / 0,5 s : `timeline.ts` n'a pas été modifié, `calculerTimeline` ignore encore `but`.
+- Image zéro complète, miniature PNG, contrôles finaux, mention « Illustration » dans la planche.
 
-- Arborescence : `lib/pub/audio/voix/` remplace `voix.ts` et `voix.worker.ts`.
-- Section 9 : CSP `'wasm-unsafe-eval'` et `worker-src 'self'` en place, nouvelle ligne isolation cross-origin (COOP et COEP), ligne masquage des secrets.
-- ADR-07 : licence GPL-3.0-only actée (H2 résolue), mise en œuvre retenue, mesures de F1 (106 s sur 1 fil, 40 à 61 s sur 4 fils), isolation nécessaire, navigateurs non mesurés.
-- ADR-08 : révision et fichiers épinglés, cache IndexedDB (pas Cache Storage), tailles réelles, effet sur la CSP.
-
-## docs/specs.md
-
-- US-P1 : 8 à 14 scènes ; nouveau critère : le studio demande au moins une capture avant le script de départ.
-
-## docs/changelog.md
-
-Entrée du 2026-10-25.
-
-## Points à signaler
-
-1. `frontend-voix.md` affirme que COEP n'est pas dans `_headers`, mais le fichier commité contient `Cross-Origin-Embedder-Policy: require-corp`. Docs alignées sur le fichier. Les avatars GitHub doivent donc être chargés avec `crossorigin="anonymous"` : à vérifier dans les pages qui les affichent.
-2. Le masquage des secrets (`packages/core/src/masquage.ts`, `github.ts`) apparaissait encore comme modifié, non commité, dans le dépôt au moment de la rédaction ; la doc le décrit comme en place.
-3. `docs/tasks.md` n'est pas dans ma zone : les lignes « Points remontés » traitées ici (effacement, `PubResume`, « 6 outils » à passer à 13, H1/H2, B11) sont à cocher par l'orchestrateur. H2 est tranchée (GPL-3.0-only).
-4. Reste à décider par Soufiane : `GPL-3.0-only` ou `or-later`, écoute finale de la voix (H1), mesures Edge, Firefox et Safari.
+## À trancher
+- Seuils de la pause (1,2 / 0,8 / 0,5 s) et liste fermée de dix gestes : choix de l'architecte, à confirmer.
+- Seuil de noir involontaire (luminance moyenne sous 2 % sur plus de 0,2 s) : à calibrer sur un vrai export.

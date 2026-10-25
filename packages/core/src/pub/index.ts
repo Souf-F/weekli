@@ -1,4 +1,4 @@
-export { CATALOGUE_PUB, QUESTIONS_PUB, type QuestionPub, REGLES_PUB } from "./guide";
+export { CATALOGUE_PUB, QUESTIONS_PUB, type QuestionPub, REGLES_POST_PROJET, REGLES_PUB } from "./guide";
 export * from "./limites";
 export { type EntreeScriptPub, scriptPubDepuisReponses } from "./modele";
 export { nettoyerScriptPub } from "./nettoyer";

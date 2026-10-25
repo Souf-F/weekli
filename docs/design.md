@@ -352,6 +352,53 @@ Projet inventé pour illustrer le format : « Tablée », réservations en ligne
 
 Dans cet exemple, la scène `preuve` est absente : le projet fictif n'a aucune preuve réelle à montrer, et on n'en invente pas.
 
+### 8.16 Discipline de production
+
+Décision de Soufiane (2026-10-25) : on garde l'énergie et la structure narrative de Stepwize ainsi que la voix Vivienne, et on adopte, pour la discipline, la méthode d'un skill de motion design externe (matériau de lecture, rien n'en est exécuté). Cette section prime sur 8.7 et 8.8 quand elles se contredisent.
+
+**Identité et mouvement tirés du projet.** Couleurs, logo, nom et lien viennent du projet de l'utilisateur (8.4, 8.11). La typographie suit `marque.typo` : `nette` pour une interface rigoureuse, `editoriale` pour un univers plus humain. Le caractère du mouvement suit la même clé : `nette` donne des transformations sobres (ressorts amortis, peu de rebond), `editoriale` un rythme plus organique (rebonds plus marqués, décalages plus longs). Un dépassement ne coupe jamais un mot ni ne sort une carte du cadre.
+
+**Gestes : 2 ou 3 par pub.** La bibliothèque contient dix gestes, identifiés par :
+
+| Identifiant | Geste | Défini en |
+|---|---|---|
+| `accent` | Mots clés en couleur d'accent ou d'alerte, rebond 1,06 | 8.7 |
+| `surlignage` | Bloc qui balaie derrière le mot accentué | 8.7 |
+| `soulignement` | Filet sous la signature | 8.7 |
+| `frappe` | Texte tapé avec curseur carré | 8.7 |
+| `impact` | Mot d'impact, décalage chromatique, secousse | 8.7 |
+| `lettres` | Mot d'action en lettres qui tombent et particules | 8.7 |
+| `glitch`, `flou`, `pixels` | Transitions de scène | 8.8 |
+| `rayons` | Rayons de la révélation et de la fin | 8.6 |
+
+Le script porte un champ facultatif `gestes` (2 à 3 identifiants distincts). Le moteur n'applique que ces gestes : un geste non choisi est remplacé par sa version neutre (accent sans rebond, `impact` en simple changement d'échelle, `lettres` en mot par mot, `frappe` en mot par mot, `surlignage` en couleur de texte, `soulignement` omis, transition en `coupe`, `rayons` en halo fixe). Le mot par mot, la `coupe`, les fonds et le motif de carrés ne sont pas des gestes : ils sont toujours présents. Sans `gestes`, le moteur applique les défauts du catalogue 8.9 (comportement actuel). Un geste explique un changement, puis se stabilise ; l'objet qui se déplace garde sa forme d'une scène à l'autre.
+
+Choix conseillé : un projet sobre prend `accent`, `soulignement` et `flou` ; un projet nerveux prend `impact`, `glitch` et `lettres`. Une transition explicite (`glitch`, `flou`, `pixels`) hors des gestes choisis donne un avertissement de `nettoyerScriptPub`.
+
+**But d'une scène : `lire`, `comprendre`, `montrer`.** Champ facultatif `but` sur chaque scène, qui règle la pause de lecture, c'est-à-dire le temps immobile après la fin des gestes d'entrée :
+
+| But | Contenu | Pause de lecture minimale | Traitement |
+|---|---|---|---|
+| `lire` | Message indispensable | 1,2 s | Rien ne bouge sauf le fond ; texte court |
+| `comprendre` | Schéma, parcours | 0,8 s | On laisse voir la relation puis son résultat |
+| `montrer` | Capture, carton, exemple dense | 0,5 s | Exposition brève possible, contenu jamais raccourci |
+
+But par défaut : `lire` pour `ouverture`, `repetition`, `chorus`, `rupture`, `revelation`, `preuve`, `appel` ; `comprendre` pour `boucle`, `etape`, `resultat` ; `montrer` pour `fin`. La pause prolonge la scène dans ses bornes de 8.9 sans ralentir les gestes. Quand la voix est plus courte que gestes plus pause, la durée de la scène suit gestes plus pause (dans les bornes). Un seul calendrier régit scènes, transitions et repères audio.
+
+**Image zéro complète et miniature.** La première image est un état complet : logo ou monogramme lisible, titre utile, bon contraste, rien à moitié entré. Le moteur rend donc l'ouverture avec le logo et le nom déjà posés dès t = 0 (pas de fondu depuis le noir). Une miniature PNG au ratio de la vidéo (1920 x 1080) est livrée avec le MP4 : elle reprend l'image zéro avec le titre de la pub, jamais une image prise au hasard. Il ne faut pas promettre qu'une plateforme l'utilisera automatiquement.
+
+**Honnêteté : réel et illustratif.**
+- Une animation n'est jamais présentée comme une démonstration réelle. Ni la voix, ni les textes à l'écran ne disent « en direct », « en vrai » ou « démonstration ».
+- Réel : les captures du site et les engagements vérifiables du projet (README). Illustratif : les cartes, listes, frises, tampons, bulles et situations. Le studio marque les cartes illustratives par une mention discrète « Illustration » dans la planche de relecture, et la note de contrôles la rappelle.
+- Pas de preuve, de chiffre, de client ni d'offre inventés (8.2, point 3).
+
+**Contrôles finaux** (le moteur les exécute après l'export, F10) :
+1. Images intermédiaires aux raccords : une image à chaque milieu de transition et deux images à t0 + 0,2 s et t1 - 0,2 s de chaque scène, en plus des extrémités. On cherche texte coupé, accent faux, carte hors cadre, sprite étiré.
+2. Crête vraie (true peak) du fichier AAC final sous -1,5 dBTP ; niveau intégré visé -16 LUFS. Mesure refaite après toute modification du son.
+3. Aucun noir involontaire : sur le MP4 décodé, aucune image dont la luminance moyenne est inférieure à 2 % hors des fonds sombres de marque, et aucune plage de plus de 0,2 s ; le fond sombre `sombre` n'est pas un noir.
+4. Durée, dimensions, cadence et présence de la piste audio conformes au plan ; durée audio égale à la durée vidéo à une image près ; fondu de fin présent.
+5. Image zéro identique à la miniature PNG.
+
 ## 9. Le studio de pub (interface)
 
 ### 9.1 Parcours

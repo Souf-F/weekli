@@ -150,3 +150,14 @@ Ordre, avec un minimum d'agents :
    - B16 (sonnet) : outil MCP `proposer_post_projet` et prompt associé (même principe que preparer_pub : Weekli fournit les données et les règles, Claude rédige). Règles d'écriture dans core.
    - F14 (sonnet) : panneau « Post LinkedIn » dans le studio et sur la page du projet : propositions, copie en un clic, régénération ; en mode clé API, génération dans le navigateur.
 
+## Impacts de la discipline de production (2026-10-25, design.md 8.16)
+
+- **F10 (moteur et studio), ajouts** :
+  - Application des gestes choisis : lire `script.gestes` et ne jouer que ces gestes, chaque autre geste prenant sa version neutre (table de repli dans design.md 8.16). Sans `gestes`, comportement actuel. Fini quand : deux scripts du même exemple, l'un avec `["accent", "soulignement", "flou"]`, l'autre avec `["impact", "glitch", "lettres"]`, donnent deux films visiblement différents, et un test de rendu vérifie qu'un geste non choisi n'est pas déclenché.
+  - Application de `but` : pause de lecture de 1,2 s, 0,8 s ou 0,5 s selon le but (défaut par type), dans les bornes de `DUREES_SCENE`, sans ralentir les gestes. `calculerTimeline` doit en tenir compte (modification de `timeline.ts`, hors du lot de cette mise à jour) et ses tests couvrir les trois buts. Fini quand : la durée d'une scène `lire` est supérieure ou égale à gestes plus 1,2 s dans ses bornes.
+  - Image zéro complète : l'ouverture est rendue avec logo et nom déjà posés à t = 0. Fini quand : l'image 0 du MP4 est identique à la miniature PNG.
+  - Miniature PNG 1920 x 1080 exportée avec le MP4 (même nom, extension `.png`), proposée en téléchargement dans le studio.
+  - Contrôles finaux après export (design.md 8.16) : images aux raccords (planche de relecture), crête vraie sous -1,5 dBTP, absence de noirs involontaires, durée audio égale à la durée vidéo. Le rapport s'affiche dans le studio ; un échec bloque le téléchargement avec la cause.
+  - Mention discrète « Illustration » sur les cartes illustratives dans la planche de relecture.
+- **B9 / B11 (génération et outils MCP), ajouts** : `preparer_pub` renvoie déjà `regles` et `catalogue` depuis `guide.ts` (gestes, but, honnêteté inclus) ; le schéma de sortie structurée (`SCHEMA_SCRIPT_PUB`) contient `gestes` et `but`. Rien d'autre à coder, vérifier seulement à la recette que Claude renseigne `gestes`.
+- **B16 (post du projet)** : utiliser `REGLES_POST_PROJET` (exportée par `@weekli/core`) comme règles de l'outil `proposer_post_projet`.

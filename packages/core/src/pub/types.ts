@@ -14,6 +14,26 @@ export type Rect = { x: number; y: number; largeur: number; hauteur: number }; /
 export type Cadrage = "haut" | "milieu" | "bas" | "complet" | Rect;
 export type MotsAccent = { texte: string; accent?: string };
 export type Transition = "coupe" | "glitch" | "flou" | "pixels";
+
+// Gestes de la bibliotheque de mouvement (design.md 8.7 et 8.8) : une pub en retient 2 ou 3
+export const GESTES = [
+	"accent",
+	"surlignage",
+	"soulignement",
+	"frappe",
+	"impact",
+	"lettres",
+	"glitch",
+	"pixels",
+	"flou",
+	"rayons",
+] as const;
+export type Geste = (typeof GESTES)[number];
+export const GESTES_PUB = { min: 2, max: 3 } as const;
+
+// But d'une scene : regle sa pause de lecture (design.md 8.16)
+export const BUTS = ["lire", "comprendre", "montrer"] as const;
+export type But = (typeof BUTS)[number];
 export type Carte = { titre: string; detail?: string };
 
 export type Visuel =
@@ -25,6 +45,7 @@ export type SceneCommune = {
 	voix: string;
 	duree?: number;
 	transition?: Transition;
+	but?: But;
 	masquee?: boolean;
 };
 
@@ -45,6 +66,21 @@ export type ScenePub = SceneCommune &
 
 export type TypeScene = ScenePub["type"];
 
+// But par defaut de chaque type de scene
+export const BUT_DEFAUT: Record<TypeScene, But> = {
+	ouverture: "lire",
+	repetition: "lire",
+	boucle: "comprendre",
+	chorus: "lire",
+	rupture: "lire",
+	revelation: "lire",
+	etape: "comprendre",
+	resultat: "comprendre",
+	preuve: "lire",
+	appel: "lire",
+	fin: "montrer",
+};
+
 export type ScriptPub = {
 	version: 1;
 	titre: string;
@@ -60,6 +96,7 @@ export type ScriptPub = {
 	};
 	voix: { mode: "synthese" | "importee" | "aucune"; vitesse: number; prononciation: Record<string, string> };
 	musique: "energique" | "calme" | "aucune";
+	gestes?: Geste[];
 	captures: CaptureRef[];
 	scenes: ScenePub[];
 };

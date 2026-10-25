@@ -93,6 +93,7 @@ type ScriptPub = {
     prononciation: Record<string, string>; // 20 entrees max, cle et valeur 40 caracteres
   };
   musique: "energique" | "calme" | "aucune";
+  gestes?: Geste[];                    // 2 a 3 gestes distincts parmi la bibliotheque (design.md 8.16) ; absent : defauts du catalogue
   captures: CaptureRef[];              // 0 a 6
   scenes: ScenePub[];                  // 8 a 14
 };
@@ -111,11 +112,15 @@ type MotsAccent = { texte: string; accent?: string }; // accent : partie de text
 
 type Transition = "coupe" | "glitch" | "flou" | "pixels";
 
+type Geste = "accent" | "surlignage" | "soulignement" | "frappe" | "impact" | "lettres" | "glitch" | "pixels" | "flou" | "rayons";
+type But = "lire" | "comprendre" | "montrer";
+
 type SceneCommune = {
   id: string;                          // /^[a-z0-9-]{1,24}$/, unique
   voix: string;                        // 0 a 220 caracteres, lu par la voix off
   duree?: number;                      // secondes, utilisee seulement sans voix ; bornee par type
   transition?: Transition;             // transition d'entree, defaut selon le type
+  but?: But;                           // regle la pause de lecture (design.md 8.16) ; defaut selon le type (lire, comprendre ou montrer)
   masquee?: boolean;                   // presente dans le script mais pas rendue
 };
 
@@ -150,6 +155,11 @@ Règles de structure (avertissement si non respectées, rejet si marqué « reje
 | Durée totale estimée de 50 à 65 s | avertissement |
 | Texte qui ressemble à du code ou à une commande (accent grave, signe dollar, ou mots `npm`, `git`, `commit`, `const`, `function`) | avertissement « la pub ne montre pas de code » |
 | Taille JSON après nettoyage supérieure à 24 Ko | rejet |
+| `gestes` : identifiants inconnus ou en double | retirés, avertissement |
+| `gestes` : plus de 3 identifiants valides | les 3 premiers sont gardés, avertissement |
+| `gestes` : moins de 2 identifiants valides, ou valeur qui n'est pas une liste | champ ignoré (défauts du catalogue), avertissement |
+| Transition `glitch`, `flou` ou `pixels` d'une scène visible absente de `gestes` (quand `gestes` est présent) | avertissement, rien n'est retiré |
+| `but` hors de `lire`, `comprendre`, `montrer` | champ ignoré (but par défaut du type), avertissement |
 
 Autres règles appliquées par `nettoyerScriptPub` :
 
