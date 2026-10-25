@@ -3,7 +3,7 @@ import type { Ctx2D, InstantScene, Scene } from "../../scene";
 import { avecAlpha } from "../../visuel/couleur";
 import { avancement, easeInCubic, easeInOutCubic, easeOutCubic, easeOutExpo, interpoler } from "../../visuel/courbes";
 import { dessinerMotParMot } from "../../visuel/cinetique";
-import { blocCentre, CARTE, dessinerCarte, fondTension, type Identite } from "./commun";
+import { blocQuiTient, CARTE, dessinerCarte, fondTension, type Identite } from "./commun";
 
 // Boucle (design.md 8.9), calee sur la reference de 5,6 a 9,8 s : la phrase entre mot a mot en haut,
 // au rythme de la voix ; six copies de la carte flottent en profondeur (petites, floues et pales au
@@ -14,12 +14,12 @@ type Emplacement = { x: number; y: number; e: number; a: number };
 
 // Positions relevees sur la reference (images a 6,5 et 8,5 s), de la plus proche a la plus lointaine
 const EMPLACEMENTS: Emplacement[] = [
-	{ x: 600, y: 780, e: 1.05, a: -6 },
-	{ x: 1320, y: 500, e: 0.72, a: 6 },
-	{ x: 930, y: 668, e: 0.58, a: 0 },
-	{ x: 1015, y: 470, e: 0.48, a: -8 },
-	{ x: 760, y: 560, e: 0.42, a: 7 },
-	{ x: 1190, y: 640, e: 0.38, a: -3 },
+	{ x: 600, y: 780, e: 1.2, a: -6 },
+	{ x: 1320, y: 500, e: 0.86, a: 6 },
+	{ x: 930, y: 668, e: 0.7, a: 0 },
+	{ x: 1015, y: 470, e: 0.58, a: -8 },
+	{ x: 760, y: 560, e: 0.5, a: 7 },
+	{ x: 1190, y: 640, e: 0.46, a: -3 },
 ];
 // cartes qui avancent, dans l'ordre des reperes (une carte du milieu se voit mieux partir)
 const ORDRE_AVANCEE = [1, 2, 0, 3];
@@ -71,8 +71,8 @@ function etatCarte(rang: number, e0: Emplacement, s: number, avancees: number[])
 	let x = e0.x + Math.cos(s * 0.8 + phase) * 10;
 	let y = e0.y + Math.sin(s * 0.9 + phase) * 12;
 	let e = e0.e;
-	let alpha = interpoler(0.55, 1, (e0.e - 0.38) / 0.67);
-	let flouCarte = Math.max(0, (0.6 - e0.e) * 9);
+	let alpha = interpoler(0.7, 1, (e0.e - 0.46) / 0.74);
+	let flouCarte = Math.max(0, (0.66 - e0.e) * 9);
 	const angle = e0.a + Math.sin(s * 0.7 + phase) * 1.5;
 	for (const debut of avancees) {
 		const k = avancement(s, debut, AVANCEE);
@@ -128,9 +128,13 @@ export function creerBoucle(identite: Identite): Scene {
 				}
 			}
 
-			const bloc = blocCentre(ctx, phrase, { niveau: "grand", ambiance: identite.ambiance, x: 960, largeur: 1500, lignesMax: 2, alignement: "centre" }, 169);
+			const options = { niveau: "grand", ambiance: identite.ambiance, x: 960, largeur: 1500, lignesMax: 2, alignement: "centre" } as const;
+			const bloc = blocQuiTient(ctx, phrase, [
+				{ options, centre: 169 },
+				{ options: { ...options, niveau: "titre", largeur: 1600, lignesMax: 3 }, centre: 190 },
+			]);
 			const debutPhrase = 0.09 * duree;
-			const ecart = Math.min(0.27, (0.42 * duree) / Math.max(1, bloc.mots - 1));
+			const ecart = Math.min(0.3, (0.5 * duree) / Math.max(1, bloc.mots - 1));
 			dessinerMotParMot(ctx, bloc, s, { debut: debutPhrase, ecart, couleur: p.blanc, couleurAccent: p.alerteSombre });
 			dessinerPastille(ctx, p, reperes, s, debutReperes, pas);
 		},

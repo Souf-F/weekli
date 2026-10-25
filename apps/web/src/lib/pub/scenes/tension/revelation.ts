@@ -14,7 +14,7 @@ import { type Grille, grilleImage, grilleMonogramme } from "./logo";
 // 56 px, partie accentuee surlignee ; signature en 96 px qui glisse puis se souligne. Les rayons
 // s'ouvrent pendant la formation, la camera pousse de 1 a 1,04.
 
-const T = { point: 0.03, convergence: 0.02, formation: 0.2, rangement: 0.28, nom: 0.21, slogan: 0.32, signature: 0.68 };
+const T = { point: 0.03, convergence: 0.02, formation: 0.16, rangement: 0.24, nom: 0.17, slogan: 0.3, signature: 0.68 };
 const PARTICULES = 300;
 const GRAND = 468; // cote du logo forme au centre
 const LOGO = 176; // cote du logo range a cote du nom
@@ -34,6 +34,7 @@ function particules(grille: Grille, boite: Boite, s: number, duree: number, grai
 	const fenetre = tF - T.convergence * duree;
 	const pas = boite.cote / Math.max(grille.colonnes, grille.lignes);
 	const resultat: Particule[] = [];
+	const cellules: Particule[] = []; // dessinees apres les eclats : le logo reste net
 	for (let j = 0; j < total; j++) {
 		const angle = hasard() * Math.PI * 2;
 		const rayon = 700 + hasard() * 600;
@@ -51,7 +52,7 @@ function particules(grille: Grille, boite: Boite, s: number, duree: number, grai
 			const cy = boite.y + (l - (grille.lignes - 1) / 2) * pas;
 			const e = easeInOutCubic(k);
 			const courbe = Math.sin(e * Math.PI) * tourbillon;
-			resultat.push({
+			cellules.push({
 				x: interpoler(sx, cx, e) - Math.sin(angle) * courbe,
 				y: interpoler(sy, cy, e) + Math.cos(angle) * courbe,
 				cote: interpoler(taille, pas * 0.86, e),
@@ -61,9 +62,10 @@ function particules(grille: Grille, boite: Boite, s: number, duree: number, grai
 			});
 			continue;
 		}
-		// eclat : converge vers le logo, puis rejaillit et s'eteint
-		const ex = 960 + Math.cos(eclat.a) * eclat.r * 0.4;
-		const ey = 540 + Math.sin(eclat.a) * eclat.r * 0.4;
+		// eclat : converge en couronne autour du logo (jamais dessus), puis rejaillit et s'eteint
+		const couronne = boite.cote * 0.55 + 20 + eclat.r * 0.3;
+		const ex = boite.x + Math.cos(eclat.a) * couronne;
+		const ey = boite.y + Math.sin(eclat.a) * couronne;
 		const tau = Math.max(0, s - tF);
 		const sortie = (eclat.v * (1 - Math.exp(-2.2 * tau))) / 2.2;
 		const e = easeInOutCubic(k);
@@ -78,7 +80,7 @@ function particules(grille: Grille, boite: Boite, s: number, duree: number, grai
 			cellule: false,
 		});
 	}
-	return resultat;
+	return [...resultat, ...cellules];
 }
 
 function dessinerOnde(ctx: Ctx2D, p: Palette, s: number, debut: number) {
@@ -139,10 +141,13 @@ export function creerRevelation(identite: Identite): Scene {
 			const grille = grilleIm?.cellules.length ? grilleIm : grilleMonogramme(identite.monogramme);
 
 			// lockup : logo puis nom, centres ensemble sur la largeur
+			// nom long : plus petit, puis sur deux lignes ; le lockup reste centre
 			const nomLargeur = 1600 - LOGO - ESPACE;
-			const essai = mettreEnPage(ctx, identite.nom, { niveau: "affiche", ambiance, x: 0, y: 0, largeur: nomLargeur, lignesMax: 1 });
+			const essais = [1, 0.75, 0.56].map((echelle) => ({ niveau: "affiche", echelle, ambiance, largeur: nomLargeur, lignesMax: 1 }) as const);
+			const choix = [...essais, { ...essais[2], lignesMax: 2 }].find((o) => !mettreEnPage(ctx, identite.nom, { ...o, x: 0, y: 0 }).coupe) ?? { ...essais[2], lignesMax: 2 };
+			const essai = mettreEnPage(ctx, identite.nom, { ...choix, x: 0, y: 0 });
 			const gauche = 960 - (LOGO + ESPACE + essai.largeur) / 2;
-			const nom = blocCentre(ctx, identite.nom, { niveau: "affiche", ambiance, x: gauche + LOGO + ESPACE, largeur: nomLargeur, lignesMax: 1 }, LIGNE);
+			const nom = blocCentre(ctx, identite.nom, { ...choix, x: gauche + LOGO + ESPACE }, LIGNE);
 			const boite = boiteLogo(s, duree, { x: gauche + LOGO / 2, y: LIGNE, cote: LOGO });
 
 			// le point qui attend, puis les particules
@@ -184,7 +189,7 @@ export function creerRevelation(identite: Identite): Scene {
 
 			const blocSlogan = blocCentre(ctx, slogan, { niveau: "slogan", echelle: 1.27, ambiance, x: 960, largeur: 1560, lignesMax: 2, alignement: "centre" }, 592);
 			const debutSlogan = T.slogan * duree;
-			const ecart = Math.min(0.14, (0.2 * duree) / Math.max(1, blocSlogan.mots - 1));
+			const ecart = Math.min(0.2, (0.28 * duree) / Math.max(1, blocSlogan.mots - 1));
 			dessinerMotParMot(ctx, blocSlogan, s, { debut: debutSlogan, ecart, couleur: p.blanc, accent: false });
 			dessinerSurlignage(ctx, blocSlogan, s, { debut: finMotParMot(blocSlogan, debutSlogan, ecart) + 0.25, bloc: p.blanc, texte: p.sombre });
 

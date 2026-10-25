@@ -33,6 +33,19 @@ export function blocCentre(ctx: Ctx2D, contenu: MotsAccent | string, o: Omit<Opt
 	return mettreEnPage(ctx, contenu, { ...o, y: Math.round(centre - essai.hauteur / 2) });
 }
 
+// Premiere mise en page qui tient sans troncature (chacune descend deja jusqu'a 80 % de sa taille) ;
+// les suivantes sont des replis pour les textes longs. Faute de mieux, la derniere (coupee).
+export type Essai = { options: Omit<OptionsMiseEnPage, "y">; centre: number };
+
+export function blocQuiTient(ctx: Ctx2D, contenu: MotsAccent | string, essais: Essai[]): Bloc {
+	let bloc: Bloc | null = null;
+	for (const e of essais) {
+		bloc = blocCentre(ctx, contenu, e.options, e.centre);
+		if (!bloc.coupe) return bloc;
+	}
+	return bloc as Bloc;
+}
+
 // Fond sombre de toutes les scenes de tension, avec les options propres a la scene
 export function fondTension(ctx: Ctx2D, i: InstantScene, p: Palette, extra: Partial<OptionsFondSombre> = {}) {
 	dessinerFondSombre(ctx, p, { secondes: i.secondes, temps: i.temps, graine: i.graine, ...extra });

@@ -123,7 +123,7 @@ export function creerOuverture(identite: Identite): Scene {
 			if (detail) {
 				const derniere = bloc.lignes[bloc.lignes.length - 1].y;
 				const sous = blocCentre(ctx, detail, { niveau: "slogan", echelle: 1.8, ambiance, x: CENTRE.x, largeur: 1400, lignesMax: 1, alignement: "centre" }, derniere + 112);
-				dessinerMotParMot(ctx, sous, s, { debut: 0.44 * duree, couleur: p.accentSombre, ecart: 0.1 });
+				dessinerMotParMot(ctx, sous, s, { debut: 0.4 * duree, couleur: p.accentSombre, ecart: 0.03 });
 			}
 		},
 	};

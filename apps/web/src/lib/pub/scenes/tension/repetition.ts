@@ -4,15 +4,16 @@ import { avecAlpha } from "../../visuel/couleur";
 import { avancement, easeInOutCubic, easeOutCubic, easeOutExpo, interpoler } from "../../visuel/courbes";
 import { dessinerMotParMot } from "../../visuel/cinetique";
 import { dessinerImpact, secousseImpact } from "../../visuel/impact";
-import { blocCentre, dessinerCarte, fondTension, type Identite, type PoseCarte } from "./commun";
+import { blocCentre, blocQuiTient, dessinerCarte, fondTension, type Identite, type PoseCarte } from "./commun";
 
 // Repetition (design.md 8.9), calee sur la reference de 1,85 a 5,9 s. Premiere ligne en 205 px a
 // gauche, la carte inclinee a droite ; les lignes suivantes montent en haut au centre et la carte
 // glisse sous elles, au centre, avec des ondes. A 60 % : le mot d'impact plein ecran sur fond rougi,
-// puis a 74 % un mur de 7 x 7 cartes identiques derriere lui.
+// puis a 70 % un mur de 7 x 7 cartes identiques derriere lui.
 
 const IMPACT_T = 0.6;
-const MUR_T = 0.74;
+const LIGNES_T = 0.5; // les lignes se partagent t 0 a 0,5 (la seconde est deja la a 3 s dans la reference)
+const MUR_T = 0.7;
 const SORTIE = { duree: 0.18, montee: 40 };
 const MUR = { colonnes: 7, lignes: 7, pasX: 155, pasY: 102, echelle: 0.344, centre: { x: 960, y: 560 } };
 
@@ -53,9 +54,9 @@ function dessinerMur(ctx: Ctx2D, i: InstantScene, carte: Carte, debut: number) {
 			const dx = c - (colonnes - 1) / 2;
 			const dy = l - (lignes - 1) / 2;
 			// les cartes se posent du centre vers les bords
-			const k = easeOutExpo(avancement(s, debut + Math.hypot(dx, dy) * 0.035, 0.3));
+			const k = easeOutExpo(avancement(s, debut + Math.hypot(dx, dy) * 0.025, 0.25));
 			if (k <= 0) continue;
-			dessinerCarte(ctx, i, carte, { x: centre.x + dx * pasX, y: centre.y + dy * pasY, echelle: echelle * interpoler(0.7, 1, k), alpha: 0.9 * k });
+			dessinerCarte(ctx, i, carte, { x: centre.x + dx * pasX, y: centre.y + dy * pasY, echelle: echelle * interpoler(0.7, 1, k), alpha: 0.96 * k });
 		}
 	}
 }
@@ -78,12 +79,13 @@ export function creerRepetition(identite: Identite): Scene {
 			ctx.fillRect(0, 0, LARGEUR, HAUTEUR);
 			ctx.save();
 			ctx.translate(secousse.x, secousse.y);
-			const alerte = enImpact ? interpoler(1, 0.35, easeOutCubic(avancement(s, tImpact, tMur - tImpact))) : 0;
+			// fond rougi au choc, puis de nouveau sombre sous le mur (reference a 5 s)
+			const alerte = enImpact ? interpoler(1, 0, easeOutCubic(avancement(s, tImpact, tMur - tImpact + 0.15))) : 0;
 			fondTension(ctx, i, p, { alerte });
 
 			if (!enImpact) {
 				const n = Math.max(1, lignes.length);
-				const fenetre = tImpact / n;
+				const fenetre = (LIGNES_T * duree) / n;
 				const k = Math.min(n - 1, Math.floor(s / fenetre));
 				const debutLigne = k * fenetre;
 				// la ligne courante ; la precedente sort vers le haut pendant que la nouvelle entre
@@ -92,11 +94,19 @@ export function creerRepetition(identite: Identite): Scene {
 					const sortie = rang < k ? easeOutCubic(avancement(s, debutLigne, SORTIE.duree)) : 0;
 					if (sortie >= 1) continue;
 					const enHaut = !!carte && rang > 0;
+					const enHautOptions = { niveau: "grand", echelle: 1.08, ambiance, x: 960, largeur: 1600, lignesMax: 2, alignement: "centre" } as const;
+					// ligne trop longue pour la colonne de gauche : elle passe en haut, comme les suivantes
 					const bloc = carte
 						? enHaut
-							? blocCentre(ctx, lignes[rang], { niveau: "grand", echelle: 1.08, ambiance, x: 960, largeur: 1600, lignesMax: 2, alignement: "centre" }, 190)
-							: blocCentre(ctx, lignes[rang], { niveau: "affiche", echelle: 1.28, ambiance, x: 210, largeur: 860, lignesMax: 3 }, 530)
-						: blocCentre(ctx, lignes[rang], { niveau: "affiche", echelle: 1.28, ambiance, x: 960, largeur: 1600, lignesMax: 3, alignement: "centre" }, 540);
+							? blocCentre(ctx, lignes[rang], enHautOptions, 190)
+							: blocQuiTient(ctx, lignes[rang], [
+									{ options: { niveau: "affiche", echelle: 1.28, ambiance, x: 210, largeur: 860, lignesMax: 3 }, centre: 530 },
+									{ options: enHautOptions, centre: 190 },
+								])
+						: blocQuiTient(ctx, lignes[rang], [
+								{ options: { niveau: "affiche", echelle: 1.28, ambiance, x: 960, largeur: 1600, lignesMax: 3, alignement: "centre" }, centre: 540 },
+								{ options: { ...enHautOptions, lignesMax: 3 }, centre: 540 },
+							]);
 					const mots = Math.max(1, bloc.mots - 1);
 					const ecart = Math.min(0.35, (fenetre * 0.5) / mots);
 					ctx.save();
@@ -120,7 +130,11 @@ export function creerRepetition(identite: Identite): Scene {
 				}
 			} else {
 				if (carte) dessinerMur(ctx, i, carte, tMur);
-				const bloc = blocCentre(ctx, impact, { niveau: "impact", echelle: 1.25, majuscules: ambiance === "nette", ambiance, x: 960, largeur: 1680, lignesMax: 2, alignement: "centre" }, 560);
+				const options = { niveau: "impact", echelle: 1.25, majuscules: ambiance === "nette", ambiance, x: 960, largeur: 1680, lignesMax: 2, alignement: "centre" } as const;
+				const bloc = blocQuiTient(ctx, impact, [
+					{ options, centre: 560 },
+					{ options: { ...options, echelle: 0.85 }, centre: 560 },
+				]);
 				dessinerImpact(ctx, bloc, s, { debut: tImpact, couleur: p.alerteSombre });
 			}
 			ctx.restore();
