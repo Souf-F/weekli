@@ -17,6 +17,9 @@ function texteDeScene(d: ScenePub): string {
 			return d.phrase.texte;
 		case "chorus":
 		case "resultat":
+		case "transformation":
+		case "flux":
+		case "avantapres":
 			return d.titre.texte;
 		case "appel":
 			return d.question.texte;
@@ -72,6 +75,9 @@ export const registreDeTest = (): RegistreScenes => ({
 	rupture: sceneDeTest,
 	revelation: sceneDeTest,
 	etape: sceneDeTest,
+	transformation: sceneDeTest,
+	flux: sceneDeTest,
+	avantapres: sceneDeTest,
 	resultat: sceneDeTest,
 	preuve: sceneDeTest,
 	appel: sceneDeTest,
