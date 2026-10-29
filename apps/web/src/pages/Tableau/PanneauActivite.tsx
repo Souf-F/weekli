@@ -26,9 +26,12 @@ export function PanneauActivite({
 	surBasculerRepo,
 }: Props) {
 	return (
-		<section className={p.panneau}>
+		<section className={`${p.panneau} ${styles.panneau}`}>
 			<div className={p.titre}>
-				<h2>Ta semaine</h2>
+				<div>
+					<p className={p.etape}>Étape 1</p>
+					<h2>Ta semaine</h2>
+				</div>
 				<select
 					value={jours}
 					onChange={(e) => surJours(Number(e.target.value))}

@@ -13,6 +13,11 @@ import styles from "./Tableau.module.css";
 
 const MAX_DIFFS = 5;
 
+// Mode demonstration, developpement uniquement : le bloc disparait du build de production
+const demo =
+	import.meta.env.DEV && new URLSearchParams(location.search).has("demo") ? await import("./demo/installer") : null;
+demo?.installerDemo();
+
 export function Tableau() {
 	const { moi } = useOutletContext<ContexteApp>();
 	const reglages = useMemo(lireReglages, []);
@@ -90,7 +95,8 @@ export function Tableau() {
 				const choisis = repos.flatMap((r) => r.commits.map((c) => [r.repo, c.sha] as const)).slice(0, MAX_DIFFS);
 				details = await Promise.all(choisis.map(([repo, sha]) => api.commit(repo, sha)));
 			}
-			const final = await genererPosts({
+			const generation = demo ? demo.genererPostsDemo : genererPosts;
+			const final = await generation({
 				cleApi: reglages.cleApi,
 				modele: reglages.modele,
 				repos,
@@ -114,69 +120,86 @@ export function Tableau() {
 		}
 	};
 
+	const nbRepos = activite?.repos.length ?? 0;
+
 	return (
-		<div className={styles.grille}>
-			<div className={styles.colonne}>
-				<PanneauActivite
-					jours={jours}
-					surJours={setJours}
-					activite={activite}
-					chargement={chargement}
-					erreur={erreurActivite}
-					selection={selection}
-					surBasculer={basculer}
-					surBasculerRepo={basculerRepo}
-				/>
-			</div>
+		<div className={styles.page}>
+			<header className={styles.entete}>
+				<p className={styles.surtitre}>Tableau de bord</p>
+				<h1>
+					Ta semaine, <em>en posts.</em>
+				</h1>
+				<p className={styles.chapo}>
+					Choisis ce que tu as livré, Claude le raconte. Tu relis, tu ajustes, tu copies.
+				</p>
+			</header>
 
-			<div className={styles.colonne}>
-				<PanneauOptions
-					options={options}
-					surOptions={setOptions}
-					inclureDiffs={inclureDiffs}
-					surInclureDiffs={setInclureDiffs}
-					nbSelection={selection.size}
-					enCours={enCours}
-					sansCle={!reglages.cleApi}
-					surGenerer={generer}
-					surArreter={() => arret.current?.abort()}
-				/>
-				{!reglages.cleApi && (
-					<p className={p.aide}>
-						Pas encore de clé ? <Link to="/app/reglages">Ajoute-la ici</Link>, ou utilise Weekli directement dans
-						Claude.
-					</p>
-				)}
-			</div>
-
-			<section className={styles.posts}>
-				{erreur && <p className={p.erreur}>{erreur}</p>}
-				{sauvegarde && (
-					<p className={p.aide}>
-						{sauvegarde} <Link to="/app/historique">Voir l'historique</Link>
-					</p>
-				)}
-				{posts.length === 0 && !enCours && !erreur && (
-					<div className={styles.vide}>
-						<h2>
-							Tes posts
-							<br />
-							<em>apparaîtront ici.</em>
-						</h2>
-						<p className={p.aide}>Choisis tes commits, règle l'angle, puis lance la génération.</p>
-					</div>
-				)}
-				{enCours && posts.length === 0 && <p className={p.aide}>Claude lit ta semaine…</p>}
-				{posts.map((post, i) => (
-					<CartePost
-						key={i}
-						post={post}
-						moi={moi}
-						enCours={enCours}
-						surModifier={(texte) => setPosts((ps) => ps.map((x, j) => (j === i ? { ...x, texte } : x)))}
+			<div className={styles.grille}>
+				<aside className={styles.atelier} aria-label="Préparation">
+					<PanneauActivite
+						jours={jours}
+						surJours={setJours}
+						activite={activite}
+						chargement={chargement}
+						erreur={erreurActivite}
+						selection={selection}
+						surBasculer={basculer}
+						surBasculerRepo={basculerRepo}
 					/>
-				))}
-			</section>
+					<PanneauOptions
+						options={options}
+						surOptions={setOptions}
+						inclureDiffs={inclureDiffs}
+						surInclureDiffs={setInclureDiffs}
+						nbSelection={selection.size}
+						nbRepos={nbRepos}
+						enCours={enCours}
+						sansCle={!demo && !reglages.cleApi}
+						surGenerer={generer}
+						surArreter={() => arret.current?.abort()}
+					/>
+					{!demo && !reglages.cleApi && (
+						<p className={p.aide}>
+							Pas encore de clé ? <Link to="/app/reglages">Ajoute-la ici</Link>, ou utilise Weekli directement dans
+							Claude.
+						</p>
+					)}
+				</aside>
+
+				<section className={styles.posts} aria-label="Posts générés" aria-live="off">
+					{erreur && <p className={p.erreur}>{erreur}</p>}
+					{posts.length === 0 && !enCours && !erreur && (
+						<div className={styles.vide}>
+							<p className={styles.surtitre}>Étape 3</p>
+							<h2>
+								Tes posts <em>apparaîtront ici.</em>
+							</h2>
+							<p className={p.aide}>Choisis tes commits, règle l'angle, puis lance la rédaction.</p>
+						</div>
+					)}
+					{enCours && posts.length === 0 && (
+						<div className={styles.vide} role="status">
+							<h2>
+								Claude lit <em>ta semaine…</em>
+							</h2>
+						</div>
+					)}
+					{posts.map((post, i) => (
+						<CartePost
+							key={i}
+							post={post}
+							moi={moi}
+							enCours={enCours}
+							surModifier={(texte) => setPosts((ps) => ps.map((x, j) => (j === i ? { ...x, texte } : x)))}
+						/>
+					))}
+					{sauvegarde && (
+						<p className={p.aide} role="status">
+							{sauvegarde} <Link to="/app/historique">Voir l'historique</Link>
+						</p>
+					)}
+				</section>
+			</div>
 		</div>
 	);
 }

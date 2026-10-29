@@ -8,6 +8,7 @@ type Props = {
 	inclureDiffs: boolean;
 	surInclureDiffs: (v: boolean) => void;
 	nbSelection: number;
+	nbRepos: number;
 	enCours: boolean;
 	sansCle: boolean;
 	surGenerer: () => void;
@@ -22,13 +23,16 @@ const TONS: { id: Ton; nom: string }[] = [
 ];
 
 export function PanneauOptions(props: Props) {
-	const { options, surOptions, inclureDiffs, surInclureDiffs, nbSelection, enCours, sansCle, surGenerer, surArreter } =
+	const { options, surOptions, inclureDiffs, surInclureDiffs, nbSelection, nbRepos, enCours, sansCle, surGenerer, surArreter } =
 		props;
 
 	return (
 		<section className={p.panneau}>
 			<div className={p.titre}>
-				<h2>Rédaction</h2>
+				<div>
+					<p className={p.etape}>Étape 2</p>
+					<h2>Rédaction</h2>
+				</div>
 			</div>
 			<label className={p.champ}>
 				Angle
@@ -40,6 +44,7 @@ export function PanneauOptions(props: Props) {
 					))}
 				</select>
 			</label>
+			<div className={p.duo}>
 			<label className={p.champ}>
 				Langue
 				<select value={options.langue} onChange={(e) => surOptions({ ...options, langue: e.target.value as Langue })}>
@@ -57,6 +62,7 @@ export function PanneauOptions(props: Props) {
 					))}
 				</select>
 			</label>
+			</div>
 			<label className={`${p.ligne} ${p.ligneEspacee}`}>
 				<input type="checkbox" checked={inclureDiffs} onChange={(e) => surInclureDiffs(e.target.checked)} />
 				Lire les diffs des commits choisis (5 max)
@@ -72,9 +78,14 @@ export function PanneauOptions(props: Props) {
 					disabled={sansCle || nbSelection === 0}
 					className={p.pleineLargeur}
 				>
-					Générer{nbSelection > 0 ? ` (${nbSelection} commit${nbSelection > 1 ? "s" : ""})` : ""}
+					Rédiger {options.nombre > 1 ? `${options.nombre} posts` : "le post"}
 				</Bouton>
 			)}
+			<p className={`${p.aide} ${p.aideEspacee}`} aria-live="polite">
+				{nbSelection > 0
+					? `${nbSelection} commit${nbSelection > 1 ? "s" : ""} sur ${nbRepos} repo${nbRepos > 1 ? "s" : ""}`
+					: "Coche au moins un commit."}
+			</p>
 			{sansCle && (
 				<p className={`${p.aide} ${p.aideEspacee}`}>
 					Ajoute ta clé API dans les réglages pour générer.

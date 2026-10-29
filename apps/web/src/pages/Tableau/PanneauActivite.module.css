@@ -6,11 +6,21 @@
 	font: inherit;
 	font-size: var(--t-petit);
 }
+.panneau {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+}
+.panneau .repos {
+	flex: 1 1 auto;
+	min-height: 0;
+}
 .repos {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
+	align-content: start;
 	gap: var(--espace-3);
-	max-height: 560px;
+	max-height: 520px;
 	overflow: auto;
 	/* Marge interne pour que l'anneau de focus ne soit pas rogne par le defilement */
 	padding: var(--espace-1);
@@ -43,6 +53,8 @@
 	min-width: 0;
 }
 .compte {
+	flex: none;
+	white-space: nowrap;
 	margin-left: auto;
 	font-size: var(--t-petit);
 	color: var(--texte-doux);
@@ -50,11 +62,25 @@
 .message {
 	flex: 1;
 	min-width: 0;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
 	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+	overflow-wrap: anywhere;
+	line-height: 1.4;
 }
 .sha {
 	color: var(--moka-texte);
 	font-size: var(--t-etiquette);
+}
+.repo summary strong {
+	min-width: 0;
+	font-size: var(--t-petit);
+	line-height: 1.35;
+	overflow-wrap: anywhere;
+}
+@media (max-width: 860px) {
+	.repos {
+		max-height: 340px;
+	}
 }

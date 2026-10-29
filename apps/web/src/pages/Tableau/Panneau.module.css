@@ -7,9 +7,18 @@
 	backdrop-filter: var(--flou-verre);
 	-webkit-backdrop-filter: var(--flou-verre);
 }
+.etape {
+	margin: 0 0 var(--espace-1);
+	font-size: var(--t-etiquette);
+	line-height: var(--lh-etiquette);
+	font-weight: 600;
+	letter-spacing: var(--suivi-etiquette);
+	text-transform: uppercase;
+	color: var(--moka-texte);
+}
 .titre {
 	display: flex;
-	align-items: baseline;
+	align-items: flex-end;
 	justify-content: space-between;
 	gap: var(--espace-3);
 	margin-bottom: var(--espace-4);
@@ -23,6 +32,11 @@
 	font-size: var(--t-petit);
 	line-height: var(--lh-petit);
 	color: var(--texte-doux);
+}
+.duo {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--espace-3);
 }
 .champ {
 	display: grid;
@@ -48,7 +62,7 @@
 }
 .ligne {
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	gap: var(--espace-2);
 	font-size: var(--t-petit);
 }
