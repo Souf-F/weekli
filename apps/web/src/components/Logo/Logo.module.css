@@ -1,18 +1,18 @@
 .logo {
 	display: inline-flex;
 	align-items: center;
-	gap: 10px;
+	gap: var(--espace-2);
 	font-family: var(--serif);
-	font-size: 1.6rem;
+	font-size: var(--t-sous-titre);
+	line-height: 1;
 }
 .carre {
 	display: grid;
 	place-items: center;
-	width: 32px;
-	height: 32px;
-	border-radius: 9px;
+	width: var(--espace-6);
+	height: var(--espace-6);
+	border-radius: var(--rayon-s);
 	background: var(--espresso);
 	color: var(--platine);
-	font-size: 1.15rem;
-	font-style: italic;
+	font-size: var(--t-corps-grand);
 }

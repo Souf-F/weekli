@@ -1,26 +1,27 @@
 .cta {
-	padding: clamp(40px, 7vw, 88px);
+	padding: var(--espace-8) var(--espace-5);
 	text-align: center;
 	box-shadow: var(--ombre);
 }
 .titre {
-	font-size: clamp(2.6rem, 6vw, 5rem);
+	font-size: var(--t-affiche);
+	line-height: var(--lh-affiche);
 }
 .texte {
-	max-width: 520px;
-	margin: 22px auto 32px;
+	max-width: var(--mesure);
+	margin: var(--espace-5) auto var(--espace-6);
 	color: var(--texte-doux);
 }
 .url {
 	display: flex;
 	align-items: center;
-	gap: 12px;
+	gap: var(--espace-3);
 	max-width: 620px;
 	margin: 0 auto;
-	padding: 8px 8px 8px 20px;
+	padding: var(--espace-2) var(--espace-2) var(--espace-2) var(--espace-5);
 	border: 1px solid var(--filet);
-	border-radius: 14px;
-	background: rgba(255, 255, 255, 0.75);
+	border-radius: var(--rayon-m);
+	background: var(--blanc);
 	text-align: left;
 }
 .url code {
@@ -33,6 +34,6 @@
 	.url {
 		flex-direction: column;
 		align-items: stretch;
-		padding: 14px;
+		padding: var(--espace-4);
 	}
 }

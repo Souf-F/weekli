@@ -1,0 +1,43 @@
+.onglets {
+	display: grid;
+	gap: var(--espace-4);
+	min-width: 0;
+}
+.liste {
+	display: flex;
+	gap: var(--espace-1);
+	padding: var(--espace-1);
+	border-radius: var(--rayon-s);
+	background: var(--voile-moka);
+	overflow-x: auto;
+}
+.onglet {
+	flex: 1 0 auto;
+	padding: var(--espace-2) var(--espace-3);
+	border: 0;
+	border-radius: calc(var(--rayon-s) - 3px);
+	background: transparent;
+	font: 500 var(--t-petit) / 1.2 var(--sans);
+	color: var(--texte-doux);
+	cursor: pointer;
+	transition:
+		background var(--duree-rapide) var(--ease),
+		color var(--duree-rapide) var(--ease);
+}
+.onglet:hover {
+	color: var(--espresso);
+}
+.onglet[aria-selected="true"] {
+	background: var(--blanc);
+	color: var(--espresso);
+	box-shadow: var(--ombre-carte);
+}
+.panneau {
+	min-width: 0;
+	border-radius: var(--rayon-s);
+}
+@media (prefers-reduced-motion: reduce) {
+	.onglet {
+		transition: none;
+	}
+}

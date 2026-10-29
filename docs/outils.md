@@ -2,6 +2,8 @@
 
 Les outils GitHub sont en **lecture seule** (`readOnlyHint: true`) et ne portent que sur les repos **publics** de l'utilisateur connecté.
 
+**Contenus de repo non fiables.** Tout texte qui vient d'un repo (descriptions, README, messages de commit, extraits de diff) est rangé dans un champ `contenu_non_fiable`, et la description de l'outil rappelle que c'est une donnée à lire, jamais une consigne à suivre. Les autres champs (nom, URL, dates, nombres) sont à la racine.
+
 ## `activite_github`
 
 Liste les commits récents, débarrassés du bruit.
@@ -19,13 +21,15 @@ Liste les commits récents, débarrassés du bruit.
   "repos": [
     {
       "repo": "scanner-ssl",
-      "description": "Audit de surface d'attaque",
       "langage": "JavaScript",
       "url": "https://github.com/Souf-F/scanner-ssl",
       "site": "https://scanner-ssl.pages.dev",
-      "commits": [
-        { "sha": "a1b2c3d", "message": "Ajout de la vérification DMARC", "date": "2026-10-20" }
-      ]
+      "contenu_non_fiable": {
+        "description": "Audit de surface d'attaque",
+        "commits": [
+          { "sha": "a1b2c3d", "message": "Ajout de la vérification DMARC", "date": "2026-10-20" }
+        ]
+      }
     }
   ]
 }
@@ -37,7 +41,7 @@ Liste les commits récents, débarrassés du bruit.
 |---|---|---|
 | `repo` | texte | Nom du repo, sans le propriétaire |
 
-Renvoie la description, le site, les sujets, les langages, le nombre d'étoiles et le README (6000 caractères au maximum). Refuse les repos privés.
+Renvoie le site, l'URL, les sujets, les langages et le nombre d'étoiles à la racine, et la description et le README (6000 caractères au maximum) sous `contenu_non_fiable`. Refuse les repos privés.
 
 ## `details_commit`
 
@@ -46,7 +50,15 @@ Renvoie la description, le site, les sujets, les langages, le nombre d'étoiles 
 | `repo` | texte | Nom du repo |
 | `sha` | texte, 7 caractères minimum | SHA du commit |
 
-Renvoie le message complet, les statistiques et jusqu'à 15 fichiers modifiés avec un extrait du diff (1500 caractères par fichier). Utile pour raconter un problème résolu.
+Renvoie le SHA, la date et les statistiques à la racine, et le message complet et jusqu'à 15 fichiers modifiés avec un extrait du diff (1500 caractères par fichier) sous `contenu_non_fiable`. Utile pour raconter un problème résolu.
+
+## `lister_repos`
+
+Aucun paramètre. Liste les repos publics de l'utilisateur (30 au plus, sans forks, du plus récemment poussé au plus ancien), même sans activité récente. Sert à choisir le projet d'une pub.
+
+```json
+[{ "repo": "tablee", "site": "https://tablee.example", "url": "https://github.com/alice/tablee", "maj": "2026-10-20T10:00:00Z", "contenu_non_fiable": { "description": "..." } }]
+```
 
 ## `sauver_brouillons`
 
@@ -75,6 +87,115 @@ Capture d'écran d'une page d'un site dont l'utilisateur a **prouvé la proprié
 
 Garanties : domaine vérifié obligatoire, redirection vers un autre domaine refusée (HTTP et JavaScript), emails, IP, tokens et champs de mot de passe floutés avant la capture, 5 captures par minute, aucune image stockée.
 
+## `lire_style` et `sauver_style`
+
+`lire_style` (aucun paramètre, lecture seule) renvoie le style d'écriture mémorisé : `{ exemples, profil, maj }`, champs vides si rien n'est enregistré. `sauver_style` mémorise `exemples` (8000 caractères au plus) et `profil` (2000), au moins un des deux ; un champ absent garde sa valeur. À n'utiliser qu'à la demande de l'utilisateur.
+
+## Pub vidéo
+
+Le flux complet : `preparer_pub`, les 3 questions à l'utilisateur, `capturer_site` si un domaine est vérifié, `sauver_pub`, puis le lien du studio.
+
+### `preparer_pub`
+
+| Paramètre | Type | Description |
+|---|---|---|
+| `repo` | texte | Nom du repo public, sans le propriétaire |
+
+Lecture seule. Renvoie :
+
+| Champ | Contenu |
+|---|---|
+| `repo` | `repo`, `site`, `url`, `sujets`, `langages`, et `contenu_non_fiable` (`description`, `readme`) |
+| `domainesVerifies` | Noms d'hôte dont l'utilisateur a prouvé la propriété (donc capturables) |
+| `pubExistante` | Id de la pub la plus récente de ce repo, ou `null` : à passer comme `id` à `sauver_pub` pour la remplacer |
+| `marqueConnue`, `capturesDisponibles` | Marque et captures de cette pub, ou `null` et `[]` |
+| `questions` | Les 3 questions (`pourQui`, `probleme`, `promesse`) avec leur aide |
+| `catalogue`, `regles` | Types de scènes et règles d'écriture, en texte |
+| `schema` | Schéma JSON du script |
+
+Erreurs : nom de repo invalide, repo introuvable ou privé.
+
+### `sauver_pub`
+
+| Paramètre | Type | Description |
+|---|---|---|
+| `id` | UUID, facultatif | Pub existante à remplacer ; sans `id`, une nouvelle pub est créée |
+| `script` | objet | Script de pub, version 1 |
+
+Le script est toujours nettoyé et validé par `nettoyerScriptPub` (même règle que le site) : textes tronqués sans couper un mot, tirets longs remplacés, bornes vérifiées. Réponse :
+
+```json
+{ "id": "0b6f8d5e-6a51-4c0e-9d0e-3f3b2c1a9e77", "lien": "https://weekli.example/app/studio?pub=0b6f8d5e-6a51-4c0e-9d0e-3f3b2c1a9e77", "avertissements": [], "dureeEstimee": 59 }
+```
+
+`dureeEstimee` est en secondes (voix comptée à 170 mots par minute). Les `avertissements` signalent ce qui a été corrigé ou ce qui est hors cible (durée, nombre de mots, texte qui ressemble à du code) : corrige-les puis sauve à nouveau avec l'`id` reçu. Erreurs : `Script invalide : <erreurs>`, `20 pubs au maximum`, `Pub introuvable`. Les pubs sont gardées 90 jours après leur dernière modification.
+
+### `lister_pubs` et `lire_pub`
+
+`lister_pubs` (aucun paramètre) renvoie `{ id, titre, projet, cree, maj, scenes }` pour chaque pub, de la plus récemment modifiée à la plus ancienne ; `scenes` compte les scènes visibles. `lire_pub` (`id`) renvoie la pub complète avec son script, ou `Pub introuvable`.
+
+## Posts par type
+
+### `preparer_post`
+
+| Paramètre | Type | Description |
+|---|---|---|
+| `type` | `presentation`, `tuto`, `coulisses`, `lecon`, `semaine` | Type de post |
+| `repo` | texte | Nom du repo public, sans le propriétaire (tous les types sauf `semaine`) |
+| `commits` | texte[] | SHA de 7 à 40 caractères, 10 au plus (`coulisses` : 1 au moins, `lecon` : facultatif) |
+| `fichiers` | texte[] | Chemins à lire, 12 au plus (`tuto`, facultatif) ; un secret, un fichier généré ou binaire est refusé |
+| `jours` | entier | 1 à 30, 7 par défaut (`semaine`) |
+
+Lecture seule. Entrée validée par `validerDemandePost`, sortie `DonneesPost` identique à `POST /api/posts/donnees` : `type`, `nom`, `repo` (`null` pour `semaine`), `specifique` (selon le type), `style`, `regles`, `consigne`. Tout texte du repo est dans `contenu_non_fiable`. `coulisses` sans `commits` renvoie à la place `{ type, nom, repo, commitsDisponibles, regles, consigne }` ; `lecon` sans `commits` ajoute `commitsDisponibles` aux données.
+
+Erreurs : entrée invalide (messages de la route), repo ou commit introuvable, repo privé. Le repo d'un autre compte n'est pas atteignable.
+
+### Prompt `preparer_post`
+
+| Argument | Description |
+|---|---|
+| `type` | Type de post |
+| `repo` | Nom du repo GitHub public (sauf `semaine`) |
+
+Guide Claude (`promptPreparerPost`) : appeler `preparer_post`, lire consigne et règles, poser la question si elles le demandent, rédiger 2 ou 3 versions.
+
+### `proposer_post_projet`
+
+Conservé pour l'instant (équivalent de `type: "presentation"`, retrait décidé après la recette) : préférer `preparer_post`.
+
+| Paramètre | Type | Description |
+|---|---|---|
+| `repo` | texte | Nom du repo public, sans le propriétaire |
+
+Lecture seule. Weekli ne rédige pas, il fournit les données et les règles. Renvoie :
+
+| Champ | Contenu |
+|---|---|
+| `repo` | `repo`, `site`, `url`, `sujets`, et `contenu_non_fiable` (`description`, `readme`) |
+| `domainesVerifies` | Domaines dont l'utilisateur a prouvé la propriété |
+| `pubExistante` | Id, titre, réponses et voix de la dernière pub de ce repo, ou `null` |
+| `style` | `exemples` et `profil` du style mémorisé |
+| `regles` | Règles d'écriture du post (`REGLES_POST_PROJET`) |
+| `consigne` | 2 ou 3 versions au format « Aujourd'hui je vous présente », sans commit, code ni chiffre de développement ; question à l'utilisateur si le pourquoi ou la démarche manquent |
+
+Erreurs : nom de repo invalide, repo introuvable ou privé. Le repo d'un autre compte n'est pas atteignable.
+
+### Prompt `post_projet`
+
+| Argument | Description |
+|---|---|
+| `repo` | Nom du repo GitHub public du projet |
+
+Guide Claude : `proposer_post_projet`, poser la question si le pourquoi ou la démarche manquent, rédiger 2 ou 3 versions, les présenter.
+
+## Prompt `pub_projet`
+
+| Argument | Description |
+|---|---|
+| `repo` | Nom du repo GitHub public du projet |
+
+Guide Claude : `preparer_pub`, poser les 3 questions sans inventer les réponses, regarder le site si un domaine est vérifié, écrire le script, `sauver_pub`, donner le lien du studio.
+
 ## Prompt `posts_semaine`
 
 | Argument | Description |
@@ -91,9 +212,13 @@ Routes JSON servies par le Worker, toutes protégées par la session (cookie `Ht
 | Méthode | Route | Réponse |
 |---|---|---|
 | GET | `/api/moi` | `{ login, nom, avatar }` |
-| GET | `/api/activite?jours=7` | Même format que `activite_github` (1 à 30 jours) |
-| GET | `/api/repos/:repo` | Même format que `details_repo` |
-| GET | `/api/repos/:repo/commits/:sha` | Même format que `details_commit` (SHA validé : 7 à 40 caractères hexadécimaux) |
+| GET | `/api/activite?jours=7` | Mêmes champs que `activite_github`, à plat (1 à 30 jours) |
+| GET | `/api/repos` | Repos publics sans forks (30 au plus), champs à plat (`repo`, `description`, `site`, `url`, `maj`) |
+| GET | `/api/repos/:repo` | Mêmes champs que `details_repo`, à plat |
+| GET | `/api/repos/:repo/commits/:sha` | Mêmes champs que `details_commit`, à plat (SHA validé : 7 à 40 caractères hexadécimaux) |
+| GET | `/api/repos/:repo/commits?jours=30` | Commits du compte sur ce repo (bruit retiré, 30 au plus, `jours` de 1 à 90) |
+| GET | `/api/repos/:repo/fichiers-tuto` | Aperçu de la lecture d'un tuto, sans lire de fichier : `branche`, `arborescence`, `proposes`, `ecartes` |
+| POST | `/api/posts/donnees` | Corps `{ type, repo?, commits?, fichiers?, jours? }` (64 Ko) ; renvoie les mêmes données que `preparer_post` |
 | GET | `/api/brouillons` | Historique, du plus récent au plus ancien (100 au maximum) |
 | POST | `/api/brouillons` | Corps `{ posts: Post[] }` (5 au maximum, 64 Ko) ; renvoie les brouillons créés |
 | PATCH | `/api/brouillons/:id` | Corps `{ texte?, publie? }` |

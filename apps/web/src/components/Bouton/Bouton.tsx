@@ -2,7 +2,7 @@ import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "reac
 import { Link } from "react-router-dom";
 import styles from "./Bouton.module.css";
 
-type Variante = "plein" | "contour";
+type Variante = "plein" | "contour" | "clair";
 type Taille = "normal" | "petit";
 
 type Commun = { variante?: Variante; taille?: Taille; children: ReactNode; className?: string };

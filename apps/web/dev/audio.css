@@ -1,0 +1,7 @@
+:root { color-scheme: light dark; font-family: ui-sans-serif, system-ui, sans-serif; }
+body { margin: 0; padding: 24px; }
+main { max-width: 860px; margin: 0 auto; display: grid; gap: 16px; }
+h1 { font-size: 1.25rem; margin: 0; }
+.barre { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+button, .bouton { font: inherit; padding: 8px 16px; cursor: pointer; width: fit-content; }
+pre { overflow-x: auto; margin: 0; padding: 12px; background: color-mix(in srgb, currentColor 8%, transparent); font-size: 0.8125rem; }

@@ -1,5 +1,15 @@
 // Protections appliquees a toutes les reponses du Worker (hors fichiers du front, couverts par _headers)
 
+// Toutes les cles de chiffrement et de signature derivent de ce secret : trop court, il ne protege plus rien.
+// `openssl rand -hex 32` en donne 64 caracteres.
+const LONGUEUR_MIN_CLE = 32;
+
+export function verifierConfiguration(env: Env): Response | null {
+	if ((env.COOKIE_ENCRYPTION_KEY ?? "").length >= LONGUEUR_MIN_CLE) return null;
+	console.error(`COOKIE_ENCRYPTION_KEY absente ou trop courte (${LONGUEUR_MIN_CLE} caracteres minimum)`);
+	return new Response("Configuration du serveur invalide", { status: 500 });
+}
+
 const ROUTES_SENSIBLES = /^\/(authorize|token|register|callback|auth\/)/;
 
 // Limite par adresse IP les routes d'authentification, cibles classiques de force brute et d'abus

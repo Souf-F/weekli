@@ -1,28 +1,40 @@
 .periode {
-	padding: 8px 10px;
+	padding: var(--espace-2) var(--espace-3);
 	border: 1px solid var(--filet);
-	border-radius: 10px;
-	background: rgba(255, 255, 255, 0.8);
+	border-radius: var(--rayon-s);
+	background: var(--champ);
 	font: inherit;
-	font-size: 0.85rem;
+	font-size: var(--t-petit);
+}
+.panneau {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+}
+.panneau .repos {
+	flex: 1 1 auto;
+	min-height: 0;
 }
 .repos {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
-	gap: 10px;
-	max-height: 560px;
+	align-content: start;
+	gap: var(--espace-3);
+	max-height: 520px;
 	overflow: auto;
+	/* Marge interne pour que l'anneau de focus ne soit pas rogne par le defilement */
+	padding: var(--espace-1);
 }
 .repo {
 	border: 1px solid var(--filet);
-	border-radius: 14px;
-	background: rgba(255, 255, 255, 0.5);
+	border-radius: var(--rayon-m);
+	background: var(--voile-blanc);
 }
 .repo summary {
 	display: flex;
 	align-items: center;
-	gap: 10px;
-	padding: 12px 14px;
+	gap: var(--espace-3);
+	padding: var(--espace-3) var(--espace-4);
 	cursor: pointer;
 	list-style: none;
 }
@@ -31,28 +43,44 @@
 }
 .repo ul {
 	margin: 0;
-	padding: 0 14px 12px 38px;
+	padding: 0 var(--espace-4) var(--espace-3) var(--espace-7);
 	list-style: none;
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
-	gap: 6px;
+	gap: var(--espace-2);
 }
 .repo label {
 	min-width: 0;
 }
 .compte {
+	flex: none;
+	white-space: nowrap;
 	margin-left: auto;
-	font-size: 0.8rem;
+	font-size: var(--t-petit);
 	color: var(--texte-doux);
 }
 .message {
 	flex: 1;
 	min-width: 0;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
 	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+	overflow-wrap: anywhere;
+	line-height: 1.4;
 }
 .sha {
-	color: var(--moka);
-	font-size: 0.75rem;
+	color: var(--moka-texte);
+	font-size: var(--t-etiquette);
+}
+.repo summary strong {
+	min-width: 0;
+	font-size: var(--t-petit);
+	line-height: 1.35;
+	overflow-wrap: anywhere;
+}
+@media (max-width: 860px) {
+	.repos {
+		max-height: 340px;
+	}
 }

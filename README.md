@@ -118,4 +118,4 @@ TypeScript · React 19 et Vite · CSS Modules · Cloudflare Workers, Durable Obj
 
 ## Licence
 
-MIT
+GPL-3.0 (voir [LICENSE](LICENSE)). Le site embarque le phonémiseur espeak-ng, distribué sous GPL-3.0, pour la voix off générée dans le navigateur. Le modèle vocal Kokoro est sous Apache-2.0 et la voix `ff_siwis` est entraînée sur le corpus SIWIS (CC-BY 4.0).

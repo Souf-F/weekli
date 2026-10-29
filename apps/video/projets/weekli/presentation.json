@@ -1,7 +1,7 @@
 {
 	"titre": "Weekli, la pub",
 	"projet": "weekli",
-	"format": "portrait",
+	"format": "paysage",
 	"ambiance": "energique",
 	"prononciation": {
 		"Weekli": "Wikli",
@@ -15,7 +15,10 @@
 		{
 			"id": "accroche",
 			"voix": "Tu codes toute la semaine. Et pourtant, personne ne le voit.",
-			"visuel": { "type": "accroche", "texte": "Tu codes toute la semaine. *Personne ne le voit.*" }
+			"visuel": {
+				"type": "accroche",
+				"texte": "Tu codes toute la semaine. *Personne ne le voit.*"
+			}
 		},
 		{
 			"id": "probleme",
@@ -23,63 +26,73 @@
 			"visuel": {
 				"type": "probleme",
 				"titre": "Raconter son travail, c'est long.",
-				"points": ["Un post qui prend une heure", "Des commits vite oubliés", "Des projets invisibles"]
+				"points": [
+					"Un post qui prend une heure",
+					"Des commits vite oubliés",
+					"Des projets invisibles"
+				]
 			}
 		},
 		{
 			"id": "revelation",
 			"voix": "Voici Weekli. De GitHub à LinkedIn, en une seule phrase.",
-			"visuel": { "type": "revelation", "nom": "Weekli", "slogan": "De GitHub à LinkedIn, en une phrase." }
+			"visuel": {
+				"type": "revelation",
+				"nom": "Weekli",
+				"slogan": "De GitHub à LinkedIn, en une phrase."
+			}
 		},
 		{
 			"id": "fonctionnalites",
-			"voix": "Weekli lit ton activité GitHub, Claude écrit tes posts dans ton style, et chaque post peut devenir une vidéo.",
+			"voix": "Weekli lit ta semaine sur GitHub, écrit tes posts dans ton style, et chaque post peut devenir une vidéo.",
 			"visuel": {
 				"type": "fonctionnalites",
 				"titre": "Ton code devient *une histoire.*",
 				"elements": [
-					{ "titre": "Ta semaine sur GitHub", "texte": "Commits triés, bruit retiré", "icone": "github" },
-					{ "titre": "Claude rédige", "texte": "Dans ton style, sans rien inventer", "icone": "ia" },
-					{ "titre": "Posts en vidéo", "texte": "Export MP4 au format LinkedIn", "icone": "video" }
+					{
+						"titre": "Ta semaine sur GitHub",
+						"texte": "Le bruit retiré, l'essentiel gardé",
+						"icone": "github"
+					},
+					{
+						"titre": "Claude rédige",
+						"texte": "Dans ton style, sans rien inventer",
+						"icone": "ia"
+					},
+					{
+						"titre": "Posts en vidéo",
+						"texte": "Export MP4 au format LinkedIn",
+						"icone": "video"
+					}
 				]
-			}
-		},
-		{
-			"id": "demo-claude",
-			"voix": "Dans Claude, une phrase suffit. Weekli fournit tes commits, Claude écrit, et les brouillons sont enregistrés.",
-			"visuel": {
-				"type": "terminal",
-				"commande": "Fais mes posts LinkedIn de la semaine",
-				"lignes": ["activite_github   12 commits sur weekli", "details_commit    88baace", "sauver_brouillons 2 posts enregistrés"]
 			}
 		},
 		{
 			"id": "demo-site",
-			"voix": "Tu préfères le web ? Le site fait la même chose, avec ta propre clé API, et un studio vidéo.",
-			"visuel": { "type": "capture", "image": "projets/weekli/captures/studio.png", "legende": "Ou *directement* sur le site." }
-		},
-		{
-			"id": "preuve",
-			"voix": "Le tout tient en treize commits, près de dix mille lignes écrites, et soixante-quatorze tests automatisés.",
+			"voix": "Tout se passe sur le site : tu relis, tu ajustes, tu exportes. Rien n'est publié sans toi.",
 			"visuel": {
-				"type": "chiffres",
-				"elements": [
-					{ "valeur": 13, "libelle": "commits" },
-					{ "valeur": 9868, "libelle": "lignes écrites" },
-					{ "valeur": 74, "libelle": "tests automatisés" },
-					{ "valeur": 0, "libelle": "vulnérabilité connue" }
-				]
+				"type": "capture",
+				"image": "projets/weekli/captures/studio.png",
+				"legende": "Ou *directement* sur le site."
 			}
 		},
 		{
 			"id": "confiance",
 			"voix": "Et ton IA reste la tienne : ta clé ne quitte jamais ton navigateur, et rien n'est publié sans toi.",
-			"visuel": { "type": "citation", "texte": "Ton IA reste *la tienne.*" }
+			"visuel": {
+				"type": "citation",
+				"texte": "Ton IA reste *la tienne.*"
+			}
 		},
 		{
 			"id": "appel",
 			"voix": "Weekli. Raconte enfin ce que tu construis. Le code est ouvert, sur GitHub.",
-			"visuel": { "type": "appel", "titre": "Raconte ce que tu construis.", "lien": "github.com/Souf-F/weekli", "sousTexte": "Open source · licence MIT" }
+			"visuel": {
+				"type": "appel",
+				"titre": "Raconte ce que tu construis.",
+				"lien": "github.com/Souf-F/weekli",
+				"sousTexte": "Open source · licence MIT"
+			}
 		}
 	]
 }

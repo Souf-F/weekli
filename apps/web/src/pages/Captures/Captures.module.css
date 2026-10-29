@@ -1,44 +1,41 @@
 .entete {
-	margin-bottom: 28px;
-}
-.entete h1 {
-	font-size: clamp(2.4rem, 5vw, 3.6rem);
+	margin-bottom: var(--espace-5);
 }
 .formulaire {
 	display: grid;
 	grid-template-columns: 1.2fr 1fr 1fr auto;
-	gap: 12px;
+	gap: var(--espace-3);
 	align-items: end;
 }
 .formulaire label {
 	margin-bottom: 0;
 }
 .vide {
-	padding: 40px 28px;
+	padding: var(--espace-7) var(--espace-5);
 	border: 1px dashed var(--moka-clair);
-	border-radius: 20px;
-	background: rgba(255, 255, 255, 0.25);
+	border-radius: var(--rayon-l);
+	background: var(--vide-fond);
 }
 .vide p {
-	margin: 0 0 6px;
+	margin: 0 0 var(--espace-2);
 }
 .grille {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
-	gap: 16px;
-	margin-top: 16px;
+	gap: var(--espace-4);
+	margin-top: var(--espace-4);
 }
 .capture {
 	margin: 0;
-	padding: 12px;
+	padding: var(--espace-3);
 	border: 1px solid var(--filet);
-	border-radius: 16px;
-	background: #fff;
+	border-radius: var(--rayon-m);
+	background: var(--blanc);
 }
 .capture img {
 	display: block;
 	width: 100%;
-	border-radius: 10px;
+	border-radius: var(--rayon-s);
 	border: 1px solid var(--filet);
 }
 .capture .mobile {
@@ -48,9 +45,9 @@
 .capture figcaption {
 	display: flex;
 	justify-content: space-between;
-	gap: 8px;
-	margin-top: 10px;
-	font-size: 0.82rem;
+	gap: var(--espace-2);
+	margin-top: var(--espace-3);
+	font-size: var(--t-petit);
 }
 .capture code {
 	overflow: hidden;
@@ -58,7 +55,7 @@
 	white-space: nowrap;
 }
 .capture a {
-	color: var(--moka);
+	color: var(--moka-texte);
 	font-weight: 500;
 }
 

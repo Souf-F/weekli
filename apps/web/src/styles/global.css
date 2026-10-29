@@ -12,8 +12,8 @@ body {
 	margin: 0;
 	color: var(--espresso);
 	font-family: var(--sans);
-	font-size: 16px;
-	line-height: 1.6;
+	font-size: var(--t-corps);
+	line-height: var(--lh-corps);
 	-webkit-font-smoothing: antialiased;
 	overflow-x: hidden;
 	/* Repli si WebGL est indisponible */
@@ -21,6 +21,16 @@ body {
 		radial-gradient(60% 50% at 15% 10%, var(--platine), transparent),
 		radial-gradient(50% 50% at 85% 20%, var(--lavande), transparent),
 		radial-gradient(40% 40% at 90% 95%, var(--moka-clair), transparent), var(--lavande);
+}
+
+/* Voile entre le mesh (canvas fixe, z-index -1) et le contenu */
+html::after {
+	content: "";
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	background: var(--voile-mesh);
+	pointer-events: none;
 }
 
 a {
@@ -31,22 +41,43 @@ h1,
 h2,
 h3 {
 	margin: 0;
-	font-weight: 400;
+	font-weight: 500;
+}
+h1 {
+	font-size: var(--t-titre);
+}
+h1,
+h2,
+h3 {
+	font-family: var(--serif);
 }
 h1,
 h2 {
-	font-family: var(--serif);
-	letter-spacing: -0.01em;
-	line-height: 1.02;
+	letter-spacing: -0.012em;
+	line-height: var(--lh-titre);
+}
+h2 {
+	font-size: var(--t-sous-titre);
+	line-height: var(--lh-sous-titre);
 }
 h1 em,
 h2 em {
-	color: var(--moka);
+	font-style: normal;
+	color: var(--moka-texte);
 }
 h3 {
-	font-size: 1.08rem;
+	font-size: var(--t-corps-grand);
 	font-weight: 600;
-	letter-spacing: -0.01em;
+	letter-spacing: -0.005em;
+	line-height: var(--lh-sous-titre);
+}
+/* Cible tactile minimale de 24 px (WCAG 2.2) pour les cases a cocher */
+input[type="checkbox"] {
+	width: var(--espace-5);
+	height: var(--espace-5);
+	margin: 0;
+	accent-color: var(--moka);
+	vertical-align: middle;
 }
 code {
 	font-family: var(--mono);
@@ -57,15 +88,22 @@ code {
 	color: var(--platine);
 }
 
+/* Focus clavier visible partout, sur fond clair comme sur fond espresso */
+:focus-visible {
+	outline: 2px solid transparent;
+	outline-offset: 2px;
+	box-shadow: var(--focus);
+}
+
 /* Apparitions au scroll (voir hooks/useReveal) */
 .revele {
 	opacity: 0;
-	transform: translateY(28px);
+	transform: translateY(var(--espace-5));
 	filter: blur(6px);
 	transition:
-		opacity 1s var(--ease),
-		transform 1s var(--ease),
-		filter 1s var(--ease);
+		opacity var(--duree-section) var(--ease),
+		transform var(--duree-section) var(--ease),
+		filter var(--duree-section) var(--ease);
 	transition-delay: var(--delai, 0s);
 }
 .revele.vu {
@@ -75,6 +113,9 @@ code {
 }
 
 @media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
 	.revele {
 		opacity: 1;
 		transform: none;

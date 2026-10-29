@@ -18,3 +18,13 @@ export function verifierUrl(brute: string, domaines: Domaine[]): URL {
 	}
 	return url;
 }
+
+// Une page deja chargee ou une redirection doit rester en https sur un domaine verifie
+export const estDomaineVerifie = (href: string, domaines: Domaine[]): boolean => {
+	try {
+		const url = new URL(href);
+		return url.protocol === "https:" && domaines.some((d) => d.hote === url.hostname);
+	} catch {
+		return false;
+	}
+};

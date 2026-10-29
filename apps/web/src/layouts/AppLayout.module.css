@@ -1,98 +1,89 @@
 .app {
 	max-width: var(--largeur);
 	margin: 0 auto;
-	padding: 16px;
+	padding: var(--espace-4);
 }
+/* Verre autorise : panneaux de l'app */
 .barre {
 	display: flex;
 	align-items: center;
-	gap: 24px;
-	padding: 10px 10px 10px 18px;
+	gap: var(--espace-5);
+	padding: var(--espace-2) var(--espace-2) var(--espace-2) var(--espace-4);
 	border: 1px solid var(--bord-verre);
-	border-radius: 16px;
+	border-radius: var(--rayon-m);
 	background: var(--verre-fort);
-	backdrop-filter: blur(18px);
-	-webkit-backdrop-filter: blur(18px);
+	backdrop-filter: var(--flou-verre);
+	-webkit-backdrop-filter: var(--flou-verre);
 }
 .nav {
 	display: flex;
-	gap: 6px;
+	gap: var(--espace-1);
 }
 .nav a {
-	padding: 8px 14px;
-	border-radius: 10px;
-	font-size: 0.92rem;
+	padding: var(--espace-2) var(--espace-3);
+	border-radius: var(--rayon-s);
+	font-size: var(--t-petit);
 	color: var(--texte-doux);
 	transition:
-		background 0.3s,
-		color 0.3s;
+		background var(--duree-ui),
+		color var(--duree-ui);
 }
 .nav a:hover {
 	color: var(--espresso);
 }
 .nav .actif {
-	background: rgba(111, 78, 55, 0.1);
+	background: var(--voile-moka);
 	color: var(--espresso);
 }
 .profil {
 	margin-left: auto;
 	display: flex;
 	align-items: center;
-	gap: 12px;
-	font-size: 0.9rem;
+	gap: var(--espace-3);
+	font-size: var(--t-petit);
 }
 .profil img {
 	border-radius: 50%;
 }
 .contenu {
-	padding: 32px 0 64px;
+	padding: var(--espace-6) 0 var(--espace-8);
 }
 
 .centre {
 	min-height: 100svh;
 	display: grid;
 	place-items: center;
-	padding: 16px;
+	padding: var(--espace-4);
 	color: var(--texte-doux);
 }
 .connexion {
 	max-width: 480px;
-	padding: 48px;
+	padding: var(--espace-7);
 	border: 1px solid var(--bord-verre);
-	border-radius: 24px;
+	border-radius: var(--rayon-l);
 	background: var(--verre-fort);
-	backdrop-filter: blur(24px);
-	-webkit-backdrop-filter: blur(24px);
+	backdrop-filter: var(--flou-verre);
+	-webkit-backdrop-filter: var(--flou-verre);
 	box-shadow: var(--ombre);
 	color: var(--espresso);
 	text-align: center;
 }
 .connexion h1 {
-	margin: 28px 0 14px;
-	font-size: 2.6rem;
+	margin: var(--espace-5) 0 var(--espace-3);
 }
 .connexion p {
-	margin: 0 0 28px;
+	margin: 0 0 var(--espace-5);
 	color: var(--texte-doux);
 }
 .connexion .erreur {
 	color: var(--danger);
 }
 
-@media (max-width: 720px) {
-	.barre {
-		flex-wrap: wrap;
-	}
-	.profil span {
-		display: none;
-	}
-}
-
 /* Mobile : la navigation passe sous le logo et defile horizontalement */
 @media (max-width: 900px) {
 	.barre {
 		flex-wrap: wrap;
-		row-gap: 10px;
+		row-gap: var(--espace-2);
 	}
 	.nav {
 		order: 3;
@@ -100,6 +91,8 @@
 		min-width: 0;
 		overflow-x: auto;
 		scrollbar-width: none;
+		/* Marge pour que l'anneau de focus ne soit pas rogne par le defilement */
+		padding: var(--espace-1);
 	}
 	.nav::-webkit-scrollbar {
 		display: none;
@@ -110,4 +103,17 @@
 	.profil span {
 		display: none;
 	}
+}
+
+.pied {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--espace-2) var(--espace-5);
+	padding: var(--espace-5) var(--espace-1) var(--espace-2);
+	border-top: 1px solid var(--filet);
+	font-size: var(--t-petit);
+	color: var(--texte-doux);
+}
+.pied a:hover {
+	color: var(--espresso);
 }

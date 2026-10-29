@@ -1,43 +1,60 @@
-/* Styles partages par les panneaux du tableau de bord */
+/* Styles partages par les panneaux du tableau de bord (verre autorise : panneaux de l'app) */
 .panneau {
-	padding: 24px;
+	padding: var(--espace-5);
 	border: 1px solid var(--bord-verre);
-	border-radius: 20px;
+	border-radius: var(--rayon-l);
 	background: var(--verre-fort);
-	backdrop-filter: blur(20px);
-	-webkit-backdrop-filter: blur(20px);
+	backdrop-filter: var(--flou-verre);
+	-webkit-backdrop-filter: var(--flou-verre);
+}
+.etape {
+	margin: 0 0 var(--espace-1);
+	font-size: var(--t-etiquette);
+	line-height: var(--lh-etiquette);
+	font-weight: 600;
+	letter-spacing: var(--suivi-etiquette);
+	text-transform: uppercase;
+	color: var(--moka-texte);
 }
 .titre {
 	display: flex;
-	align-items: baseline;
+	align-items: flex-end;
 	justify-content: space-between;
-	gap: 12px;
-	margin-bottom: 18px;
+	gap: var(--espace-3);
+	margin-bottom: var(--espace-4);
 }
-.titre h2 {
-	font-size: 1.9rem;
+.titre h2,
+.titre h3 {
+	font-size: var(--t-sous-titre);
+	line-height: var(--lh-sous-titre);
 }
 .aide {
 	margin: 0;
-	font-size: 0.85rem;
+	font-size: var(--t-petit);
+	line-height: var(--lh-petit);
 	color: var(--texte-doux);
+}
+.duo {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--espace-3);
 }
 .champ {
 	display: grid;
-	gap: 6px;
-	margin-bottom: 16px;
-	font-size: 0.88rem;
+	gap: var(--espace-2);
+	margin-bottom: var(--espace-4);
+	font-size: var(--t-petit);
 	font-weight: 500;
 }
 .champ select,
 .champ input,
 .champ textarea {
 	width: 100%;
-	padding: 10px 12px;
+	padding: var(--espace-3);
 	border: 1px solid var(--filet);
-	border-radius: 10px;
-	background: rgba(255, 255, 255, 0.8);
-	font: 400 0.95rem var(--sans);
+	border-radius: var(--rayon-s);
+	background: var(--champ);
+	font: 400 var(--t-corps) / var(--lh-corps) var(--sans);
 	color: var(--espresso);
 }
 .champ textarea {
@@ -46,15 +63,26 @@
 }
 .ligne {
 	display: flex;
-	align-items: center;
-	gap: 8px;
-	font-size: 0.9rem;
+	align-items: flex-start;
+	gap: var(--espace-2);
+	font-size: var(--t-petit);
 }
 .erreur {
-	margin: 12px 0 0;
-	padding: 10px 14px;
-	border-radius: 10px;
-	background: rgba(163, 57, 43, 0.1);
+	margin: var(--espace-3) 0 0;
+	padding: var(--espace-3) var(--espace-4);
+	border-radius: var(--rayon-s);
+	background: var(--voile-danger);
 	color: var(--danger);
-	font-size: 0.9rem;
+	font-size: var(--t-petit);
+}
+.ligneEspacee {
+	margin-bottom: var(--espace-5);
+}
+.aideEspacee {
+	margin-top: var(--espace-3);
+}
+/* Specificite relevee pour l'emporter sur .bouton (nowrap) du composant Bouton */
+.panneau .pleineLargeur {
+	width: 100%;
+	white-space: normal;
 }

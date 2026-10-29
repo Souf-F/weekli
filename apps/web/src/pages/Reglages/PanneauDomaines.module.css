@@ -1,59 +1,60 @@
 .liste {
 	list-style: none;
-	margin: 16px 0;
+	margin: var(--espace-4) 0;
 	padding: 0;
 	display: grid;
-	gap: 6px;
+	gap: var(--espace-2);
 }
 .liste li {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: 8px;
-	padding: 8px 12px;
+	gap: var(--espace-2);
+	padding: var(--espace-2) var(--espace-3);
 	border: 1px solid var(--filet);
-	border-radius: 10px;
-	background: rgba(255, 255, 255, 0.6);
+	border-radius: var(--rayon-s);
+	background: var(--voile-blanc);
 }
 .liste button {
 	border: 0;
 	background: none;
 	color: var(--danger);
-	font: 500 0.82rem var(--sans);
+	font: 500 var(--t-petit) / 1.2 var(--sans);
 	cursor: pointer;
 }
 .ajout {
 	display: flex;
-	gap: 8px;
+	gap: var(--espace-2);
 }
 .ajout input {
 	flex: 1;
 	min-width: 0;
-	padding: 10px 12px;
+	padding: var(--espace-3);
 	border: 1px solid var(--filet);
-	border-radius: 10px;
-	background: rgba(255, 255, 255, 0.8);
-	font: 400 0.95rem var(--mono);
+	border-radius: var(--rayon-s);
+	background: var(--champ);
+	font: 400 var(--t-corps) var(--mono);
 }
 .preuve {
-	margin-top: 16px;
-	padding: 16px;
-	border-radius: 12px;
-	background: rgba(111, 78, 55, 0.08);
-	font-size: 0.9rem;
+	margin-top: var(--espace-4);
+	padding: var(--espace-4);
+	border-radius: var(--rayon-s);
+	background: var(--voile-moka);
+	font-size: var(--t-petit);
+	line-height: var(--lh-petit);
 }
 .preuve p {
-	margin: 0 0 8px;
+	margin: 0 0 var(--espace-2);
 }
 .methode {
-	margin-top: 14px !important;
+	margin-top: var(--espace-3) !important;
 	font-weight: 600;
 }
 .preuve dl {
 	display: grid;
 	grid-template-columns: auto minmax(0, 1fr);
-	gap: 4px 12px;
-	margin: 0 0 12px;
+	gap: var(--espace-1) var(--espace-3);
+	margin: 0 0 var(--espace-3);
 }
 .preuve dt {
 	color: var(--texte-doux);

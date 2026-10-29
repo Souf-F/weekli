@@ -1,0 +1,89 @@
+:root {
+	--fond: #f6f4ef;
+	--texte: #1b1a17;
+	--discret: #5c5850;
+	--trait: #c9c3b6;
+	--accent: #1f4f46;
+	--espace: 1rem;
+	color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--fond: #161513;
+		--texte: #ece8df;
+		--discret: #a39e93;
+		--trait: #3a3731;
+		--accent: #8fc9b9;
+	}
+}
+
+body {
+	margin: 0;
+	background: var(--fond);
+	color: var(--texte);
+	font: 1rem/1.5 system-ui, sans-serif;
+}
+
+main {
+	max-width: 48rem;
+	margin: 0 auto;
+	padding: calc(var(--espace) * 2) var(--espace);
+}
+
+.note,
+#etat {
+	color: var(--discret);
+}
+
+form {
+	display: grid;
+	gap: var(--espace);
+}
+
+.ligne {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: calc(var(--espace) / 2);
+}
+
+textarea,
+select,
+input,
+button {
+	font: inherit;
+	color: inherit;
+	background: transparent;
+	border: 1px solid var(--trait);
+	border-radius: 4px;
+	padding: 0.4rem 0.6rem;
+}
+
+textarea {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+button {
+	cursor: pointer;
+}
+
+button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}
+
+audio {
+	width: 100%;
+}
+
+.phonemes {
+	font-family: ui-monospace, monospace;
+	overflow-wrap: anywhere;
+}

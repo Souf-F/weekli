@@ -1,0 +1,43 @@
+.zone {
+	border-color: var(--danger);
+}
+.zone a {
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+.declencheur {
+	margin-top: var(--espace-4);
+	color: var(--danger);
+	border-color: var(--danger);
+}
+.confirmation {
+	margin-top: var(--espace-4);
+	padding: var(--espace-4);
+	border-radius: var(--rayon-m);
+	background: var(--voile-danger);
+}
+.confirmation h3 {
+	color: var(--danger);
+}
+.confirmation p {
+	margin: var(--espace-2) 0 var(--espace-4);
+	font-size: var(--t-petit);
+	line-height: var(--lh-petit);
+}
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--espace-3);
+}
+.actions .danger {
+	background: var(--danger);
+	border-color: var(--danger);
+	color: var(--blanc);
+}
+.actions .danger:hover:not(:disabled) {
+	background: var(--espresso);
+	border-color: var(--espresso);
+}
+.export {
+	margin: var(--espace-4) var(--espace-3) 0 0;
+}

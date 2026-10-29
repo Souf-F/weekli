@@ -159,12 +159,8 @@ const POSES: Record<Visuel["type"], Pose> = {
 	probleme: { x: -0.85, y: -0.75, z: -2, echelle: 1.1, amplitude: 0.38 },
 	revelation: { x: 0, y: 0.1, z: -2.6, echelle: 1.7, amplitude: 0.16 },
 	fonctionnalites: { x: 0.92, y: 0.88, z: -1.5, echelle: 0.9, amplitude: 0.25 },
-	terminal: { x: -0.9, y: 0.82, z: -1.5, echelle: 1.05, amplitude: 0.3 },
 	capture: { x: 0.9, y: -0.88, z: -2, echelle: 1.2, amplitude: 0.22 },
 	chiffres: { x: 0.9, y: 0.95, z: -1.2, echelle: 1.05, amplitude: 0.32 },
-	architecture: { x: -0.92, y: -0.88, z: -1.8, echelle: 0.85, amplitude: 0.24 },
-	chronologie: { x: 0.95, y: 0.15, z: -0.8, echelle: 1.1, amplitude: 0.24 },
-	code: { x: -0.9, y: 0.85, z: -1.4, echelle: 0.95, amplitude: 0.22 },
 	citation: { x: 0.8, y: -0.7, z: -0.4, echelle: 1.15, amplitude: 0.2 },
 	appel: { x: 0, y: -1.05, z: -3, echelle: 1.9, amplitude: 0.3 },
 };

@@ -1,0 +1,340 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Audit sécurité et RGPD final Weekli, 29 octobre 2026</title><style>
+@page{size:A4;margin:16mm 14mm}
+:root{--ink:#1d1a17;--muted:#5d554d;--line:#d9d2c8;--bg:#faf8f5}
+body{font:10.5pt/1.5 -apple-system,'Helvetica Neue',Arial,sans-serif;color:var(--ink);margin:0}
+h1{font:600 22pt/1.2 Georgia,serif;margin:0 0 14px;padding-bottom:10px;border-bottom:3px solid var(--ink)}
+h2{font:600 14pt/1.3 Georgia,serif;margin:26px 0 10px;padding-top:6px;border-top:1px solid var(--line);page-break-after:avoid}
+h3{font-size:12pt;margin:18px 0 8px;page-break-after:avoid}
+h2:first-of-type{page-break-before:always}
+p{margin:0 0 8px}
+p.finding{margin-top:14px;padding:8px 10px;background:var(--bg);border-left:4px solid #b9a98f;page-break-after:avoid}
+ul,ol{margin:0 0 10px;padding-left:20px}li{margin:2px 0}li.sub{margin-left:18px;list-style:circle}
+code{font:9pt Menlo,monospace;background:#f0ece6;padding:1px 3px;border-radius:3px;word-break:break-word}
+table{width:100%;border-collapse:collapse;margin:8px 0 14px;font-size:9pt;page-break-inside:auto}
+tr{page-break-inside:avoid}
+th,td{border:1px solid var(--line);padding:4px 6px;text-align:left;vertical-align:top}
+th{background:#efe9e1}
+table.garde td:first-child{width:24%;font-weight:600;background:var(--bg)}
+.b,.M,.m{display:inline-block;padding:0 6px;border-radius:4px;font-size:8.5pt;font-weight:700;color:#fff}
+.b{background:#8a1c12}.M{background:#c2561b}.m{background:#6b7a3a}
+td.ok{color:#2f6b2a;font-weight:600}td.ko,td.kM{color:#a3311f;font-weight:600}td.km{color:#8a6a10;font-weight:600}td.nv{color:#555;font-style:italic}
+</style></head><body>
+<h1>Audit de sécurité et RGPD final : Weekli</h1>
+<table class="garde">
+<tbody>
+<tr><td>Projet</td><td>Weekli (monorepo <code>apps/server</code>, <code>apps/web</code>, <code>apps/video</code>, <code>packages/core</code>)</td></tr>
+<tr><td>Date</td><td>29 octobre 2026</td></tr>
+<tr><td>Auditeur</td><td>securite-senior (aucun code modifié, rien commité)</td></tr>
+<tr><td>Branche auditée</td><td><code>feat/weekli-v1</code>, commit <code>c09e359</code> (PR Souf-F/weekli#6), 43 commits sur la branche, 46 dans tout l'historique local</td></tr>
+<tr><td>Périmètre</td><td>Code (server, web, video, core, scripts, CI, Dockerfile), historique Git complet, dépôt GitHub <code>Souf-F/weekli</code> en lecture seule, <code>npm audit</code>, serveur local <code>http://localhost:8788</code> en tests dynamiques non authentifiés</td></tr>
+<tr><td>Cibles testées</td><td>Fichiers locaux ; historique Git ; API GitHub (lecture) ; bundle de production recompilé dans un dossier temporaire ; serveur local (en-têtes, CSP, COOP et COEP, CSRF par Origin, débit, 401, OAuth, métadonnées MCP, fichiers exposés) ; navigateur Chrome headless avec un profil vierge (réseau, console, stockage, cookies)</td></tr>
+<tr><td>Hors périmètre</td><td>Aucune URL de production (rien n'est déployé) ; aucun test authentifié (consigne : ni compte ni session de Soufiane)</td></tr>
+<tr><td><strong>Verdict global</strong></td><td class="km"><strong>A CORRIGER</strong> : 0 BLOQUANT, 1 MAJEUR, 11 MINEUR nouveaux ; audit initial : 6 MAJEUR sur 6 corrigés, 13 MINEUR sur 17 corrigés, 2 partiels (m3, m12), 2 ouverts (m13, m16), plus le résidu B14 de M3</td></tr>
+</tbody></table>
+<p><strong>Aucun secret réel exposé.</strong> Le fichier <code>apps/server/.dev.vars</code> (secrets locaux réels) n'est ni suivi par Git, ni présent dans l'historique, ni poussé ; il est exclu par <code>.git/info/exclude:9</code> et <code>.dockerignore</code>. Son contenu n'a pas été affiché.</p>
+<p>Rappel : cet audit vérifie la conformité technique et documentaire. Il ne remplace pas l'avis d'un juriste ou d'un DPO.</p>
+<h2>1. Synthèse</h2>
+<table>
+<thead><tr><th>Sévérité</th><th>Nouveaux constats</th><th>Restes de l'audit initial</th></tr></thead>
+<tbody>
+<tr><td>BLOQUANT</td><td>0</td><td>0</td></tr>
+<tr><td>MAJEUR</td><td>1</td><td>0</td></tr>
+<tr><td>MINEUR</td><td>11</td><td>5 (M3 résiduel B14, m3, m12 partiels ; m13, m16 ouverts)</td></tr>
+</tbody></table>
+<p>Les 3 risques principaux :</p>
+<ol>
+<li><strong>Déni de service par expression régulière (N1)</strong> : le masquage des secrets a un coût quadratique ; un fichier de 99 Ko de son propre repo public coûte 8,5 s de CPU par lecture, sans plafond de taille avant masquage pour le README et les diffs.</li>
+<li><strong>Page Confidentialité encore inexacte sur quelques points (N2, N3)</strong> : journaux décrits comme sans donnée personnelle alors que des erreurs Octokit complètes y sont écrites, cookie de consentement MCP de 30 jours non listé, Microsoft présenté comme sous-traitant encadré alors qu'aucun contrat n'existe.</li>
+<li><strong>Cache vocal partagé et quotas KV (N4)</strong> : un compte GitHub quelconque peut écrire jusqu'à 1 440 audios par jour dans KV et sonder si une phrase a déjà été synthétisée par quelqu'un.</li>
+</ol>
+<p>Points forts constatés : effacement complet réel (KV, grants MCP, Durable Objects, toutes les sessions, autorisation GitHub révoquée), export JSON, identité par id numérique partout, token GitHub chiffré et lié à l'id (AAD) dans les props MCP, Durable Objects détruits après 24 h d'inactivité et contrôlés par propriétaire, chiffrement versionné avec AAD et clé HMAC dérivée par HKDF, polices hébergées localement (aucune requête tierce mesurée), CSP stricte sans <code>unsafe-inline</code>, COOP et COEP actifs (<code>crossOriginIsolated</code> vrai), mode démo absent du build même avec <code>VITE_DEMO=1</code>, <code>npm audit</code> à 0, 503 tests verts.</p>
+<h2>2. Éléments sensibles trouvés</h2>
+<table>
+<thead><tr><th>Élément</th><th>Emplacement</th><th>Statut</th></tr></thead>
+<tbody>
+<tr><td>Secrets locaux réels</td><td><code>apps/server/.dev.vars</code> (mode 600)</td><td>Non suivi, absent de l'historique et de GitHub, exclu de Docker. Contenu non lu. OK</td></tr>
+<tr><td>Copies de build Wrangler</td><td><code>apps/server/.wrangler/tmp/dev-*/index.js</code> (gitleaks : motifs <code>private-key</code>)</td><td>Bundles de dépendances locaux, exclus par <code>.git/info/exclude</code>, jamais suivis. Sans risque</td></tr>
+<tr><td><code>TrustedClientToken</code> d'edge-tts</td><td><code>apps/server/src/lib/voix-gec.ts:34</code> (<code>6A5A****</code>)</td><td>Constante publique du projet libre edge-tts, pas un secret de Weekli. Signalée par gitleaks, non sensible</td></tr>
+<tr><td>Jetons de test</td><td><code>apps/server/src/mcp/__tests__/aide.ts:8</code> (<code>gho_****</code>), <code>agent.test.ts:40</code></td><td>Factices</td></tr>
+<tr><td>URL avec identifiants</td><td><code>apps/server/src/lib/__tests__/domaines.test.ts:46</code> (commit <code>35c41ee</code>)</td><td>Factice (trufflehog : non vérifiée)</td></tr>
+<tr><td>Client ID OAuth GitHub</td><td>Redirection de <code>/auth/login</code> (<code>Ov23****</code>)</td><td>Public par conception OAuth, non secret</td></tr>
+<tr><td>Email personnel de l'auteur</td><td>Métadonnées des 46 commits (<code>sfec****@gmail.com</code>)</td><td>Toujours présent, voir m13</td></tr>
+<tr><td>Clé API Anthropic de l'utilisateur</td><td><code>sessionStorage</code> (par défaut) ou <code>localStorage</code>, clé <code>weekli.cle</code></td><td>Par conception, avertissement présent (m10 corrigé)</td></tr>
+</tbody></table>
+<h2>3. Nouveaux constats</h2>
+<h3>MAJEUR</h3>
+<p class="finding"><strong><span class="M">MAJEUR</span> N1. packages/core/src/masquage.ts:9, posts/tuto.ts:140 et :152, github.ts:154 : masquage des secrets en temps quadratique, sur des textes non plafonnés</strong></p>
+<ul>
+<li>Problème : le motif <code>\bsk-(?=[A-Za-z0-9_-]*\d)[A-Za-z0-9_-]{32,}</code> relance une anticipation jusqu'à la fin de la suite de caractères à chaque occurrence de <code>sk-</code>. Sur une chaîne <code>sk-sk-sk-...</code> sans chiffre, le coût est quadratique. Or <code>masquerSecrets</code> est appliqué avant la troncature, sur le texte entier : fichiers du tuto jusqu'à 100 Ko chacun (12 fichiers), README brut sans aucun plafond (<code>tuto.ts:152</code>, l'API GitHub en mode raw peut renvoyer plusieurs Mo), et patchs de commits (<code>github.ts:154</code>).</li>
+<li>Preuve : même moteur V8 que Workers, script <code>node</code> sur le motif exact : 9 Ko : 81 ms ; 24 Ko : 537 ms ; 99 Ko : 8 514 ms. Le motif PEM et les autres restent linéaires.</li>
+<li>Scénario d'attaque : n'importe quel titulaire d'un compte GitHub crée un repo public avec 12 fichiers de 99 Ko et un README de quelques Mo remplis de <code>sk-</code>, puis appelle <code>POST /api/posts/donnees</code> (type <code>tuto</code>) ou l'outil MCP <code>preparer_post</code>, 60 fois par minute. Chaque appel consomme la limite de CPU du Worker (coût facturé, isolat bloqué pour les autres requêtes qu'il sert), ou bloque le Durable Object. Exploitation dynamique non testée (nécessite une session authentifiée, hors consigne).</li>
+<li>Correction : (1) réécrire le motif sans anticipation : <code>\bsk-[A-Za-z0-9_-]{32,}</code> puis vérifier la présence d'un chiffre dans la fonction de remplacement ; (2) tronquer avant de masquer avec une marge : <code>masquerSecrets(texte.slice(0, plafond + 256)).slice(0, plafond)</code> dans <code>tuto.ts</code> (fichiers et README) et <code>github.ts</code> (patchs, README) ; (3) ajouter un test de performance (100 Ko de <code>sk-</code> en moins de 50 ms).</li>
+<li>Agent concerné : backend-senior.</li>
+</ul>
+<h3>MINEUR</h3>
+<p class="finding"><strong><span class="m">MINEUR</span> N2. apps/web/src/pages/Legal/Confidentialite.tsx:169, :160 et :85 : trois inexactitudes de la page Confidentialité</strong></p>
+<ul>
+<li>« Weekli n'y écrit aucune donnée personnelle : seulement des noms d'erreur » : faux pour <code>routes/api.ts:54</code> (<code>console.error("API :", err)</code> journalise l'erreur Octokit entière, dont l'URL <code>/repos/&lt;login&gt;/&lt;repo&gt;</code>), <code>routes/auth.ts:65</code>, <code>routes/oauth-mcp.ts:38</code> et <code>mcp/outils-captures.ts:33</code> (URL de la page capturée).</li>
+<li>« Deux cookies strictement nécessaires » : la bibliothèque OAuth pose aussi <code>__Host-oauth-consent</code>, <code>__Host-oauth-upstream</code> (10 min) et <code>__Host-oauth-approvals</code> (consentement mémorisé, 30 jours, <code>oauth-provider.js:2149</code> et <code>:2359</code>).</li>
+<li>« 60 secondes dans le limiteur de débit » : le quota vocal garde aussi <code>voix-quota:&lt;id&gt;</code> 2 heures dans KV (<code>lib/voix.ts:119</code> et <code>:122</code>).</li>
+<li>Correction : journaliser <code>err.name</code> et le statut seulement (comme <code>donnees.ts:13</code>), ou corriger la phrase ; lister les cookies OAuth ; ajouter la ligne du quota vocal. Agent : backend-senior (journaux), frontend-senior (texte).</li>
+</ul>
+<p class="finding"><strong><span class="m">MINEUR</span> N3. apps/server/src/lib/voix.ts:11 à 13 et :45 à 52, Confidentialite.tsx:127 à 129 : Microsoft sans contrat, usage non officiel</strong></p>
+<p>Microsoft est présenté comme sous-traitant « Cadre de protection des données UE-États-Unis », mais Weekli n'a aucun contrat (article 28) ni accord d'utilisation pour le service de lecture d'Edge, appelé en se présentant comme l'extension Edge (<code>Origin</code> d'extension, <code>User-Agent</code> Edge, jeton Sec-MS-GEC). Risque accepté par Soufiane (changelog du 25 octobre) et données limitées (texte de voix off, ni identité ni IP). Correction : formuler « destinataire, sans contrat, usage non officiel » plutôt que sous-traitant encadré, et prévoir Azure Speech (contrat et DPA) avant toute ouverture publique. Avis d'un juriste recommandé. Agent : architecte (décision), frontend-senior (texte).</p>
+<p class="finding"><strong><span class="m">MINEUR</span> N4. apps/server/src/routes/api.ts:279 à 283, lib/voix.ts:108 à 123 : cache vocal partagé, oracle et volume</strong></p>
+<ul>
+<li>Un appel dont le texte est déjà en cache répond aussitôt sans consommer le quota horaire : un utilisateur peut savoir si une phrase exacte a déjà été synthétisée par quelqu'un (oracle de faible portée, il faut deviner le texte exact).</li>
+<li>Chaque phrase nouvelle écrit deux valeurs KV (audio jusqu'à 2 Mo gardé 90 jours, compteur). Avec 60 phrases par heure et par compte, un seul compte GitHub peut écrire 2 880 fois par jour et stocker plusieurs centaines de Mo en 90 jours. Sur l'offre gratuite Workers (1 000 écritures KV par jour, 1 Go), cela suffit à bloquer les connexions de tous. Offre réelle non vérifiée.</li>
+<li>Correction : compter aussi les réponses servies par le cache dans un plafond (ou un quota quotidien), plafonner le volume du cache (TTL plus court, 30 jours), surveiller les quotas KV avant déploiement. Agent : backend-senior.</li>
+</ul>
+<p class="finding"><strong><span class="m">MINEUR</span> N5. apps/web/src/pages/Reglages/PanneauDonnees.tsx:58 et :77, pages/Tableau/Tableau.tsx:38 : effacement local partiel et texte du panneau inexact</strong></p>
+<p>« Supprimer mes données » n'efface que la clé API et les préférences (<code>lib/reglages.ts:50</code> à :59). Restent : IndexedDB <code>weekli-pub</code> (images importées et logo), cache vocal du navigateur, <code>localStorage</code> du dernier repo et ancien style. La page Confidentialité le dit, pas le panneau. Le panneau annonce aussi « ton token GitHub [...] pendant 90 jours » (réel : session 8 h, autorisation MCP 30 jours) et oublie les pubs. Correction : effacer aussi ces bases et clés (<code>indexedDB.deleteDatabase</code>), aligner le texte. Agent : frontend-senior.</p>
+<p class="finding"><strong><span class="m">MINEUR</span> N6. packages/core/src/github.ts:125 : README non masqué hors tuto ; liste de formats courte</strong></p>
+<p><code>detailsRepo</code> renvoie le README tronqué sans <code>masquerSecrets</code> : il sert à <code>details_repo</code>, <code>preparer_pub</code>, <code>proposer_post_projet</code> et <code>preparer_post</code> (types présentation, coulisses, leçon). Par ailleurs <code>masquage.ts</code> ne reconnaît pas <code>sk_live_</code> et <code>rk_live_</code> (Stripe), <code>AIza</code> (Google), <code>npm_</code>, <code>glpat-</code>, <code>SG.</code> (SendGrid), les JWT <code>eyJ</code>. Ces contenus sont déjà publics sur GitHub ; l'enjeu est de ne pas les recopier dans Claude ou dans un post. Correction : masquer aussi dans <code>detailsRepo</code> et ajouter ces préfixes à longueur fixe (sans motif générique). Agent : backend-senior.</p>
+<p class="finding"><strong><span class="m">MINEUR</span> N7. packages/core/src/prompts.ts:130 : balise <code>&lt;donnees_post&gt;</code> contournable en mode clé API</strong></p>
+<p>Le JSON est inséré entre <code>&lt;donnees_post&gt;</code> et <code>&lt;/donnees_post&gt;</code> ; <code>JSON.stringify</code> n'échappe pas <code>&lt;</code>, donc un README contenant <code>&lt;/donnees_post&gt;</code> suivi de consignes sort du cadre. Impact limité au texte généré pour l'utilisateur lui-même (aucun outil côté navigateur). Correction : <code>JSON.stringify(...).replaceAll("&lt;", "\\u003c")</code>. Agent : backend-senior.</p>
+<p class="finding"><strong><span class="m">MINEUR</span> N8. apps/web/src/pages/Legal/MentionsLegales.tsx:20 : téléphone de l'hébergeur absent</strong></p>
+<p>La LCEN (article 6, III) demande le nom, l'adresse et le numéro de téléphone de l'hébergeur. Correction : ajouter le numéro de Cloudflare, Inc. Agent : frontend-senior.</p>
+<p class="finding"><strong><span class="m">MINEUR</span> N9. packages/core/src/github.ts:130 : <code>detailsCommit</code> sans contrôle de visibilité</strong></p>
+<p><code>commitsRepo</code>, <code>detailsRepo</code> et la lecture du tuto refusent un repo privé ; <code>detailsCommit</code> non. Sans effet avec le scope <code>read:user</code> (les tokens d'une OAuth App ne lisent pas le privé), mais incohérent si le scope change. Correction : même contrôle <code>infos.private</code>. Agent : backend-senior.</p>
+<p class="finding"><strong><span class="m">MINEUR</span> N10. apps/server/wrangler.jsonc : aucune limite de CPU par requête</strong></p>
+<p>Pas de <code>limits.cpu_ms</code> : la limite par défaut s'applique. Avec N1, une limite explicite (par exemple 5 000 ms) borne le coût d'un abus. Agent : architecte.</p>
+<p class="finding"><strong><span class="m">MINEUR</span> N11. Fichiers sensibles testés par URL : réponse 200 de repli SPA</strong></p>
+<p><code>/.env</code>, <code>/.git/config</code>, <code>/.dev.vars</code>, <code>/backup.sql</code>, <code>/phpinfo.php</code>, <code>/.DS_Store</code>, <code>/server-status</code>, <code>/wrangler.jsonc</code>, <code>/assets/*.js.map</code> renvoient 200 avec <code>index.html</code> (783 octets), jamais le fichier. Aucun contenu sensible, mais un scanner y verra des faux positifs. Correction facultative : 404 pour les chemins commençant par un point. Agent : backend-senior.</p>
+<h2>4. Suivi de l'audit initial (24 octobre 2026)</h2>
+<table>
+<thead><tr><th>#</th><th>Constat initial</th><th>Statut</th><th>Vérification</th></tr></thead>
+<tbody>
+<tr><td>M1</td><td>Effacement incomplet, promesse inexacte</td><td class="ok"><strong>Corrigé</strong></td><td><code>lib/donnees.ts</code> : brouillons, pubs, domaines, style, anciennes clés par login ; <code>revokeGrant</code> de tous les grants (pagination) ; destruction des Durable Objects listés dans <code>mcp:&lt;id&gt;</code> ; révocation de l'autorisation GitHub (<code>DELETE /applications/{id}/grant</code>) ; fermeture de toutes les sessions indexées ; étapes indépendantes, 500 et relance si KV échoue. Texte de la page aligné. Reste local : N5</td></tr>
+<tr><td>M2</td><td>Token GitHub en clair et sans durée dans les Durable Objects</td><td class="ok"><strong>Corrigé</strong></td><td><code>lib/props.ts</code> : token chiffré AES-GCM, AAD liée à l'id ; email retiré ; alarme de destruction après 24 h d'inactivité (<code>agent.ts:15</code> et :36 à :48) ; <code>refreshTokenTTL</code> fixé à 30 jours non renouvelés (vérifié dans la bibliothèque 1.2.4 : <code>expiresAt</code> fixé à l'émission, pas de <code>refreshTokenIdleTTL</code>)</td></tr>
+<tr><td>M3</td><td>Données rattachées au login</td><td class="ok"><strong>Corrigé, résidu MINEUR</strong></td><td>Session, props, clés KV, HMAC de domaine, clés de débit et quotas par id numérique. Résidu : <code>lib/identite.ts</code> migre encore les clés <code>&lt;prefixe&gt;:&lt;login&gt;</code> à chaque connexion (et <code>chiffrement.ts:72</code> <code>dechiffrerAncien</code>). Sans effet sur une base de production neuve, mais à retirer avant déploiement (tâche B14 déjà planifiée)</td></tr>
+<tr><td>M4</td><td>Google Fonts sans consentement</td><td class="ok"><strong>Corrigé</strong></td><td>Polices dans <code>public/fonts</code>, CSP <code>font-src 'self'</code> et <code>style-src 'self'</code> ; Chrome headless : aucune requête hors <code>localhost:8788</code> sur l'accueil, Confidentialité, Mentions légales, <code>/app</code>, <code>/app/studio</code></td></tr>
+<tr><td>M5</td><td>Information des personnes incomplète</td><td class="ok"><strong>Corrigé, résidus MINEUR</strong></td><td>Base légale, tableau des traitements et durées, sous-traitants et transferts, âge minimal, contact privé, export, CNIL, voix Microsoft décrite. Résidus : N2, N3</td></tr>
+<tr><td>M6</td><td>zod vulnérable, 13 vulnérabilités</td><td class="ok"><strong>Corrigé</strong></td><td><code>overrides</code> zod 4.6.7, undici 7.30.1 ou plus ; <code>npm audit</code> : 0 ; <code>osv-scanner</code> : aucune</td></tr>
+<tr><td>m1</td><td>Email collecté sans usage</td><td class="ok">Corrigé</td><td><code>Props</code> sans email, aucune occurrence de <code>user.email</code></td></tr>
+<tr><td>m2</td><td>Token non révoqué à la déconnexion</td><td class="ok">Corrigé</td><td><code>auth.ts:72</code> à :82 (<code>DELETE /applications/{id}/token</code>). Expiration réelle des tokens de l'app : NON VÉRIFIÉ</td></tr>
+<tr><td>m3</td><td>Captures : iframes, navigation tardive</td><td class="km"><strong>Partiel</strong></td><td>Redirection HTTP contrôlée, historique de navigation contrôlé avant et après la capture, scripts coupés avant la capture, iframes, objets et embeds retirés. Reste : images et fonds CSS d'autres origines affichables (pas de <code>Fetch.enable</code>)</td></tr>
+<tr><td>m4</td><td>Floutage partiel</td><td class="ok">Corrigé</td><td>Pavé opaque, champs de saisie, <code>contenteditable</code>, shadow DOM ouvert, IPv6, téléphone ; limites documentées (<code>flou.ts:2</code>)</td></tr>
+<tr><td>m5</td><td>Domaines jamais revérifiés</td><td class="ok">Corrigé</td><td><code>domainesRevalides</code> : preuve rejouée après 7 jours</td></tr>
+<tr><td>m6</td><td><code>login</code> figé dans le Durable Object</td><td class="ok">Corrigé</td><td>Propriétaire enregistré et relu à chaque appel (<code>agent.ts:26</code>), en-tête <code>mcp-session-id</code> refusé s'il n'est pas dans <code>mcp:&lt;id&gt;</code> (<code>acces-mcp.ts</code>)</td></tr>
+<tr><td>m7</td><td>Injection de prompt</td><td class="ok">Corrigé, résidus N6 et N7</td><td><code>contenu_non_fiable</code> partout, rappel dans chaque description d'outil et chaque prompt, masquage des jetons connus, avertissement dans le skill vidéo</td></tr>
+<tr><td>m8</td><td>Arguments du pipeline vidéo</td><td class="ok">Corrigé</td><td><code>exigerNom</code>, <code>"--"</code> avant le texte de <code>say</code></td></tr>
+<tr><td>m9</td><td><code>String.fromCharCode(...)</code> au-delà de 125 Ko</td><td class="ok">Corrigé</td><td>Encodage par blocs de 32 Ko (<code>chiffrement.ts:31</code>)</td></tr>
+<tr><td>m10</td><td>Clé API lisible par JavaScript</td><td class="ok">Corrigé (accepté)</td><td><code>sessionStorage</code> par défaut, avertissement « appareil partagé », recommandation de clé dédiée avec limite de dépense</td></tr>
+<tr><td>m11</td><td>HSTS et COOP absents du front</td><td class="ok">Corrigé</td><td><code>_headers</code> ; mesuré sur le serveur local ; page de consentement avec nonce, plus d'<code>unsafe-inline</code></td></tr>
+<tr><td>m12</td><td>Dépôt GitHub et outillage</td><td class="km"><strong>Partiel</strong></td><td>Faits : hooks versionnés (<code>core.hooksPath .githooks</code>, scan des secrets), actions épinglées par SHA, <code>cooldown</code> Dependabot, <code>.dockerignore</code> avec <code><strong>/.env*</code> et <code></strong>/.dev.vars</code>, image Docker en <code>USER node</code>. Restent : <code>main</code> non protégée (404), alertes Dependabot et mises à jour de sécurité désactivées (403), signalement privé désactivé</td></tr>
+<tr><td>m13</td><td>Email personnel dans les commits</td><td class="km"><strong>Ouvert</strong></td><td>Les 5 derniers commits portent encore l'adresse personnelle ; pas d'adresse <code>noreply</code> configurée</td></tr>
+<tr><td>m14</td><td>Gestion de la clé racine</td><td class="ok">Corrigé</td><td>HKDF pour le HMAC, refus de démarrer sous 32 caractères, préfixe <code>v1</code>, AAD = clé KV</td></tr>
+<tr><td>m15</td><td>Mineurs</td><td class="ok">Corrigé</td><td>Section « Âge minimal »</td></tr>
+<tr><td>m16</td><td><code>PUBLIC_URL</code> et id KV à finaliser</td><td class="km"><strong>Ouvert</strong> (déploiement)</td><td>Toujours <code>http://localhost:8788</code> et <code>&lt;Add-KV-ID&gt;</code> ; noté dans <code>docs/installation.md:66</code></td></tr>
+<tr><td>m17</td><td>Dépendances de dev vulnérables</td><td class="ok">Corrigé</td><td><code>npm audit</code> complet : 0</td></tr>
+</tbody></table>
+<h2>5. Points nouveaux vérifiés en priorité</h2>
+<table>
+<thead><tr><th>Point</th><th>Statut</th><th>Vérification</th></tr></thead>
+<tbody>
+<tr><td><code>/api/voix</code> : validation</td><td class="ok">OK</td><td>Corps strict (<code>texte</code> 1 à 400 caractères, <code>scene</code> <code>[a-z0-9_-]{1,64}</code>), 64 Ko max, Origin, session, 60/min ; SSML échappé (<code>&amp;</code>, <code>&lt;</code>, <code>&gt;</code>, caractères de contrôle), URL Microsoft fixe (pas de SSRF), délai 15 s, audio plafonné à 2 Mo</td></tr>
+<tr><td><code>/api/voix</code> : jeton Sec-MS-GEC</td><td class="ok">OK technique, MINEUR N3</td><td>Port d'edge-tts, aucun secret de Weekli ; usage non officiel</td></tr>
+<tr><td><code>/api/voix</code> : cache KV partagé et limite</td><td class="km">MINEUR N4</td><td>Clé = SHA-256 de la voix et du texte ; 60 phrases par heure par compte ; cache non compté</td></tr>
+<tr><td>Kokoro : CSP <code>wasm-unsafe-eval</code>, <code>worker-src 'self'</code></td><td class="ok">OK</td><td>Aucun <code>eval</code> ni <code>new Function</code> dans le bundle ; modèles servis par le site, révision et SHA-256 épinglés (<code>scripts/modeles-voix.mjs</code>)</td></tr>
+<tr><td>COOP et COEP</td><td class="ok">OK</td><td>En-têtes mesurés, <code>crossOriginIsolated</code> vrai dans Chrome</td></tr>
+<tr><td>Lecture approfondie du tuto : plafonds</td><td class="ok">OK, MAJEUR N1</td><td>12 fichiers, 3 000 caractères, 24 000 au total, README 8 000, 100 Ko par fichier, 300 chemins ; mais masquage avant troncature et quadratique</td></tr>
+<tr><td>Tuto : exclusions et secrets</td><td class="ok">OK</td><td><code>.env*</code> (sauf exemples), <code>.dev.vars</code>, <code>.npmrc</code>, <code>.netrc</code>, clés, <code>credentials*</code>, <code>secrets.*</code>, <code>tfstate</code> ni lus ni listés ; dossiers de dépendances, générés, binaires écartés ; octet nul rejeté</td></tr>
+<tr><td>Tuto : chemins choisis</td><td class="ok">OK</td><td>Seuls les chemins présents dans l'arbre et non écartés sont lus ; propriétaire toujours le login de la session ; repo privé refusé</td></tr>
+<tr><td>Tuto : contenu non fiable</td><td class="ok">OK</td><td>Arborescence, fichiers, README sous <code>contenu_non_fiable</code></td></tr>
+<tr><td><code>POST /api/posts/donnees</code></td><td class="ok">OK</td><td>Validation stricte (<code>validerDemandePost</code>), 64 Ko, 401 sans session (mesuré), 403 sans Origin (mesuré)</td></tr>
+<tr><td><code>GET /api/repos/:repo/commits</code> et <code>fichiers-tuto</code></td><td class="ok">OK</td><td><code>NOM_REPO</code>, jours bornés 1 à 90, privé refusé, 401 mesuré</td></tr>
+<tr><td>Outils MCP <code>preparer_post</code>, <code>proposer_post_projet</code>, <code>preparer_pub</code>, <code>sauver_pub</code></td><td class="ok">OK</td><td>Identité relue à chaque appel, schémas zod, <code>nettoyerScriptPub</code>, limite de 20 pubs, lecture sous le login du token</td></tr>
+<tr><td>Studio : IndexedDB</td><td class="ok">OK, MINEUR N5</td><td>Images et logo locaux seulement, jamais envoyés ; non effacés par « Supprimer mes données »</td></tr>
+<tr><td>Studio : import d'images</td><td class="ok">OK</td><td>Type réel par octets magiques, 8 Mo (512 Ko pour le logo), redimensionnement à 2 560 px</td></tr>
+<tr><td>Studio : SVG rastérisé</td><td class="ok">OK</td><td>Logo seulement, décodé via <code>&lt;img&gt;</code> (aucun script, aucune ressource externe), jamais injecté dans le DOM</td></tr>
+<tr><td>Studio : export</td><td class="ok">OK</td><td>MP4, PNG, SRT en URL <code>blob:</code> locales</td></tr>
+<tr><td>Effacement complet et export</td><td class="ok">OK, MINEUR N5</td><td>Voir M1 ; export <code>GET /api/moi/donnees</code> sans token, en pièce jointe</td></tr>
+<tr><td>Pages Confidentialité et Mentions légales</td><td class="ok">OK, MINEUR N2, N3, N8</td><td>Comparées point par point au code (détail section 7)</td></tr>
+<tr><td>Masquage des jetons</td><td class="km">MAJEUR N1, MINEUR N6</td><td>Formats connus seulement (choix documenté)</td></tr>
+<tr><td>Identité par id GitHub</td><td class="ok">OK, résidu B14</td><td>Voir M3</td></tr>
+<tr><td>Mode démo absent du build</td><td class="ok">OK</td><td><code>import.meta.env.DEV</code> en garde (<code>main.tsx:9</code>, <code>Tableau.tsx:22</code>, <code>lib/demo/installer.ts:127</code>) ; build recompilé avec <code>VITE_DEMO=1</code> : aucun module ni donnée de démo, assets identiques à <code>apps/web/dist</code> ; <code>apps/web/dist</code> actuel : aucune donnée de démo (seuls subsistent des noms de propriétés minifiés inatteignables)</td></tr>
+</tbody></table>
+<h2>6. Checklist complète</h2>
+<h3>6.1 Code backend</h3>
+<table>
+<thead><tr><th>Point</th><th>Statut</th><th>Comment</th></tr></thead>
+<tbody>
+<tr><td>Injection SQL ou NoSQL</td><td class="ok">OK</td><td>Pas de SQL ; clés KV construites depuis la session</td></tr>
+<tr><td>Injection de commande</td><td class="ok">OK</td><td>Aucune exécution dans le Worker ; scripts vidéo en <code>execFileSync</code> sans shell, noms validés</td></tr>
+<tr><td>Path traversal</td><td class="ok">OK</td><td>Tuto : chemins de l'arbre seulement ; scripts vidéo validés</td></tr>
+<tr><td>SSRF</td><td class="ok">OK, MINEUR (m3)</td><td><code>global_fetch_strictly_public</code>, URL fixes (GitHub, DoH Cloudflare, Microsoft) ; captures limitées aux domaines vérifiés</td></tr>
+<tr><td>Hash des mots de passe</td><td>Sans objet</td><td>Connexion GitHub uniquement</td></tr>
+<tr><td>OAuth : PKCE S256, <code>state</code> lié au cookie, usage unique</td><td class="ok">OK</td><td>Lecture du code ; <code>plain</code> refusé (mesuré, 400) ; métadonnées <code>code_challenge_methods_supported: S256</code></td></tr>
+<tr><td>Consentement MCP avant GitHub</td><td class="ok">OK</td><td><code>beginConsent</code> ; page échappée, CSP à nonce</td></tr>
+<tr><td>Sessions : 256 bits, rotation, chiffrées, 8 h, index par compte</td><td class="ok">OK</td><td><code>session.ts</code></td></tr>
+<tr><td>Cookies <code>HttpOnly</code>, <code>Secure</code>, <code>SameSite=Lax</code>, <code>__Host-</code></td><td class="ok">OK</td><td>En HTTPS ; en local <code>weekli_etat</code> mesuré <code>HttpOnly; SameSite=Lax</code></td></tr>
+<tr><td>Déconnexion et révocation GitHub</td><td class="ok">OK</td><td>m2</td></tr>
+<tr><td>IDOR (API)</td><td class="ok">OK (lecture)</td><td>Aucune route ne prend d'id utilisateur ; brouillons et pubs filtrés dans la liste du compte ; NON VÉRIFIÉ dynamiquement (pas de session)</td></tr>
+<tr><td>IDOR (MCP)</td><td class="ok">OK (lecture)</td><td>m6 ; NON VÉRIFIÉ dynamiquement</td></tr>
+<tr><td>Validation des entrées</td><td class="ok">OK</td><td>64 Ko, <code>nettoyerPost</code>, <code>nettoyerScriptPub</code>, zod, regex de repo et SHA</td></tr>
+<tr><td>Upload de fichiers</td><td class="ok">OK</td><td>Côté navigateur uniquement (type réel, taille) ; aucun upload serveur</td></tr>
+<tr><td>CORS</td><td class="ok">OK</td><td>Aucun CORS sur <code>/api</code> ; <code>/mcp</code> reflète l'origine sans <code>Allow-Credentials</code> (jeton porteur) (mesuré)</td></tr>
+<tr><td>CSRF</td><td class="ok">OK</td><td>403 mesuré sans Origin, Origin tierce, <code>null</code>, et <code>127.0.0.1</code> au lieu de <code>localhost</code>, sur <code>/api</code>, <code>/auth/logout</code>, <code>/authorize</code></td></tr>
+<tr><td>Limitation de débit</td><td class="ok">OK</td><td>Auth : 429 après 20 requêtes par minute (mesuré, <code>Retry-After: 60</code>) ; API 60/min/compte, captures 5/min (lecture)</td></tr>
+<tr><td>En-têtes de sécurité</td><td class="ok">OK</td><td>Front : CSP, HSTS, COOP, COEP, nosniff, Referrer-Policy, Permissions-Policy (mesurés) ; Worker : nosniff, XFO DENY, Referrer-Policy, HSTS en HTTPS, <code>no-store</code> sur <code>/api</code> et <code>/auth</code></td></tr>
+<tr><td>401 sur les routes protégées</td><td class="ok">OK</td><td>14 routes testées, toutes 401 ; <code>/mcp</code> 401 avec <code>WWW-Authenticate</code> et métadonnées de ressource</td></tr>
+<tr><td>Messages d'erreur</td><td class="ok">OK</td><td>Génériques ; pages OAuth sans détail interne (mesuré)</td></tr>
+<tr><td>Journaux</td><td class="km">MINEUR (N2)</td><td>Erreurs complètes journalisées à 4 endroits</td></tr>
+<tr><td>ReDoS</td><td class="ko">KO (N1)</td><td>Mesuré</td></tr>
+</tbody></table>
+<h3>6.2 Base de données (KV, Durable Objects)</h3>
+<table>
+<thead><tr><th>Point</th><th>Statut</th><th>Comment</th></tr></thead>
+<tbody>
+<tr><td>Non exposée publiquement</td><td class="ok">OK</td><td>Services gérés ; nmap sans objet (aucun hôte déployé)</td></tr>
+<tr><td>Privilèges minimaux</td><td class="ok">OK</td><td>Liaisons du Worker seulement</td></tr>
+<tr><td>Chiffrement au repos</td><td class="ok">OK</td><td>Sessions, brouillons, pubs, style, domaines, index, token MCP ; audio vocal et compteurs en clair (non personnels ou peu sensibles)</td></tr>
+<tr><td>Champs internes renvoyés</td><td class="ok">OK</td><td><code>/api/moi</code> : id, login, nom, avatar ; jamais de token</td></tr>
+<tr><td>Identifiants séquentiels</td><td class="ok">OK</td><td>UUID v4, 256 bits</td></tr>
+<tr><td>Fichiers de base dans le dépôt ou par URL</td><td class="ok">OK</td><td>Aucun ; URL testées : repli SPA (N11)</td></tr>
+<tr><td>Sauvegardes et restauration</td><td class="nv">NON VÉRIFIÉ</td><td>Aucune procédure ; KV sans sauvegarde native</td></tr>
+<tr><td>Row Level Security</td><td>Sans objet</td><td></td></tr>
+</tbody></table>
+<h3>6.3 Navigateur (Chrome headless, profil vierge)</h3>
+<table>
+<thead><tr><th>Point</th><th>Statut</th><th>Comment</th></tr></thead>
+<tbody>
+<tr><td>Secrets dans les bundles</td><td class="ok">OK</td><td>Motifs <code>sk-ant-</code>, <code>sk_live</code>, <code>pk_live</code>, <code>AKIA</code>, <code>AIza</code>, <code>ghp_</code>, <code>gho_</code>, <code>xox</code>, <code>eyJ</code> : aucun</td></tr>
+<tr><td>Source maps</td><td class="ok">OK</td><td>Aucun <code>.map</code> produit ; <code>/assets/*.map</code> renvoie le repli SPA</td></tr>
+<tr><td>Réseau</td><td class="ok">OK</td><td>Aucune requête tierce avant ou après chargement ; seule <code>/api/moi</code> (401) sur <code>/app</code></td></tr>
+<tr><td>Stockage</td><td class="ok">OK</td><td><code>localStorage</code>, <code>sessionStorage</code>, IndexedDB vides sans action ; aucun cookie</td></tr>
+<tr><td>Console</td><td class="ok">OK</td><td>Seulement l'erreur réseau attendue du 401</td></tr>
+<tr><td>Fichiers exposés</td><td class="ok">OK, MINEUR (N11)</td><td>Aucun contenu sensible servi</td></tr>
+<tr><td>XSS</td><td class="ok">OK</td><td>Aucun <code>innerHTML</code>, <code>eval</code>, <code>document.write</code>, <code>dangerouslySetInnerHTML</code> dans l'app ; React échappe</td></tr>
+<tr><td>Scripts tiers, SRI</td><td class="ok">OK</td><td>Aucun script tiers</td></tr>
+<tr><td><code>target="_blank"</code></td><td class="ok">OK</td><td>Aucun</td></tr>
+<tr><td>Mode démo</td><td class="ok">OK</td><td>Section 5</td></tr>
+</tbody></table>
+<h3>6.4 Clés API</h3>
+<table>
+<thead><tr><th>Clé</th><th>Statut</th><th>Comment</th></tr></thead>
+<tbody>
+<tr><td><code>GITHUB_CLIENT_SECRET</code>, <code>COOKIE_ENCRYPTION_KEY</code></td><td class="ok">OK</td><td>Secrets Wrangler ou <code>.dev.vars</code> local non suivi ; aucune variable <code>VITE_</code> ; absents du bundle et de l'historique</td></tr>
+<tr><td><code>GITHUB_CLIENT_ID</code></td><td class="ok">OK</td><td>Public par conception</td></tr>
+<tr><td>Token GitHub de l'utilisateur</td><td class="ok">OK</td><td>Chiffré partout, jamais renvoyé au navigateur ni à Claude, absent de l'export</td></tr>
+<tr><td>Clé API Anthropic</td><td class="ok">OK par conception</td><td>Navigateur vers <code>api.anthropic.com</code> seulement</td></tr>
+<tr><td>Droits minimaux</td><td class="ok">OK</td><td>Scope <code>read:user</code></td></tr>
+</tbody></table>
+<h3>6.5 Dépôt GitHub</h3>
+<table>
+<thead><tr><th>Point</th><th>Statut</th><th>Comment</th></tr></thead>
+<tbody>
+<tr><td>Historique complet</td><td class="ok">OK</td><td>46 commits, toutes branches</td></tr>
+<tr><td>gitleaks</td><td class="ok">OK</td><td>3 résultats dans l'historique : jetons de test factices et constante publique edge-tts</td></tr>
+<tr><td>trufflehog</td><td class="ok">OK</td><td>1 résultat non vérifié, URL de test factice</td></tr>
+<tr><td>Fichiers sensibles suivis ou ayant été suivis</td><td class="ok">OK</td><td>Seul <code>.dev.vars.example</code></td></tr>
+<tr><td><code>.dev.vars</code></td><td class="ok">OK</td><td>Ni suivi, ni dans l'historique, ni poussé</td></tr>
+<tr><td><code>.gitignore</code></td><td class="ok">OK (choix)</td><td><code>.git/info/exclude</code> couvre <code>.dev.vars</code>, <code>.env*</code>, <code>node_modules</code>, <code>dist</code>, <code>.wrangler</code></td></tr>
+<tr><td>Visibilité</td><td>Public</td><td></td></tr>
+<tr><td>Secret scanning et push protection</td><td class="ok">OK</td><td>Activés, 0 alerte</td></tr>
+<tr><td>Dependabot alerts et mises à jour de sécurité</td><td class="ko">KO (m12)</td><td>Désactivées</td></tr>
+<tr><td>Protection de branche</td><td class="ko">KO (m12)</td><td><code>main</code> non protégée</td></tr>
+<tr><td>CI</td><td class="ok">OK</td><td><code>contents: read</code>, actions épinglées par SHA, <code>npm audit</code> en CI</td></tr>
+</tbody></table>
+<h3>6.6 Dépendances</h3>
+<table>
+<thead><tr><th>Point</th><th>Statut</th><th>Comment</th></tr></thead>
+<tbody>
+<tr><td><code>npm audit</code></td><td class="ok">OK</td><td>0 vulnérabilité (arbre complet et production)</td></tr>
+<tr><td><code>osv-scanner</code></td><td class="ok">OK</td><td>Aucune sur 670 paquets</td></tr>
+<tr><td><code>semgrep</code></td><td class="ok">OK</td><td>9 résultats, tous faux positifs ou sans risque : libellés constants (<code>donnees.ts:13</code>, <code>identite.ts:42</code>), valeurs échappées (<code>pages.ts:54</code>), XFO (<code>securite.ts:42</code>), échappement SSML de contenu (<code>voix.ts:25</code>), regex construite depuis un dictionnaire interne échappé (<code>prononciation.ts:45</code>)</td></tr>
+<tr><td>Tests</td><td class="ok">OK</td><td>server 236, core 267, tous verts</td></tr>
+</tbody></table>
+<h3>6.7 RGPD</h3>
+<table>
+<thead><tr><th>Point</th><th>Statut</th><th>Comment</th></tr></thead>
+<tbody>
+<tr><td>Inventaire</td><td>Fait</td><td>Section 8</td></tr>
+<tr><td>Minimisation</td><td class="ok">OK</td><td>Email retiré ; voix sans identité</td></tr>
+<tr><td>Base légale</td><td class="ok">OK</td><td>6.1.b et 6.1.f indiqués</td></tr>
+<tr><td>Cookies et traceurs avant consentement</td><td class="ok">OK</td><td>Aucun traceur, aucune requête tierce (mesuré)</td></tr>
+<tr><td>Bandeau</td><td>Sans objet</td><td>Seulement des cookies nécessaires</td></tr>
+<tr><td>Mentions légales</td><td class="ok">OK, MINEUR (N8)</td><td></td></tr>
+<tr><td>Politique de confidentialité</td><td class="ok">OK, MINEUR (N2, N3)</td><td></td></tr>
+<tr><td>Politique cookies</td><td class="ok">OK, MINEUR (N2)</td><td>Cookies OAuth non listés</td></tr>
+<tr><td>Accès et portabilité</td><td class="ok">OK</td><td>Export JSON</td></tr>
+<tr><td>Effacement</td><td class="ok">OK, MINEUR (N5)</td><td>Serveur complet ; stockage local partiel</td></tr>
+<tr><td>Rectification, opposition</td><td class="ok">OK</td><td>Contact privé par email</td></tr>
+<tr><td>Formulaires</td><td class="ok">OK</td><td>« Se souvenir de la clé » non coché ; pas de newsletter</td></tr>
+<tr><td>Sécurité (article 32)</td><td class="ok">OK</td><td>HTTPS, chiffrement, accès restreint</td></tr>
+<tr><td>Durées de conservation</td><td class="ok">OK</td><td>8 h, 24 h, 30 jours fixes, 90 jours ; entrées périmées retirées à la lecture</td></tr>
+<tr><td>Transferts hors UE</td><td class="ok">OK, MINEUR (N3)</td><td></td></tr>
+<tr><td>Mineurs</td><td class="ok">OK</td><td></td></tr>
+</tbody></table>
+<h2>7. Pages légales comparées au code</h2>
+<table>
+<thead><tr><th>Affirmation de la page</th><th>Code</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td>Session de 8 heures</td><td><code>session.ts:8</code></td><td class="ok">Exact</td></tr>
+<tr><td>MCP : 30 jours non renouvelés, session technique effacée après 24 h</td><td><code>conservation.ts:6</code>, <code>agent.ts:15</code>, bibliothèque</td><td class="ok">Exact</td></tr>
+<tr><td>Brouillons, pubs, style, domaines : 90 jours renouvelés à l'écriture, retirés à la lecture</td><td><code>conservation.ts</code>, <code>perimee</code></td><td class="ok">Exact</td></tr>
+<tr><td>Captures non conservées</td><td><code>api.ts:350</code></td><td class="ok">Exact</td></tr>
+<tr><td>Voix : texte sans identité, audio 90 jours non rattaché</td><td><code>voix.ts:41</code>, <code>:114</code></td><td class="ok">Exact</td></tr>
+<tr><td>Lutte contre les abus : 60 secondes</td><td><code>voix.ts:119</code> (2 h)</td><td class="km">Incomplet (N2)</td></tr>
+<tr><td>Chiffrement AES-256-GCM avant KV</td><td><code>chiffrement.ts</code></td><td class="ok">Exact</td></tr>
+<tr><td>Fichiers du studio dans IndexedDB, jamais envoyés</td><td><code>cartes/chargement.ts</code>, <code>stockage.ts</code></td><td class="ok">Exact</td></tr>
+<tr><td>Clé API jamais envoyée au serveur</td><td><code>generation.ts</code>, CSP</td><td class="ok">Exact</td></tr>
+<tr><td>Deux cookies</td><td>Bibliothèque OAuth : trois de plus</td><td class="km">Incomplet (N2)</td></tr>
+<tr><td>Journaux sans donnée personnelle</td><td><code>api.ts:54</code> et trois autres</td><td class="km">Inexact (N2)</td></tr>
+<tr><td>Effacement complet (grants, DO, autorisation GitHub, sessions)</td><td><code>donnees.ts</code></td><td class="ok">Exact</td></tr>
+<tr><td>Export sans token</td><td><code>api.ts:122</code></td><td class="ok">Exact</td></tr>
+<tr><td>Microsoft sous Data Privacy Framework</td><td>Aucun contrat</td><td class="km">À reformuler (N3)</td></tr>
+<tr><td>Contact, CNIL, âge minimal</td><td>Présents</td><td class="ok">Exact</td></tr>
+<tr><td>Mentions légales : éditeur, contact, hébergeur et adresse</td><td>Présents, téléphone absent</td><td>N8</td></tr>
+</tbody></table>
+<h2>8. Inventaire RGPD des données personnelles</h2>
+<table>
+<thead><tr><th>Donnée</th><th>Où</th><th>Pourquoi</th><th>Durée</th><th>Base légale</th></tr></thead>
+<tbody>
+<tr><td>Id, login, nom, avatar GitHub</td><td>KV <code>session:*</code> (chiffré)</td><td>Compte, appels GitHub</td><td>8 h</td><td>Contrat</td></tr>
+<tr><td>Token GitHub (<code>read:user</code>)</td><td>KV <code>session:*</code> ; grants OAuth (chiffrés) ; props du Durable Object (chiffré, AAD id)</td><td>Lire les repos publics</td><td>8 h ; 30 jours fixes ; 24 h d'inactivité</td><td>Contrat</td></tr>
+<tr><td>Index des sessions et des Durable Objects</td><td>KV <code>sessions:&lt;id&gt;</code>, <code>mcp:&lt;id&gt;</code> (chiffrés)</td><td>Effacement complet</td><td>8 h ; tant qu'un DO vit</td><td>Contrat</td></tr>
+<tr><td>Id, login, nom (props MCP)</td><td>Stockage du Durable Object (en clair, hors token)</td><td>Outils MCP</td><td>24 h d'inactivité</td><td>Contrat</td></tr>
+<tr><td>Brouillons, pubs, style, domaines</td><td>KV par id (chiffrés)</td><td>Service</td><td>90 jours après la dernière écriture</td><td>Contrat</td></tr>
+<tr><td>Texte et audio de voix off</td><td>KV <code>voix:&lt;empreinte&gt;</code> (non rattaché) ; Microsoft (transit)</td><td>Voix de la pub</td><td>90 jours</td><td>Contrat</td></tr>
+<tr><td>Compteur vocal</td><td>KV <code>voix-quota:&lt;id&gt;:&lt;heure&gt;</code></td><td>Plafond d'usage</td><td>2 h</td><td>Intérêt légitime</td></tr>
+<tr><td>Adresse IP</td><td>Limiteur Cloudflare ; journaux Workers</td><td>Abus, diagnostic</td><td>60 s ; rétention Cloudflare</td><td>Intérêt légitime</td></tr>
+<tr><td>Consentement mémorisé par client MCP</td><td>Cookie <code>__Host-oauth-approvals</code> signé</td><td>Ne pas redemander</td><td>30 jours</td><td>Contrat</td></tr>
+<tr><td>Clé API Anthropic, réglages, dernier repo</td><td>Navigateur</td><td>Mode site</td><td>Onglet, ou jusqu'à effacement</td><td>Contrat (chez l'utilisateur)</td></tr>
+<tr><td>Images, logo, modèle vocal, cache vocal</td><td>IndexedDB du navigateur</td><td>Studio</td><td>Jusqu'à effacement par l'utilisateur</td><td>Contrat (chez l'utilisateur)</td></tr>
+<tr><td>Commits, diffs, README envoyés à Anthropic</td><td>Transit navigateur</td><td>Génération en mode clé</td><td>Selon Anthropic</td><td>Contrat, à l'initiative de l'utilisateur</td></tr>
+</tbody></table>
+<p>Sous-traitants et destinataires : Cloudflare, Inc. (hébergement, KV, Durable Objects, Browser Run, DNS over HTTPS, journaux : États-Unis) ; GitHub, Inc. (identité et données : États-Unis) ; Microsoft (voix, sans contrat : États-Unis, N3) ; Anthropic (mode clé, depuis le navigateur : États-Unis).</p>
+<h2>9. Vérifications non faites</h2>
+<table>
+<thead><tr><th>Vérification</th><th>Raison</th></tr></thead>
+<tbody>
+<tr><td>Tests authentifiés (IDOR avec deux comptes, effacement réel, export réel, exploitation de N1, quotas vocaux)</td><td>Consigne : aucune session ni compte de Soufiane</td></tr>
+<tr><td>Exploitabilité de N1 dans le runtime Workers</td><td>Nécessite une session ; coût CPU mesuré dans Node (même moteur V8)</td></tr>
+<tr><td>Expiration réelle des tokens de l'app OAuth GitHub</td><td>Réglage du compte du propriétaire</td></tr>
+<tr><td>Offre Cloudflare (quotas KV, limite de CPU)</td><td>Aucun compte consulté, rien n'est déployé</td></tr>
+<tr><td>Réseau interne accessible depuis Browser Run</td><td>Infrastructure Cloudflare</td></tr>
+<tr><td>Contenu réel des journaux Workers</td><td>Rien n'est déployé</td></tr>
+<tr><td>nmap</td><td>Aucun hôte déployé</td></tr>
+<tr><td>Sauvegardes</td><td>Aucune infrastructure</td></tr>
+<tr><td>Webhooks du dépôt</td><td>Portée <code>admin:repo_hook</code> absente du token <code>gh</code></td></tr>
+</tbody></table>
+<h2>10. Outils utilisés</h2>
+<table>
+<thead><tr><th>Outil</th><th>Version</th><th>Usage</th></tr></thead>
+<tbody>
+<tr><td>git</td><td>2.50.1</td><td>Historique, exclusions</td></tr>
+<tr><td>gitleaks</td><td>8.30.1</td><td>Historique (<code>--log-opts=--all</code>) et arborescence, <code>--redact</code></td></tr>
+<tr><td>trufflehog</td><td>3.99.4</td><td><code>git file://.</code></td></tr>
+<tr><td>semgrep</td><td>1.182.0</td><td><code>p/default</code>, <code>p/typescript</code>, <code>p/secrets</code>, <code>p/github-actions</code></td></tr>
+<tr><td>osv-scanner</td><td>2.7.0</td><td><code>package-lock.json</code></td></tr>
+<tr><td>npm audit</td><td>npm 11.16.0, Node 26.3.0</td><td>Arbre complet et production</td></tr>
+<tr><td>gh</td><td>2.98.0</td><td>Réglages, alertes, protection, PR #6 (lecture)</td></tr>
+<tr><td>curl</td><td>Système</td><td>Tests dynamiques non authentifiés (environ 70 requêtes au total)</td></tr>
+<tr><td>Google Chrome headless + CDP</td><td>Système</td><td>Réseau, console, stockage, cookies avec un profil vierge ; conversion PDF</td></tr>
+<tr><td>Vite</td><td>Projet</td><td>Build de production recompilé dans un dossier temporaire avec <code>VITE_DEMO=1</code></td></tr>
+<tr><td>vitest</td><td>Projet</td><td>503 tests</td></tr>
+</tbody></table>
+<p>Aucun outil manquant. Mise à jour proposée : <code>brew upgrade semgrep</code>.</p>
+</body></html>

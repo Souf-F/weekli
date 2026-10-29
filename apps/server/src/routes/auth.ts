@@ -2,9 +2,10 @@ import { Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { Octokit } from "octokit";
 import { chiffrer, dechiffrer } from "../lib/chiffrement";
-import { creerPkce, echangerCode, urlAutorisation } from "../lib/github-oauth";
+import { migrerIdentite } from "../lib/identite";
+import { creerPkce, echangerCode, revoquerToken, urlAutorisation } from "../lib/github-oauth";
 import { pageErreur } from "../lib/pages";
-import { creerSession, idAleatoire, supprimerSession } from "../lib/session";
+import { creerSession, idAleatoire, lireSession, supprimerSession } from "../lib/session";
 import type { AppEnv } from "../types";
 
 // Connexion GitHub du site web (mode 2). Distincte de l'OAuth MCP, qui sert les clients comme Claude.
@@ -19,7 +20,7 @@ auth.get("/login", async (c) => {
 	const etat = idAleatoire();
 	const { verifieur, defi } = await creerPkce();
 	// Le verifieur PKCE reste cote serveur, chiffre ; l'etat est aussi lie au navigateur par cookie
-	await c.env.OAUTH_KV.put(`etat:${etat}`, await chiffrer(c.env.COOKIE_ENCRYPTION_KEY, USAGE, { verifieur }), {
+	await c.env.OAUTH_KV.put(`etat:${etat}`, await chiffrer(c.env.COOKIE_ENCRYPTION_KEY, USAGE, { verifieur }, `etat:${etat}`), {
 		expirationTtl: DUREE_ETAT,
 	});
 	setCookie(c, COOKIE_ETAT, etat, {
@@ -45,7 +46,7 @@ auth.get("/callback", async (c) => {
 	}
 	const stocke = await c.env.OAUTH_KV.get(`etat:${etat}`);
 	await c.env.OAUTH_KV.delete(`etat:${etat}`); // usage unique
-	const donnees = stocke ? await dechiffrer<{ verifieur: string }>(c.env.COOKIE_ENCRYPTION_KEY, USAGE, stocke) : null;
+	const donnees = stocke ? await dechiffrer<{ verifieur: string }>(c.env.COOKIE_ENCRYPTION_KEY, USAGE, stocke, `etat:${etat}`) : null;
 	if (!donnees) return pageErreur("Connexion expirée ou invalide. Recommence depuis le site.");
 
 	try {
@@ -57,7 +58,9 @@ auth.get("/callback", async (c) => {
 			verifieur: donnees.verifieur,
 		});
 		const { data: user } = await new Octokit({ auth: token }).rest.users.getAuthenticated();
-		await creerSession(c, { login: user.login, nom: user.name ?? user.login, avatar: user.avatar_url, token });
+		const id = String(user.id);
+		await migrerIdentite(c.env, { id, login: user.login });
+		await creerSession(c, { id, login: user.login, nom: user.name ?? user.login, avatar: user.avatar_url, token });
 	} catch (err) {
 		console.error("Connexion GitHub :", err);
 		return pageErreur("GitHub a refusé la connexion. Recommence depuis le site.");
@@ -65,7 +68,16 @@ auth.get("/callback", async (c) => {
 	return c.redirect("/app");
 });
 
+// La session est supprimee d'abord : un echec de GitHub ne doit jamais empecher la deconnexion
 auth.post("/logout", async (c) => {
-	await supprimerSession(c);
+	const session = await lireSession(c);
+	await supprimerSession(c, session);
+	if (session) {
+		await revoquerToken({
+			clientId: c.env.GITHUB_CLIENT_ID,
+			clientSecret: c.env.GITHUB_CLIENT_SECRET,
+			token: session.token,
+		}).catch((err) => console.error("Revocation du token GitHub :", err instanceof Error ? err.message : "echec"));
+	}
 	return c.body(null, 204);
 });

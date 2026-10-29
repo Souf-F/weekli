@@ -1,0 +1,325 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Audit sécurité et RGPD Weekli, 24 octobre 2026</title><style>
+@page{size:A4;margin:16mm 14mm}
+:root{--ink:#1d1a17;--muted:#5d554d;--line:#d9d2c8;--bg:#faf8f5}
+body{font:10.5pt/1.5 -apple-system,'Helvetica Neue',Arial,sans-serif;color:var(--ink);margin:0}
+h1{font:600 22pt/1.2 Georgia,serif;margin:0 0 14px;padding-bottom:10px;border-bottom:3px solid var(--ink)}
+h2{font:600 14pt/1.3 Georgia,serif;margin:26px 0 10px;padding-top:6px;border-top:1px solid var(--line);page-break-after:avoid}
+h3{font-size:12pt;margin:18px 0 8px;page-break-after:avoid}
+h2:first-of-type{page-break-before:always}
+p{margin:0 0 8px}
+p.finding{margin-top:14px;padding:8px 10px;background:var(--bg);border-left:4px solid #b9a98f;page-break-after:avoid}
+ul,ol{margin:0 0 10px;padding-left:20px}li{margin:2px 0}li.sub{margin-left:18px;list-style:circle}
+code{font:9pt Menlo,monospace;background:#f0ece6;padding:1px 3px;border-radius:3px;word-break:break-word}
+table{width:100%;border-collapse:collapse;margin:8px 0 14px;font-size:9pt;page-break-inside:auto}
+tr{page-break-inside:avoid}
+th,td{border:1px solid var(--line);padding:4px 6px;text-align:left;vertical-align:top}
+th{background:#efe9e1}
+table.garde td:first-child{width:24%;font-weight:600;background:var(--bg)}
+.b,.M,.m{display:inline-block;padding:0 6px;border-radius:4px;font-size:8.5pt;font-weight:700;color:#fff}
+.b{background:#8a1c12}.M{background:#c2561b}.m{background:#6b7a3a}
+td.ok{color:#2f6b2a;font-weight:600}td.ko,td.kM{color:#a3311f;font-weight:600}td.km{color:#8a6a10;font-weight:600}td.nv{color:#555;font-style:italic}
+</style></head><body>
+<h1>Audit de sécurité et RGPD initial : Weekli</h1>
+<table class="garde">
+<tbody>
+<tr><td>Projet</td><td>Weekli (monorepo <code>apps/server</code>, <code>apps/web</code>, <code>apps/video</code>, <code>packages/core</code>)</td></tr>
+<tr><td>Date</td><td>24 octobre 2026</td></tr>
+<tr><td>Auditeur</td><td>securite-senior (audit statique, aucun code modifié)</td></tr>
+<tr><td>Branche auditée</td><td><code>docs/brief-v1</code>, commit <code>d40f24a</code> (inclut les livraisons RGPD backend et frontend faites pendant l'audit, base de départ <code>2a76ca2</code>)</td></tr>
+<tr><td>Périmètre</td><td>Code (server, web, video, core, scripts, Dockerfile, docker-compose, CI), historique Git complet (18 commits, toutes les branches locales et distantes), dépôt public GitHub <code>Souf-F/weekli</code> en lecture seule, dépendances npm</td></tr>
+<tr><td>Cibles testées</td><td>Fichiers locaux, historique Git local, API GitHub (lecture), bundle front compilé dans un dossier temporaire</td></tr>
+<tr><td>Hors périmètre</td><td>Aucune URL de production (rien n'est déployé), aucun serveur local lancé (secrets OAuth absents) : tous les tests dynamiques sont marqués NON VÉRIFIÉ</td></tr>
+<tr><td><strong>Verdict global</strong></td><td><strong>A CORRIGER</strong> : 0 BLOQUANT, 6 MAJEUR, 17 MINEUR</td></tr>
+</tbody></table>
+<p><strong>Aucun secret réel n'a été trouvé</strong> : ni dans le code, ni dans l'historique Git, ni sur le dépôt GitHub (secret scanning GitHub : 0 alerte).</p>
+<p>Rappel : cet audit vérifie la conformité technique et documentaire. Il ne remplace pas l'avis d'un juriste ou d'un DPO.</p>
+<h2>1. Synthèse</h2>
+<table>
+<thead><tr><th>Sévérité</th><th>Nombre</th></tr></thead>
+<tbody>
+<tr><td>BLOQUANT</td><td>0</td></tr>
+<tr><td>MAJEUR</td><td>6</td></tr>
+<tr><td>MINEUR</td><td>17</td></tr>
+</tbody></table>
+<p>Les 3 risques principaux :</p>
+<ol>
+<li><strong>Le droit à l'effacement est incomplet et la page Confidentialité promet plus que le code</strong> : le token GitHub, le nom et l'email restent stockés côté connecteur MCP (grants et Durable Objects) après « Supprimer mes données ».</li>
+<li><strong>Les données sont rattachées au login GitHub, qui est renommable et réattribuable</strong> : un nouveau titulaire d'un ancien login hériterait des brouillons et des domaines vérifiés de l'ancien.</li>
+<li><strong>Une dépendance d'exécution du Worker est vulnérable</strong> (zod 4.5.4, GHSA-mrhx-c7xc-m3w5, sévérité haute) et les polices Google Fonts transmettent l'IP des visiteurs à Google sans consentement.</li>
+</ol>
+<p>Points forts constatés : PKCE S256 des deux côtés, consentement MCP par client avant GitHub (bibliothèque officielle), cookies <code>__Host-</code> <code>HttpOnly</code> <code>SameSite=Lax</code>, vérification d'<code>Origin</code> sur toutes les écritures, sessions et données chiffrées AES-256-GCM avec HKDF, CSP stricte sans script inline, validation stricte des paramètres GitHub, <code>global_fetch_strictly_public</code>, pas de shell dans les scripts vidéo, historique Git propre, secret scanning et push protection actifs sur GitHub.</p>
+<h2>2. Éléments sensibles trouvés</h2>
+<table>
+<thead><tr><th>Élément</th><th>Emplacement</th><th>Statut</th></tr></thead>
+<tbody>
+<tr><td>Secret réel (clé API, token, mot de passe)</td><td>Aucun, dans le code, l'historique et GitHub</td><td>OK</td></tr>
+<tr><td>URL avec identifiants <code>https://user:mdp@...</code></td><td><code>apps/server/src/lib/__tests__/domaines.test.ts:46</code> (commit <code>35c41ee</code>)</td><td>Valeur de test factice, non sensible (signalée par trufflehog, non vérifiée par lui)</td></tr>
+<tr><td><code>gho_exemple</code>, <code>sk-ant-...</code></td><td>Tests et placeholder de champ</td><td>Factices</td></tr>
+<tr><td><code>.dev.vars</code></td><td>Absent du disque et de tout l'historique ; seul <code>.dev.vars.example</code> (placeholders) est suivi</td><td>OK</td></tr>
+<tr><td>Email personnel de l'auteur</td><td>Métadonnées de tous les commits publics (<code>sfec****</code>)</td><td>Donnée personnelle publique, voir m13</td></tr>
+<tr><td>Token GitHub de l'utilisateur final</td><td>Stocké en clair dans le stockage Durable Object du connecteur MCP (<code>props</code>)</td><td>Voir M2</td></tr>
+<tr><td>Clé API Anthropic de l'utilisateur</td><td><code>sessionStorage</code> ou <code>localStorage</code> du navigateur, clé <code>weekli.cle</code></td><td>Par conception, voir m10</td></tr>
+</tbody></table>
+<h2>3. Détail des problèmes</h2>
+<h3>MAJEUR</h3>
+<p class="finding"><strong><span class="M">MAJEUR</span> M1. apps/server/src/lib/donnees.ts:7 et apps/web/src/pages/Legal/Confidentialite.tsx:89 : effacement incomplet, promesse inexacte</strong></p>
+<ul>
+<li>Problème : <code>DELETE /api/moi/donnees</code> (<code>routes/api.ts:73</code>) supprime seulement <code>brouillons:&lt;login&gt;</code>, <code>domaines:&lt;login&gt;</code> et la session courante. Restent : les grants et tokens MCP de <code>@cloudflare/workers-oauth-provider</code> (props chiffrées contenant login, nom, email et token GitHub, refresh token valable 30 jours et renouvelé à chaque rafraîchissement), le stockage des Durable Objects <code>WeekliMCP</code> (voir M2), les autres sessions du même compte (autres navigateurs, jusqu'à 8 h), et le token GitHub lui-même, jamais révoqué auprès de GitHub. Or la page Confidentialité affirme : « Tout ce que Weekli détient sur toi est supprimé immédiatement : session, token GitHub, brouillons, domaines et style d'écriture ».</li>
+<li>Preuve : lecture de <code>donnees.ts</code> (deux <code>delete</code> KV seulement) ; <code>node_modules/@cloudflare/workers-oauth-provider/dist/oauth-provider.js:5084</code> (<code>DEFAULT_REFRESH_TOKEN_TTL = 720 * 60 * 60</code>) ; le handoff backend le reconnaît (point 2).</li>
+<li>Scénario : un utilisateur exerce son droit à l'effacement depuis le site, croit être effacé, mais son connecteur Claude continue de fonctionner et Weekli conserve son token GitHub et son email. Non-conformité à l'article 17 et information trompeuse (article 12).</li>
+<li>Correction : stocker <code>userId</code> (id GitHub numérique) dans la session ; dans <code>effacerDonnees</code>, appeler <code>env.OAUTH_PROVIDER.listUserGrants(userId)</code> puis <code>revokeGrant</code> pour chacun, purger les Durable Objects de l'utilisateur (voir M2), supprimer toutes les sessions du compte (index <code>sessions:&lt;userId&gt;</code> ou valeur versionnée), révoquer le token GitHub (<code>DELETE https://api.github.com/applications/{client_id}/grant</code> avec authentification basique client_id et secret). Tant que ce n'est pas fait, corriger le texte de la page Confidentialité et du panneau <code>PanneauDonnees.tsx</code>.</li>
+<li>Agent concerné : backend-senior (code), frontend-senior (textes).</li>
+</ul>
+<p class="finding"><strong><span class="M">MAJEUR</span> M2. apps/server/src/mcp/agent.ts:30 (via agents <code>McpAgent.updateProps</code>) : token GitHub en clair et sans durée de conservation dans les Durable Objects</strong></p>
+<ul>
+<li>Problème : la bibliothèque <code>agents@0.30.0</code> enregistre les props de chaque session MCP dans le stockage du Durable Object (<code>ctx.storage.put("props", props)</code>, <code>node_modules/agents/dist/mcp/index.js:1442</code>). Ces props contiennent <code>login</code>, <code>name</code>, <code>email</code> et <code>accessToken</code> (token GitHub) en clair. Un Durable Object est créé par session MCP, et rien dans Weekli n'appelle <code>destroy()</code> ni <code>storage.deleteAll()</code> : les données s'accumulent sans limite de durée. Cela contredit <code>docs/securite.md</code> (« tokens chiffrés », « Fuite du stockage » protégée) et la durée de 90 jours annoncée.</li>
+<li>Preuve : lecture du code de la bibliothèque (lignes 1440 à 1452) ; aucune occurrence de <code>destroy</code> ou <code>deleteAll</code> dans <code>apps/server/src</code>.</li>
+<li>Scénario : une fuite ou un accès indu au stockage Durable Object expose directement des tokens GitHub (portée <code>read:user</code>, impact limité mais réel) et des emails ; en RGPD, conservation illimitée sans base (article 5.1.e).</li>
+<li>Correction : ne pas mettre le token GitHub dans les props transmises au DO, ou le chiffrer avec <code>chiffrer()</code> avant (et le déchiffrer dans le getter <code>octokit</code>) ; retirer <code>email</code> (m1) ; programmer une alarme dans le DO (<code>this.schedule</code> ou <code>ctx.storage.setAlarm</code>) qui appelle <code>this.destroy()</code> après inactivité (par exemple 24 h ou 90 jours au maximum) ; prévoir la purge dans M1. Fixer explicitement <code>refreshTokenTTL</code> dans <code>OAuthProvider</code> (par exemple 30 jours non renouvelés) et le documenter.</li>
+<li>Agent concerné : backend-senior.</li>
+</ul>
+<p class="finding"><strong><span class="M">MAJEUR</span> M3. apps/server/src/lib/brouillons.ts:7, apps/server/src/lib/domaines.ts:11 et :34 : données rattachées au login GitHub au lieu de l'id numérique</strong></p>
+<ul>
+<li>Problème : les clés KV (<code>brouillons:&lt;login&gt;</code>, <code>domaines:&lt;login&gt;</code>), le jeton HMAC de vérification de domaine, la limitation de débit et le <code>login</code> des outils MCP reposent sur le nom d'utilisateur GitHub. Un login GitHub peut être renommé, et l'ancien nom devient libre et réutilisable par n'importe qui. La session (<code>types.ts:12</code>) ne garde même pas l'id numérique.</li>
+<li>Preuve : lecture du code ; la bibliothèque OAuth, elle, indexe bien par <code>userId: String(user.id)</code> (<code>oauth-mcp.ts:94</code>), ce qui montre l'incohérence.</li>
+<li>Scénario : Alice (login <code>alice</code>) renomme son compte. Mallory crée un compte <code>alice</code>, se connecte à Weekli : il lit les brouillons d'Alice (contenu non publié) pendant leur durée de conservation, et hérite de ses domaines vérifiés, donc peut lancer des captures de son site au nom de Weekli. Le jeton de vérification étant dérivé du login, il est aussi identique.</li>
+<li>Correction : utiliser <code>user.id</code> (numérique, immuable) dans la session, les props MCP, les clés KV, le jeton HMAC et la clé de limitation de débit ; migrer les clés existantes au premier login (lire <code>login</code>, réécrire sous <code>id</code>, supprimer l'ancienne).</li>
+<li>Agent concerné : backend-senior (architecte pour la migration).</li>
+</ul>
+<p class="finding"><strong><span class="M">MAJEUR</span> M4. apps/web/index.html:9 à 14 et apps/web/public/_headers:4 : Google Fonts chargées sans consentement</strong></p>
+<ul>
+<li>Problème : chaque page charge <code>fonts.googleapis.com</code> et <code>fonts.gstatic.com</code> dès l'affichage, ce qui transmet l'adresse IP de tout visiteur à Google (transfert hors UE) sans consentement ni nécessité technique. La page Confidentialité le mentionne (ligne 72) mais l'information ne remplace pas une base légale. Jurisprudence connue : LG München, 20 janvier 2022 (3 O 17493/20) ; la CNIL recommande l'hébergement local des polices.</li>
+<li>Preuve : <code>index.html</code> lignes 9 à 14 ; CSP qui autorise ces deux domaines ; bundle compilé : <code>https://fonts.googleapis.com</code> présent dans <code>index.html</code> produit.</li>
+<li>Scénario : plainte d'un visiteur ; la requête part avant tout choix, et aucun bandeau ne permet de la refuser.</li>
+<li>Correction : héberger les polices (Instrument Serif, Geist, JetBrains Mono, toutes sous licence OFL) dans <code>apps/web/public/fonts/</code> avec <code>@font-face</code>, retirer les <code>&lt;link&gt;</code> Google et les deux domaines de la CSP (<code>style-src 'self'; font-src 'self'</code>), puis retirer la phrase de la page Confidentialité.</li>
+<li>Agent concerné : frontend-senior.</li>
+</ul>
+<p class="finding"><strong><span class="M">MAJEUR</span> M5. apps/web/src/pages/Legal/Confidentialite.tsx : information des personnes incomplète et en partie inexacte (articles 13 et 14)</strong></p>
+<ul>
+<li>Problème :</li>
+<li class="sub">aucune base légale indiquée pour chaque traitement (contrat ou intérêt légitime pour le service, intérêt légitime pour la limitation de débit) ;</li>
+<li class="sub">destinataires et sous-traitants incomplets : GitHub (identification, lecture des données), Anthropic (mode site, appelé depuis le navigateur), Cloudflare Browser Run (captures), Cloudflare Workers Logs (journaux avec erreurs, <code>observability.enabled: true</code> dans <code>wrangler.jsonc:37</code>) ; seul Cloudflare est cité ;</li>
+<li class="sub">transferts hors UE (Cloudflare, GitHub, Anthropic, Google : États-Unis) sans mention du mécanisme (Data Privacy Framework ou clauses contractuelles types) ;</li>
+<li class="sub">l'email GitHub collecté par le connecteur MCP (<code>oauth-mcp.ts:100</code>) n'est pas listé ; le connecteur MCP lui-même n'est pas décrit (grants, durée 30 jours) ;</li>
+<li class="sub">inexactitudes : ligne 46, « le style d'écriture [est] chiffré dans Cloudflare KV » alors qu'il n'est stocké que dans le navigateur (<code>lib/reglages.ts:47</code>) ; ligne 61, « renouvelé à chaque utilisation » alors que le TTL n'est renouvelé qu'à chaque écriture ; les entrées KV écrites avant <code>9935891</code> n'ont aucun TTL ;</li>
+<li class="sub">droit d'accès et de portabilité : pas d'export (seul l'affichage dans l'app) ; contact uniquement par discussion publique GitHub.</li>
+<li>Preuve : lecture de la page à <code>d40f24a</code> ; le handoff frontend signale lui-même les points 1 et 2.</li>
+<li>Scénario : information non conforme, donc traitement contestable en cas de contrôle ou de réclamation CNIL.</li>
+<li>Correction : ajouter un tableau finalité, données, base légale, durée, destinataires ; lister les sous-traitants et leur localisation ; corriger les deux inexactitudes ; ajouter un moyen de contact privé (adresse dédiée ou formulaire) ; prévoir un <code>GET /api/moi/donnees</code> d'export JSON (brouillons, domaines, profil). Faire relire par un juriste.</li>
+<li>Agent concerné : architecte (contenu), frontend-senior (page), backend-senior (export).</li>
+</ul>
+<p class="finding"><strong><span class="M">MAJEUR</span> M6. package-lock.json : zod 4.5.4 vulnérable dans le runtime du Worker, 13 vulnérabilités npm</strong></p>
+<ul>
+<li>Problème : <code>zod@4.5.4</code> (dépendance directe de <code>@weekli/server</code>, de <code>agents</code> et du SDK MCP) est affecté par GHSA-mrhx-c7xc-m3w5 (sévérité haute, CVSS 8.2) : épuisement mémoire en validant un très grand tableau. Le Worker valide avec zod les entrées des outils MCP et les messages JSON-RPC envoyés par tout utilisateur authentifié (n'importe quel compte GitHub). <code>npm audit</code> : 13 vulnérabilités (2 modérées, 11 hautes) ; la CI (<code>npm audit --audit-level=moderate</code>) échouera au prochain push.</li>
+<li>Preuve : <code>npm audit</code>, <code>osv-scanner</code> (4 vulnérabilités dans 2 paquets : zod, undici) ; <code>npm ls zod</code>.</li>
+<li>Scénario : un client MCP authentifié envoie à <code>sauver_brouillons</code> un tableau de plusieurs millions d'éléments invalides ; l'isolat du Durable Object sature sa mémoire. L'exploitabilité exacte dans le runtime Workers n'a pas été testée (NON VÉRIFIÉ dynamiquement).</li>
+<li>Correction : passer à <code>zod@&gt;=4.6.6</code> (et <code>overrides</code> dans le <code>package.json</code> racine si une dépendance l'épingle), mettre à jour <code>wrangler</code> (undici 7.30.1, dev seulement) ; pour <code>@remotion/*</code> (outil local uniquement), suivre le correctif amont. Relancer <code>npm audit</code>.</li>
+<li>Agent concerné : backend-senior.</li>
+</ul>
+<h3>MINEUR</h3>
+<p class="finding"><strong><span class="m">MINEUR</span> m1. apps/server/src/routes/oauth-mcp.ts:100 et types.ts:7 : email collecté sans usage</strong></p>
+<p>L'email GitHub est mis dans les props MCP mais n'est utilisé nulle part (minimisation, article 5.1.c). Correction : retirer <code>email</code> des <code>Props</code>. Agent : backend-senior.</p>
+<p class="finding"><strong><span class="m">MINEUR</span> m2. apps/server/src/routes/auth.ts:68 : token GitHub non révoqué à la déconnexion</strong></p>
+<p><code>/auth/logout</code> supprime la session KV mais le token reste valide chez GitHub. Si l'app OAuth ne fait pas expirer ses tokens (NON VÉRIFIÉ : <code>docs/installation.md:19</code> parle de l'option « Expire user access tokens », que je n'ai pu confirmer pour une OAuth App), il reste valable indéfiniment. Si les tokens expirent bien en 8 h, le <code>refresh_token</code> renvoyé par GitHub est ignoré (<code>github-oauth.ts:55</code>) et le connecteur MCP (refresh 30 jours) cessera de fonctionner après 8 h. Correction : vérifier le réglage réel de l'app, révoquer à la déconnexion, et traiter le refresh GitHub ou aligner les durées. Agent : backend-senior.</p>
+<p class="finding"><strong><span class="m">MINEUR</span> m3. apps/server/src/lib/capture.ts:44 à 68 : contournement de la preuve de propriété et SSRF résiduelle du navigateur</strong></p>
+<p>Seule l'URL de la page principale est contrôlée. Une page d'un domaine vérifié peut afficher en <code>&lt;iframe&gt;</code> n'importe quel site public (ou toute adresse joignable par le navigateur Browser Run) ; l'image renvoyée le montre. Elle peut aussi déclencher une navigation juste après le contrôle de <code>location.href</code> (fenêtre de 200 ms avant la capture). Correction : activer <code>Fetch.enable</code> en CDP et refuser toute requête de type <code>Document</code> (cadres compris) hors domaines vérifiés ; désactiver JavaScript (<code>Emulation.setScriptExecutionDisabled</code>) après le floutage ; recontrôler l'URL après <code>Page.captureScreenshot</code>. L'accès réseau interne du navigateur Browser Run relève de Cloudflare : NON VÉRIFIÉ. Agent : backend-senior.</p>
+<p class="finding"><strong><span class="m">MINEUR</span> m4. apps/server/src/lib/flou.ts : floutage partiel</strong></p>
+<p>Ne couvre que les nœuds texte de <code>document.body</code> : valeurs des <code>input type=text</code> et <code>textarea</code>, shadow DOM, iframes, images et canvas, IPv6, numéros de téléphone, noms ne sont pas floutés ; un flou de 6 px sur du texte court peut parfois être inversé. Correction : flouter aussi <code>input</code>, <code>textarea</code>, <code>[contenteditable]</code>, parcourir les <code>shadowRoot</code>, monter le flou ou remplacer par un pavé opaque, documenter la limite. Agent : backend-senior.</p>
+<p class="finding"><strong><span class="m">MINEUR</span> m5. apps/server/src/lib/domaines.ts:80 : domaines jamais revérifiés</strong></p>
+<p>Un domaine vérifié le reste jusqu'à 90 jours sans activité, même si son propriétaire change. Correction : revérifier avant chaque capture si la preuve date de plus de 7 jours. Agent : backend-senior.</p>
+<p class="finding"><strong><span class="m">MINEUR</span> m6. apps/server/src/mcp/agent.ts:38 : <code>login</code> figé à l'initialisation du Durable Object</strong></p>
+<p>Les outils utilisent le <code>login</code> capturé dans <code>init()</code> tandis que <code>this.octokit</code> lit les props courantes. Le Durable Object est nommé d'après l'en-tête <code>mcp-session-id</code> fourni par le client (<code>agents/dist/mcp/index.js:107</code> et <code>:176</code>), sans vérification qu'il appartient au même utilisateur. Si un identifiant de session fuitait, un autre utilisateur authentifié lirait les brouillons du premier. Exploitation non testée et peu probable (identifiant aléatoire de 256 bits). Correction : lire <code>this.props.login</code> à chaque appel d'outil et refuser si l'utilisateur des props diffère de celui enregistré dans le DO. Agent : backend-senior.</p>
+<p class="finding"><strong><span class="m">MINEUR</span> m7. packages/core/src/github.ts:72 et :101, .claude/skills/video-projet/SKILL.md : injection de prompt</strong></p>
+<p>README, messages et extraits de diff sont renvoyés bruts à Claude, sans balisage indiquant un contenu non fiable, et les diffs peuvent contenir des secrets commités par l'utilisateur. Un commit tiers fusionné en squash dans un repo de l'utilisateur lui est attribué. Le skill <code>video-projet</code> se déclare utilisable « sur n'importe quel dépôt » et fait lire README et docs à Claude Code, qui dispose d'un shell. Impact réduit côté Weekli (outils sans effet de bord hors brouillons et captures de domaines vérifiés). Correction : envelopper les contenus de repo dans un champ <code>contenu_non_fiable</code> et le rappeler dans la description des outils, masquer les motifs de secrets (ceux de <code>flou.ts</code>) dans les extraits de diff, avertir dans le skill de ne l'utiliser que sur des dépôts de confiance. Agent : backend-senior, architecte pour le skill.</p>
+<p class="finding"><strong><span class="m">MINEUR</span> m8. apps/video/scripts/capturer.mjs:17 et :25, produire.mjs:26 et :53 : arguments non validés dans le pipeline vidéo local</strong></p>
+<p><code>execFileSync</code> sans shell : pas d'injection de commande. Mais <code>projet</code> et <code>nom</code> ne sont pas validés (<code>../</code> permet d'écrire hors du dossier prévu), et le texte de voix est passé à <code>say</code> sans <code>--</code> (un texte commençant par <code>-</code> serait lu comme option). <code>capturer.mjs</code> ouvre n'importe quelle URL, y compris locale. Outil interne, lancé par l'opérateur. Correction : valider <code>projet</code> et <code>nom</code> avec <code>/^[a-z0-9-]{1,40}$/</code>, ajouter <code>"--"</code> avant le texte de <code>say</code>. Agent : backend-senior.</p>
+<p class="finding"><strong><span class="m">MINEUR</span> m9. apps/server/src/lib/chiffrement.ts:19 et github-oauth.ts:10 : <code>String.fromCharCode(...octets)</code> plante au-delà d'environ 125 Ko</strong></p>
+<p>Preuve : <code>node -e</code> avec un <code>Uint8Array</code> de 125 000 octets : <code>RangeError: Maximum call stack size exceeded</code> (même moteur V8 que Workers). Un historique de 100 brouillons de 6 000 caractères (environ 600 Ko) ne peut plus être enregistré : déni de service sur son propre compte, erreur 502. Correction : encoder en base64 par blocs (boucle de 32 Ko) ou via <code>Uint8Array.prototype.toBase64</code> si disponible. Agent : backend-senior.</p>
+<p class="finding"><strong><span class="m">MINEUR</span> m10. apps/web/src/lib/reglages.ts:50 : clé API Anthropic lisible par JavaScript</strong></p>
+<p>Choix de conception documenté et accepté (mode bonus). La protection repose entièrement sur la CSP et sur l'intégrité des dépendances du bundle ; <code>connect-src https://api.anthropic.com</code> reste un canal d'exfiltration possible si un script étranger s'exécutait (requête faite avec la clé de l'attaquant contenant celle de la victime). Correction : garder <code>sessionStorage</code> par défaut (déjà le cas), afficher un avertissement sur l'option « mémoriser », recommander une clé dédiée avec plafond de dépense. Agent : frontend-senior.</p>
+<p class="finding"><strong><span class="m">MINEUR</span> m11. apps/web/public/_headers et apps/server/src/lib/pages.ts:20 : en-têtes à compléter</strong></p>
+<p>Pas de <code>Strict-Transport-Security</code> sur les fichiers du front (le Worker ne l'ajoute que sur ses propres réponses), pas de <code>Cross-Origin-Opener-Policy: same-origin</code> ; la page de consentement autorise <code>style-src 'unsafe-inline'</code> (sans risque pratique, tout est échappé). Correction : ajouter HSTS et COOP dans <code>_headers</code>, passer le style de la page de consentement en nonce ou en hash. Agent : frontend-senior, backend-senior.</p>
+<p class="finding"><strong><span class="m">MINEUR</span> m12. Dépôt GitHub et outillage</strong></p>
+<p>Branche <code>main</code> non protégée (<code>gh api .../branches/main/protection</code> : 404) ; alertes Dependabot et mises à jour de sécurité désactivées ; signalement privé de vulnérabilité désactivé alors que <code>SECURITY.md</code> demande de l'utiliser ; actions de CI référencées par tag et non par SHA ; aucun hook local installé dans <code>.git/hooks</code> alors que <code>docs/securite.md</code> et <code>SECURITY.md</code> l'affirment ; exclusions Git uniquement dans <code>.git/info/exclude</code> (aucun <code>.gitignore</code> partagé, choix assumé du propriétaire) ; <code>.dockerignore</code> n'exclut pas <code>.env*</code> ; images Docker de dev exécutées en root ; <code>dependabot.yml</code> sans délai de refroidissement. Correction : activer protection de branche, Dependabot alerts et security updates, private vulnerability reporting ; installer le hook (<code>git config core.hooksPath</code> vers un dossier versionné) ; ajouter <code>**/.env*</code> à <code>.dockerignore</code>. Agent : architecte.</p>
+<p class="finding"><strong><span class="m">MINEUR</span> m13. Historique Git public : email personnel de l'auteur visible</strong></p>
+<p>Tous les commits portent l'adresse personnelle (<code>sfec****</code>), alors que les mentions légales indiquent « aucun email publié ». Correction : utiliser l'adresse <code>noreply</code> GitHub pour les prochains commits et activer « Block command line pushes that expose my email ». Sans réécriture de l'historique (contrainte du brief). Agent : architecte.</p>
+<p class="finding"><strong><span class="m">MINEUR</span> m14. apps/server/src/lib/chiffrement.ts et domaines.ts:24 : gestion de la clé racine</strong></p>
+<p>Une seule clé <code>COOKIE_ENCRYPTION_KEY</code> sert au chiffrement AES (HKDF, correct), au HMAC des domaines (dérivation ad hoc <code>secret:domaines</code>) et au consentement mémorisé ; pas de contrôle de longueur au démarrage, pas de version de clé pour une rotation, pas de données associées (AAD) liant un chiffré à sa clé KV. Correction : dériver aussi la clé HMAC par HKDF, refuser de démarrer si la clé fait moins de 32 octets, préfixer les chiffrés par une version, passer la clé KV en <code>additionalData</code>. Agent : backend-senior.</p>
+<p class="finding"><strong><span class="m">MINEUR</span> m15. Mineurs</strong></p>
+<p>Rien n'indique l'âge minimal (GitHub impose 13 ans ; la majorité numérique est de 15 ans en France). Correction : une phrase dans la page Confidentialité. Agent : frontend-senior.</p>
+<p class="finding"><strong><span class="m">MINEUR</span> m16. apps/server/wrangler.jsonc:26 et :36 : configuration de déploiement à finaliser</strong></p>
+<p><code>PUBLIC_URL</code> vaut <code>http://localhost:8788</code> et l'id KV est un placeholder. Déployé tel quel, l'audience des tokens MCP serait fausse. Correction : à mettre dans la checklist de déploiement. Agent : architecte.</p>
+<p class="finding"><strong><span class="m">MINEUR</span> m17. Dépendances de développement vulnérables</strong></p>
+<p><code>undici</code> (via wrangler, dev), <code>@remotion/*</code> (via zod, outil vidéo local) : sans exposition en production. Correction : mises à jour avec M6. Agent : backend-senior.</p>
+<h2>4. Checklist complète</h2>
+<h3>4.1 Code backend</h3>
+<table>
+<thead><tr><th>Point</th><th>Statut</th><th>Comment</th></tr></thead>
+<tbody>
+<tr><td>Injection SQL ou NoSQL</td><td class="ok">OK</td><td>Pas de SQL ; clés KV construites depuis la session uniquement</td></tr>
+<tr><td>Injection de commande</td><td class="ok">OK</td><td>Aucune exécution de commande dans le Worker ; scripts vidéo en <code>execFileSync</code> sans shell (m8)</td></tr>
+<tr><td>Path traversal</td><td class="ok">OK (Worker), MINEUR (scripts locaux, m8)</td><td>Lecture du code</td></tr>
+<tr><td>Paramètres envoyés à l'API GitHub</td><td class="ok">OK</td><td><code>NOM_REPO</code>, <code>SHA</code> validés (<code>validation.ts</code>), <code>owner</code> toujours issu du token</td></tr>
+<tr><td>SSRF par <code>fetch</code> du Worker</td><td class="ok">OK</td><td><code>global_fetch_strictly_public</code>, HTTPS, hôte public, <code>redirect: manual</code>, 1 Ko, 5 s</td></tr>
+<tr><td>SSRF par le navigateur Browser Run</td><td class="km">MINEUR (m3), NON VÉRIFIÉ dynamiquement</td><td>Iframes et navigation tardive non contrôlées</td></tr>
+<tr><td>Vérification de domaine (DNS TXT ou fichier, HMAC par utilisateur et domaine)</td><td class="ok">OK, MINEUR (m5, M3)</td><td>Lecture de <code>domaines.ts</code> et de ses tests</td></tr>
+<tr><td>Floutage</td><td class="km">MINEUR (m4)</td><td>Lecture de <code>flou.ts</code></td></tr>
+<tr><td>Hash des mots de passe</td><td>Sans objet</td><td>Aucun mot de passe : connexion GitHub uniquement</td></tr>
+<tr><td>OAuth MCP : PKCE S256 vers Claude</td><td class="ok">OK</td><td>Bibliothèque 1.2.4, <code>allowPlainPKCE</code> retiré</td></tr>
+<tr><td>OAuth MCP : PKCE S256 vers GitHub</td><td class="ok">OK</td><td><code>github-oauth.ts:17</code>, vérifieur gardé côté serveur</td></tr>
+<tr><td>OAuth MCP : consentement par client avant GitHub (confused deputy)</td><td class="ok">OK</td><td><code>beginConsent</code>, <code>approveConsent</code>, <code>beginUpstream</code>, demande lue côté serveur</td></tr>
+<tr><td>Page de consentement : échappement, domaine affiché, alerte loopback</td><td class="ok">OK</td><td><code>pages.ts</code>, <code>echapper</code> sur toutes les valeurs du client</td></tr>
+<tr><td>Page de consentement : CSP, nonce, <code>form-action</code>, <code>frame-ancestors</code></td><td class="ok">OK, MINEUR (m11)</td><td><code>pages.ts:19</code></td></tr>
+<tr><td>Audience des tokens (RFC 8707, 9728)</td><td class="ok">OK (code), MINEUR (m16)</td><td><code>index.ts:29</code></td></tr>
+<tr><td>Enregistrement dynamique de clients</td><td class="ok">OK</td><td>Ouvert par conception MCP, nom marqué non vérifié</td></tr>
+<tr><td>OAuth site : <code>state</code> 256 bits lié au cookie, usage unique, 10 min</td><td class="ok">OK</td><td><code>auth.ts:18</code> à 49</td></tr>
+<tr><td>Redirections ouvertes</td><td class="ok">OK</td><td>Redirections fixes ou validées par la bibliothèque</td></tr>
+<tr><td>Sessions : id 256 bits, nouveau à chaque connexion, contenu chiffré</td><td class="ok">OK</td><td><code>session.ts</code></td></tr>
+<tr><td>Cookies <code>HttpOnly</code>, <code>Secure</code> (HTTPS), <code>SameSite=Lax</code>, <code>__Host-</code></td><td class="ok">OK</td><td><code>session.ts:26</code>, cookies de la bibliothèque en <code>__Host-oauth-</code></td></tr>
+<tr><td>Expiration des sessions</td><td class="ok">OK (8 h), MINEUR (m2)</td><td>Pas de révocation du token GitHub</td></tr>
+<tr><td>Déconnexion supprime la session côté serveur</td><td class="ok">OK</td><td><code>supprimerSession</code></td></tr>
+<tr><td>Chiffrement KV AES-256-GCM, IV aléatoire, HKDF par usage</td><td class="ok">OK, MINEUR (m9, m14)</td><td><code>chiffrement.ts</code> et ses tests</td></tr>
+<tr><td>Données MCP au repos</td><td class="kM">MAJEUR (M2)</td><td>Props en clair dans les Durable Objects</td></tr>
+<tr><td>IDOR entre utilisateurs (API du site)</td><td class="ok">OK</td><td>Toutes les routes utilisent <code>session.login</code>, aucun id d'utilisateur en paramètre ; brouillons filtrés dans la liste du seul compte</td></tr>
+<tr><td>IDOR par réattribution de login</td><td class="kM">MAJEUR (M3)</td><td>Lecture du code</td></tr>
+<tr><td>IDOR via identifiant de session MCP</td><td class="km">MINEUR (m6), NON VÉRIFIÉ</td><td>Lecture de la bibliothèque</td></tr>
+<tr><td>Validation des entrées (taille des corps, nettoyage des posts, storyboard)</td><td class="ok">OK</td><td><code>bodyLimit</code> 64 Ko, <code>nettoyerPost</code>, <code>nettoyerStoryboard</code>, schémas zod</td></tr>
+<tr><td>Upload de fichiers</td><td>Sans objet</td><td>Aucun upload</td></tr>
+<tr><td>CORS</td><td class="ok">OK</td><td>Aucun en-tête CORS sur <code>/api</code> ; <code>*</code> sur <code>/mcp</code> (jeton porteur, sans cookie)</td></tr>
+<tr><td>CSRF</td><td class="ok">OK</td><td><code>SameSite=Lax</code> et <code>Origin</code> obligatoire et identique sur toute écriture <code>/api</code>, <code>/auth</code>, <code>/authorize</code></td></tr>
+<tr><td>Limitation de débit</td><td class="ok">OK</td><td>20/min/IP sur l'auth, 60/min/utilisateur API et MCP, 5/min captures et vérifications ; limiteur Cloudflare approximatif et par emplacement (par conception)</td></tr>
+<tr><td>En-têtes du Worker</td><td class="ok">OK, MINEUR (m11)</td><td><code>securite.ts</code> : nosniff, XFO, HSTS, Referrer-Policy, no-store</td></tr>
+<tr><td>Messages d'erreur génériques</td><td class="ok">OK</td><td><code>api.onError</code>, <code>pageErreur</code> ; les erreurs MCP renvoient le message à Claude de l'utilisateur lui-même</td></tr>
+<tr><td>Journaux sans donnée sensible</td><td class="ok">OK (lecture)</td><td><code>console.error</code> d'erreurs Octokit (autorisation masquée par Octokit) ; NON VÉRIFIÉ sur des journaux réels</td></tr>
+<tr><td>Tests dynamiques (requêtes forgées, autre identifiant)</td><td class="nv">NON VÉRIFIÉ</td><td>Aucun serveur lancé : secrets OAuth absents</td></tr>
+</tbody></table>
+<h3>4.2 Base de données (Cloudflare KV et Durable Objects)</h3>
+<table>
+<thead><tr><th>Point</th><th>Statut</th><th>Comment</th></tr></thead>
+<tbody>
+<tr><td>Base non exposée publiquement</td><td class="ok">OK</td><td>Services gérés Cloudflare, aucun port ; nmap sans objet (aucun hôte déployé)</td></tr>
+<tr><td>Privilèges minimaux</td><td class="ok">OK</td><td>Liaisons Worker uniquement ; jetons API Cloudflare hors périmètre</td></tr>
+<tr><td>Données sensibles chiffrées au repos</td><td class="ok">OK (KV), KO (DO, M2)</td><td></td></tr>
+<tr><td>Aucun champ interne renvoyé</td><td class="ok">OK</td><td><code>/api/moi</code> ne renvoie que login, nom, avatar ; jamais de token</td></tr>
+<tr><td>Identifiants séquentiels</td><td class="ok">OK</td><td>UUID v4 pour les brouillons, 256 bits pour les sessions</td></tr>
+<tr><td>Fichiers de base ou dumps dans le dépôt</td><td class="ok">OK</td><td>Aucun dans <code>git ls-files</code> ni dans l'historique</td></tr>
+<tr><td>Sauvegardes, restauration</td><td class="nv">NON VÉRIFIÉ</td><td>Aucune procédure documentée ; KV n'a pas de sauvegarde native</td></tr>
+<tr><td>Row Level Security</td><td>Sans objet</td><td>Pas de Supabase</td></tr>
+</tbody></table>
+<h3>4.3 Pages web côté navigateur</h3>
+<table>
+<thead><tr><th>Point</th><th>Statut</th><th>Comment</th></tr></thead>
+<tbody>
+<tr><td>Secrets dans les bundles</td><td class="ok">OK</td><td>Build dans un dossier temporaire, recherche des motifs <code>sk-</code>, <code>pk_live</code>, <code>AKIA</code>, <code>AIza</code>, <code>ghp_</code>, <code>xox</code>, <code>eyJ</code> : aucun</td></tr>
+<tr><td>URL internes dans le bundle</td><td class="ok">OK</td><td>Seulement des chaînes de bibliothèques (<code>localhost</code> de React Router et du SDK)</td></tr>
+<tr><td>Source maps</td><td class="ok">OK</td><td>Aucun <code>.map</code> produit</td></tr>
+<tr><td>CSP stricte, <code>script-src 'self'</code>, pas de script inline</td><td class="ok">OK</td><td><code>_headers</code>, <code>index.html</code></td></tr>
+<tr><td>XSS : <code>innerHTML</code>, <code>eval</code>, <code>dangerouslySetInnerHTML</code></td><td class="ok">OK</td><td>Aucun dans le code de l'app ; <code>innerHTML</code> dans <code>flou.ts</code> exécuté dans la page capturée, texte échappé</td></tr>
+<tr><td><code>target="_blank"</code> sans <code>noopener</code></td><td class="ok">OK</td><td>Aucun <code>target="_blank"</code></td></tr>
+<tr><td>Scripts tiers et SRI</td><td class="ok">OK</td><td>Aucun script tiers ; seule la feuille Google Fonts (M4), sans SRI possible</td></tr>
+<tr><td>Domaines tiers chargés</td><td class="kM">MAJEUR (M4)</td><td><code>fonts.googleapis.com</code>, <code>fonts.gstatic.com</code>, <code>avatars.githubusercontent.com</code> (après connexion), <code>api.anthropic.com</code> (mode site)</td></tr>
+<tr><td>Stockage navigateur</td><td class="km">MINEUR (m10)</td><td>Clé API et préférences ; aucun cookie lisible en JS</td></tr>
+<tr><td>Réseau, console, fichiers exposés (<code>/.env</code>, <code>/.git/config</code>...)</td><td class="nv">NON VÉRIFIÉ</td><td>Aucun site servi ; <code>run_worker_first</code> et le repli SPA renverraient <code>index.html</code> en 200 pour ces chemins (sans contenu sensible)</td></tr>
+</tbody></table>
+<h3>4.4 Clés API</h3>
+<table>
+<thead><tr><th>Clé</th><th>Statut</th><th>Comment</th></tr></thead>
+<tbody>
+<tr><td><code>GITHUB_CLIENT_ID</code>, <code>GITHUB_CLIENT_SECRET</code>, <code>COOKIE_ENCRYPTION_KEY</code></td><td class="ok">OK</td><td>Secrets Wrangler ou <code>.dev.vars</code> local, jamais dans le code, le bundle, le dépôt ni l'historique ; aucune variable <code>VITE_</code></td></tr>
+<tr><td>Token GitHub de l'utilisateur</td><td class="ok">OK (navigateur, Claude), KO (stockage DO, M2)</td><td>Jamais renvoyé au navigateur ni à Claude</td></tr>
+<tr><td>Clé API Anthropic</td><td class="ok">OK par conception, MINEUR (m10)</td><td>Ne transite pas par le serveur (vérifié : appel direct dans <code>generation.ts</code>)</td></tr>
+<tr><td>Droits minimaux</td><td class="ok">OK</td><td>Scope GitHub <code>read:user</code></td></tr>
+</tbody></table>
+<h3>4.5 Dépôt GitHub</h3>
+<table>
+<thead><tr><th>Point</th><th>Statut</th><th>Comment</th></tr></thead>
+<tbody>
+<tr><td>Historique complet (<code>git log -p --all</code>, motifs de secrets)</td><td class="ok">OK</td><td>18 commits, aucun secret</td></tr>
+<tr><td>gitleaks</td><td class="ok">OK</td><td>8.30.1 : « no leaks found »</td></tr>
+<tr><td>trufflehog</td><td class="ok">OK</td><td>3.99.4 : 1 résultat non vérifié, URL de test factice</td></tr>
+<tr><td>Fichiers sensibles suivis ou ayant été suivis</td><td class="ok">OK</td><td>Seul <code>.dev.vars.example</code></td></tr>
+<tr><td><code>.gitignore</code></td><td class="km">MINEUR (m12)</td><td>Remplacé par <code>.git/info/exclude</code> local (couvre <code>node_modules</code>, <code>dist</code>, <code>.dev.vars</code>, <code>.env*</code>, <code>.wrangler</code>, sorties vidéo)</td></tr>
+<tr><td>Visibilité</td><td>Public</td><td><code>gh repo view</code></td></tr>
+<tr><td>Secret scanning et push protection</td><td class="ok">OK</td><td>Activés, 0 alerte</td></tr>
+<tr><td>Dependabot alerts</td><td class="ko">KO (m12)</td><td>Désactivées (HTTP 403)</td></tr>
+<tr><td>Protection de branche</td><td class="ko">KO (m12)</td><td><code>main</code> non protégée</td></tr>
+<tr><td>Branches et PR distantes</td><td class="ok">OK</td><td>Branches distantes déjà dans l'historique scanné ; PR #3 et #4 fermées ne touchent que des <code>package.json</code></td></tr>
+<tr><td>CI : permissions, déclencheurs</td><td class="ok">OK</td><td><code>contents: read</code>, pas de <code>pull_request_target</code></td></tr>
+</tbody></table>
+<h3>4.6 Dépendances</h3>
+<table>
+<thead><tr><th>Point</th><th>Statut</th><th>Comment</th></tr></thead>
+<tbody>
+<tr><td><code>npm audit</code></td><td class="ko">KO (M6)</td><td>13 vulnérabilités, dont zod en production</td></tr>
+<tr><td><code>osv-scanner</code></td><td class="ko">KO (M6)</td><td>zod, undici</td></tr>
+<tr><td><code>semgrep</code></td><td class="ok">OK</td><td>8 résultats : 2 faux positifs (<code>pages.ts:53</code>, <code>securite.ts:32</code>), 6 durcissements CI et Docker repris en m12</td></tr>
+</tbody></table>
+<h3>4.7 RGPD</h3>
+<table>
+<thead><tr><th>Point</th><th>Statut</th><th>Comment</th></tr></thead>
+<tbody>
+<tr><td>Inventaire des données</td><td>Fait</td><td>Section 5</td></tr>
+<tr><td>Minimisation</td><td class="km">MINEUR (m1)</td><td>Email inutile</td></tr>
+<tr><td>Base légale</td><td class="ko">KO (M5)</td><td>Non indiquée</td></tr>
+<tr><td>Cookies et traceurs avant consentement</td><td class="ko">KO (M4)</td><td>Aucun cookie non essentiel, aucun analytics, mais polices Google tierces</td></tr>
+<tr><td>Bandeau</td><td>Sans objet</td><td>Pas nécessaire une fois M4 corrigé</td></tr>
+<tr><td>Mentions légales</td><td class="ok">OK</td><td>Page présente (<code>/mentions-legales</code>), éditeur et hébergeur ; adresse de l'hébergeur à vérifier</td></tr>
+<tr><td>Politique de confidentialité</td><td class="ko">KO partiel (M5)</td><td>Présente, incomplète</td></tr>
+<tr><td>Politique cookies</td><td class="ok">OK</td><td>Section « Cookies et traceurs »</td></tr>
+<tr><td>Droit d'accès et portabilité</td><td class="ko">KO partiel (M5)</td><td>Pas d'export</td></tr>
+<tr><td>Droit à l'effacement</td><td class="ko">KO (M1)</td><td>Incomplet</td></tr>
+<tr><td>Rectification, opposition</td><td class="ok">OK partiel</td><td>Brouillons modifiables ; demande par le dépôt public seulement</td></tr>
+<tr><td>Formulaires et cases pré-cochées</td><td class="ok">OK</td><td>« Mémoriser la clé » non coché par défaut ; pas de newsletter</td></tr>
+<tr><td>Sécurité (article 32)</td><td class="ok">OK partiel (M2)</td><td>HTTPS, chiffrement KV, accès restreint</td></tr>
+<tr><td>Durées de conservation</td><td class="ok">OK partiel (M2, M5)</td><td>90 jours KV, 8 h session ; DO illimité, grants 30 jours renouvelables, anciennes entrées sans TTL</td></tr>
+<tr><td>Transferts hors UE</td><td class="ko">KO (M5)</td><td>Non décrits</td></tr>
+<tr><td>Mineurs</td><td class="km">MINEUR (m15)</td><td>Non traité</td></tr>
+</tbody></table>
+<h2>5. Inventaire RGPD des données personnelles</h2>
+<table>
+<thead><tr><th>Donnée</th><th>Où</th><th>Pourquoi</th><th>Durée</th><th>Base légale suggérée</th></tr></thead>
+<tbody>
+<tr><td>Login, nom, avatar GitHub</td><td>KV <code>session:*</code> (chiffré)</td><td>Afficher le compte, appeler GitHub</td><td>8 h</td><td>Exécution du service (contrat)</td></tr>
+<tr><td>Token GitHub (<code>read:user</code>)</td><td>KV <code>session:*</code> (chiffré) ; grants OAuth (chiffré) ; Durable Object <code>props</code> (en clair)</td><td>Lire les repos publics</td><td>8 h ; 30 jours renouvelables ; illimitée</td><td>Contrat</td></tr>
+<tr><td>Email GitHub (public)</td><td>Grants OAuth et Durable Object</td><td>Aucun usage (m1)</td><td>30 jours ; illimitée</td><td>Aucune : à supprimer</td></tr>
+<tr><td>Id GitHub numérique, login</td><td>Index des grants OAuth (<code>userId</code>, <code>metadata.label</code>)</td><td>Lier les autorisations</td><td>Durée du grant</td><td>Contrat</td></tr>
+<tr><td>Brouillons de posts</td><td>KV <code>brouillons:&lt;login&gt;</code> (chiffré)</td><td>Historique</td><td>90 jours après la dernière écriture</td><td>Contrat</td></tr>
+<tr><td>Domaines vérifiés et date</td><td>KV <code>domaines:&lt;login&gt;</code> (chiffré)</td><td>Autoriser les captures</td><td>90 jours après la dernière écriture</td><td>Contrat</td></tr>
+<tr><td>Consentement mémorisé par client MCP</td><td>Cookie <code>__Host-oauth-approvals</code> signé</td><td>Ne pas redemander</td><td>30 jours</td><td>Contrat</td></tr>
+<tr><td>Adresse IP</td><td>Limiteur de débit (mémoire Cloudflare), journaux Workers</td><td>Lutte contre les abus, diagnostic</td><td>Fenêtre de 60 s ; journaux selon la rétention Cloudflare</td><td>Intérêt légitime</td></tr>
+<tr><td>Clé API Anthropic</td><td>Navigateur (<code>sessionStorage</code> ou <code>localStorage</code>)</td><td>Mode site</td><td>Onglet, ou jusqu'à effacement</td><td>Contrat (stockée chez l'utilisateur)</td></tr>
+<tr><td>Style d'écriture, modèle</td><td>Navigateur (<code>localStorage</code>)</td><td>Personnaliser la génération</td><td>Jusqu'à effacement</td><td>Contrat</td></tr>
+<tr><td>Commits et diffs envoyés à Anthropic</td><td>Transit navigateur vers Anthropic</td><td>Génération (mode site)</td><td>Selon Anthropic</td><td>Contrat, à l'initiative de l'utilisateur</td></tr>
+<tr><td>Captures d'écran</td><td>Non stockées</td><td>Illustrer un post</td><td>Aucune</td><td>Contrat</td></tr>
+<tr><td>Auteurs des commits (<code>%an</code>)</td><td><code>apps/video/projets/&lt;nom&gt;/donnees.json</code> (local, exclu de Git)</td><td>Pub vidéo interne</td><td>Local</td><td>Intérêt légitime (outil interne)</td></tr>
+</tbody></table>
+<p>Sous-traitants et localisation : Cloudflare, Inc. (hébergement, KV, Durable Objects, Browser Run, journaux : États-Unis, réseau mondial) ; GitHub, Inc. (identité et données : États-Unis) ; Anthropic (mode site, appelé depuis le navigateur : États-Unis) ; Google (polices, tant que M4 n'est pas corrigé : États-Unis).</p>
+<h2>6. Vérifications non faites</h2>
+<table>
+<thead><tr><th>Vérification</th><th>Raison</th></tr></thead>
+<tbody>
+<tr><td>Tests dynamiques de l'API, du MCP et de l'OAuth (IDOR avec un second compte, CSRF forgé, limitation de débit, en-têtes réels)</td><td>Aucun serveur lancé : secrets OAuth absents, consigne d'audit statique</td></tr>
+<tr><td>Inspection navigateur (réseau, console, stockage, fichiers exposés)</td><td>Rien n'est servi</td></tr>
+<tr><td>nmap</td><td>Aucun hôte déployé</td></tr>
+<tr><td>Réseau accessible depuis Browser Run</td><td>Infrastructure Cloudflare, hors périmètre</td></tr>
+<tr><td>Expiration réelle des tokens de l'app OAuth GitHub</td><td>Réglage de l'app sur le compte du propriétaire, non accessible</td></tr>
+<tr><td>Exploitabilité réelle de GHSA-mrhx-c7xc-m3w5 dans Workers</td><td>Nécessite un test de charge, non autorisé</td></tr>
+<tr><td>Sauvegardes et restauration</td><td>Aucune infrastructure</td></tr>
+<tr><td>Règles de dépôt nécessitant <code>admin:repo_hook</code> (webhooks)</td><td>Portée du token <code>gh</code> insuffisante, sans incidence sur les secrets</td></tr>
+</tbody></table>
+<h2>7. Outils utilisés</h2>
+<table>
+<thead><tr><th>Outil</th><th>Version</th><th>Usage</th></tr></thead>
+<tbody>
+<tr><td>git</td><td>2.50.1</td><td>Historique complet, <code>git show HEAD:</code></td></tr>
+<tr><td>gitleaks</td><td>8.30.1</td><td><code>gitleaks git --log-opts=--all --redact</code></td></tr>
+<tr><td>trufflehog</td><td>3.99.4</td><td><code>trufflehog git file://...</code></td></tr>
+<tr><td>semgrep</td><td>1.182.0</td><td><code>p/default</code>, <code>p/typescript</code>, <code>p/javascript</code>, <code>p/secrets</code>, <code>p/github-actions</code>, <code>p/dockerfile</code>, <code>p/nodejs</code> (<code>--config auto</code> refusé sans métriques)</td></tr>
+<tr><td>osv-scanner</td><td>2.7.0</td><td><code>scan source --lockfile package-lock.json</code></td></tr>
+<tr><td>npm audit</td><td>npm 11.16.0, Node 26.3.0</td><td>Arbre complet</td></tr>
+<tr><td>gh</td><td>2.98.0</td><td>Réglages du dépôt, alertes, branches, PR</td></tr>
+<tr><td>Vite</td><td>8 (projet)</td><td>Build du front dans un dossier temporaire pour inspecter le bundle</td></tr>
+<tr><td>Google Chrome headless</td><td>Système</td><td>Conversion en PDF</td></tr>
+</tbody></table>
+<p>Aucun outil manquant. Pour la mise à jour de semgrep : <code>brew upgrade semgrep</code>.</p>
+</body></html>

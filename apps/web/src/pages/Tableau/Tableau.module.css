@@ -1,39 +1,63 @@
+.page {
+	display: grid;
+	gap: var(--espace-7);
+}
+.entete {
+	max-width: var(--mesure);
+}
+.surtitre {
+	margin: 0 0 var(--espace-3);
+	font-size: var(--t-etiquette);
+	line-height: var(--lh-etiquette);
+	font-weight: 600;
+	letter-spacing: var(--suivi-etiquette);
+	text-transform: uppercase;
+	color: var(--moka-texte);
+}
+.entete h1 {
+	font-size: var(--t-titre);
+	line-height: var(--lh-titre);
+}
+.chapo {
+	margin: var(--espace-3) 0 0;
+	font-size: var(--t-corps-grand);
+	line-height: var(--lh-corps-grand);
+	color: var(--texte-doux);
+}
+
 .grille {
 	display: grid;
-	grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr) minmax(0, 1.4fr);
-	gap: 16px;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--espace-5);
 	align-items: start;
 }
-.colonne {
-	display: grid;
-	gap: 12px;
+.atelier {
+	display: flex;
+	flex-direction: column;
+	gap: var(--espace-3);
 	min-width: 0;
 }
 .posts {
 	display: grid;
-	gap: 16px;
+	gap: var(--espace-5);
+	min-width: 0;
 }
-.vide {
-	padding: 40px 28px;
-	border: 1px dashed var(--moka-clair);
-	border-radius: 20px;
-	background: rgba(255, 255, 255, 0.25);
-}
-.vide h2 {
-	font-size: 2.4rem;
-	margin-bottom: 12px;
+/* Sous 1100 px : une etape a la fois, les posts n'apparaissent qu'a l'etape 4 */
+.posts[data-visible="non"] {
+	display: none;
 }
 
-@media (max-width: 1100px) {
+@media (min-width: 1100px) {
 	.grille {
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: minmax(400px, 5fr) minmax(0, 7fr);
+		gap: var(--espace-6);
 	}
-	.posts {
-		grid-column: 1 / -1;
+	.posts[data-visible="non"] {
+		display: grid;
 	}
 }
-@media (max-width: 720px) {
-	.grille {
-		grid-template-columns: 1fr;
+@media (max-width: 860px) {
+	.page {
+		gap: var(--espace-5);
 	}
 }

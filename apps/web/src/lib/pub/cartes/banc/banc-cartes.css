@@ -1,0 +1,18 @@
+@font-face { font-family: "Geist"; font-weight: 500; font-display: swap; src: url("/fonts/geist-sans-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Geist"; font-weight: 600; font-display: swap; src: url("/fonts/geist-sans-latin-600-normal.woff2") format("woff2"); }
+
+#cartes { display: grid; gap: 14px; border-top: 1px solid #333; padding-top: 20px; margin-top: 12px; }
+#cartes h2 { font-size: 17px; margin: 0; }
+#cartes canvas { width: 100%; max-width: 960px; aspect-ratio: 16 / 9; background: #000; }
+#cartes label { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; }
+#cartes select, #cartes input[type="file"] { background: #2a2a2a; color: #eee; border: 1px solid #444; border-radius: 4px; padding: 6px 8px; font: inherit; }
+#cartes select:focus-visible, #cartes input:focus-visible { outline: 2px solid #8c95ff; outline-offset: 2px; }
+.pastilles { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; min-height: 36px; }
+.pastille { display: inline-flex; align-items: center; gap: 8px; font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+.pastille i { width: 28px; height: 28px; border-radius: 6px; border: 1px solid #555; display: inline-block; }
+.pastille.accent i { outline: 2px solid #fff; outline-offset: 2px; }
+.vignettes { display: flex; gap: 10px; flex-wrap: wrap; }
+.vignettes button { padding: 4px; }
+.vignettes button[aria-pressed="true"] { border-color: #8c95ff; outline: 2px solid #8c95ff; }
+.vignettes canvas { width: 120px; height: auto; aspect-ratio: auto; display: block; background: #222; }
+#cartes-reseau, #cartes-etat, #cartes-t { font-family: ui-monospace, Menlo, monospace; font-size: 13px; margin: 0; }
