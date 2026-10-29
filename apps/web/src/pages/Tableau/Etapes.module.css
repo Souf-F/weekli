@@ -1,0 +1,560 @@
+/* Etapes 1 a 3 du parcours : lignes selectionnables, cartes de type, reglages */
+.lecteur {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+.etape {
+	animation: arrivee 200ms var(--ease) both;
+}
+@keyframes arrivee {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+}
+.corps {
+	display: grid;
+	gap: var(--espace-4);
+	min-width: 0;
+}
+.titre {
+	margin: 0;
+	font-size: var(--t-sous-titre);
+	line-height: var(--lh-sous-titre);
+}
+.titre:focus {
+	outline: none;
+}
+
+/* Ligne resume d'une etape faite (poste de travail) */
+.replie {
+	display: none;
+	grid-template-columns: auto auto minmax(0, 1fr) auto;
+	align-items: center;
+	gap: var(--espace-3);
+	min-height: 48px;
+	padding: var(--espace-2) var(--espace-4);
+	border: 1px solid var(--filet);
+	border-radius: var(--rayon-m);
+	background: var(--voile-blanc);
+	font: inherit;
+	text-align: left;
+	color: var(--espresso);
+	cursor: pointer;
+	animation: replier 160ms var(--ease) both;
+}
+@keyframes replier {
+	from {
+		opacity: 0.4;
+		transform: translateY(-4px);
+	}
+}
+.replie:hover {
+	background: var(--blanc);
+}
+.replie:focus-visible {
+	outline: none;
+	box-shadow: var(--focus);
+}
+.replie > span:first-child {
+	display: grid;
+	place-items: center;
+	width: 24px;
+	height: 24px;
+	border-radius: var(--rayon-pilule);
+	background: var(--voile-moka);
+	font-size: var(--t-etiquette);
+	font-weight: 600;
+	color: var(--moka-texte);
+}
+.replie strong {
+	font-size: var(--t-etiquette);
+	letter-spacing: var(--suivi-etiquette);
+	text-transform: uppercase;
+	color: var(--texte-doux);
+}
+.replie em {
+	overflow: hidden;
+	font-style: normal;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.modifier {
+	font-size: var(--t-petit);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+	color: var(--moka-texte);
+}
+@media (min-width: 1100px) {
+	.replie {
+		display: grid;
+	}
+}
+
+.recap {
+	margin: 0;
+	padding: var(--espace-3) var(--espace-4);
+	border-radius: var(--rayon-s);
+	background: var(--voile-moka);
+	font-size: var(--t-petit);
+	line-height: var(--lh-petit);
+}
+.recap span {
+	margin-left: var(--espace-3);
+	font-size: var(--t-etiquette);
+	font-weight: 600;
+	letter-spacing: var(--suivi-etiquette);
+	text-transform: uppercase;
+	color: var(--moka-texte);
+}
+.recap span:first-child {
+	margin-left: 0;
+}
+
+/* Listes selectionnables */
+.liste {
+	display: grid;
+	gap: var(--espace-2);
+	min-width: 0;
+	margin: 0;
+	padding: var(--espace-1);
+	border: 0;
+	list-style: none;
+	max-height: 420px;
+	overflow: auto;
+}
+.ligne {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	align-items: center;
+	gap: var(--espace-3);
+	min-height: 48px;
+	padding: var(--espace-2) var(--espace-4);
+	border: 1px solid var(--filet);
+	border-radius: var(--rayon-m);
+	background: var(--voile-blanc);
+	cursor: pointer;
+	transition:
+		background var(--duree-rapide),
+		border-color var(--duree-rapide);
+}
+.ligne:hover {
+	background: var(--blanc);
+}
+.ligne:has(input:checked) {
+	border-color: var(--espresso);
+	background: var(--blanc);
+}
+.ligne:has(input:focus-visible) {
+	box-shadow: var(--focus);
+}
+.ligne input {
+	width: 20px;
+	height: 20px;
+	margin: 0;
+	accent-color: var(--espresso);
+}
+.ligne input:focus-visible {
+	outline: none;
+}
+.ligne:has(input:disabled) {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+.ligneTexte {
+	display: grid;
+	gap: 2px;
+	min-width: 0;
+}
+.ligneNom {
+	overflow: hidden;
+	font-weight: 500;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.ligneDescription {
+	overflow: hidden;
+	font-size: var(--t-petit);
+	color: var(--texte-doux);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.ligneDate {
+	font-size: var(--t-petit);
+	color: var(--texte-doux);
+	white-space: nowrap;
+}
+.sha,
+.chemin {
+	font-family: var(--mono);
+	font-size: var(--t-petit);
+	color: var(--moka-texte);
+	overflow-wrap: anywhere;
+}
+.chemin {
+	color: var(--espresso);
+}
+.recherche {
+	margin-bottom: 0;
+}
+
+/* Cartes de type */
+.cartes {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--espace-3);
+	margin: 0;
+	padding: var(--espace-1);
+	border: 0;
+	min-width: 0;
+}
+.carte {
+	position: relative;
+	display: grid;
+	grid-template-rows: auto auto 1fr auto;
+	align-content: start;
+	gap: var(--espace-2);
+	padding: var(--espace-4);
+	border: 1px solid var(--filet);
+	border-radius: var(--rayon-m);
+	background: var(--voile-blanc);
+	cursor: pointer;
+	transition:
+		background var(--duree-rapide),
+		border-color var(--duree-rapide),
+		transform var(--duree-ui) var(--ease);
+}
+.carte:hover {
+	background: var(--blanc);
+	transform: translateY(-2px);
+}
+.carte:has(input:checked) {
+	border-color: var(--espresso);
+	background: var(--blanc);
+	box-shadow: var(--ombre-carte);
+}
+.carte:has(input:focus-visible) {
+	box-shadow: var(--focus);
+}
+.carte input {
+	position: absolute;
+	opacity: 0;
+	inset: 0;
+	margin: 0;
+	cursor: pointer;
+}
+.carteNumero {
+	font: 400 1.6rem / 1 var(--serif);
+	font-style: italic;
+	color: var(--moka-texte);
+}
+.carteNom {
+	font: 500 1.15rem / 1.2 var(--serif);
+}
+.carteBut {
+	font-size: var(--t-petit);
+	line-height: var(--lh-petit);
+	color: var(--texte-doux);
+}
+.carteLit {
+	font-size: var(--t-petit);
+	line-height: var(--lh-petit);
+	color: var(--espresso);
+}
+.carteLit span {
+	font-size: var(--t-etiquette);
+	font-weight: 600;
+	letter-spacing: var(--suivi-etiquette);
+	text-transform: uppercase;
+	color: var(--moka-texte);
+}
+.carteCoche {
+	position: absolute;
+	top: var(--espace-3);
+	right: var(--espace-4);
+	font-size: var(--t-etiquette);
+	font-weight: 600;
+	letter-spacing: var(--suivi-etiquette);
+	text-transform: uppercase;
+	color: var(--succes);
+}
+/* "Ma semaine" est separee des quatre types de repo par un filet et prend toute la largeur */
+.filet {
+	grid-column: 1 / -1;
+	height: 1px;
+	margin: var(--espace-1) 0;
+	background: var(--filet);
+}
+.cartes > label:last-child {
+	grid-column: 1 / -1;
+}
+
+/* Reglages */
+.bloc {
+	display: grid;
+	gap: var(--espace-3);
+	min-width: 0;
+}
+.blocTitre {
+	margin: 0;
+	font-size: var(--t-etiquette);
+	font-weight: 600;
+	letter-spacing: var(--suivi-etiquette);
+	text-transform: uppercase;
+	color: var(--moka-texte);
+}
+.entete {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--espace-3);
+}
+.periode {
+	display: flex;
+	align-items: center;
+	gap: var(--espace-3);
+	font-size: var(--t-petit);
+	font-weight: 500;
+}
+.periode select {
+	min-height: 44px;
+	padding: 0 var(--espace-3);
+	border: 1px solid var(--filet);
+	border-radius: var(--rayon-s);
+	background: var(--champ);
+	font: inherit;
+}
+.compteurListe {
+	margin: 0;
+	font-size: var(--t-petit);
+	font-weight: 500;
+	color: var(--moka-texte);
+}
+.lectures {
+	display: grid;
+	gap: var(--espace-2);
+	margin: 0;
+	padding: var(--espace-4);
+	border: 1px solid var(--filet);
+	border-radius: var(--rayon-m);
+	background: var(--voile-blanc);
+	list-style: none;
+	font-size: var(--t-petit);
+	line-height: var(--lh-petit);
+}
+.lectures li {
+	display: grid;
+	grid-template-columns: 9.5rem minmax(0, 1fr);
+	gap: var(--espace-3);
+	overflow-wrap: anywhere;
+}
+.lectures li span {
+	font-size: var(--t-etiquette);
+	font-weight: 600;
+	letter-spacing: var(--suivi-etiquette);
+	text-transform: uppercase;
+	color: var(--moka-texte);
+}
+.compteur {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--espace-3);
+	font-size: var(--t-etiquette);
+	font-weight: 400;
+	color: var(--texte-doux);
+}
+.compteur [data-bas="oui"] {
+	color: var(--danger);
+	font-weight: 600;
+}
+.repli {
+	border: 1px solid var(--filet);
+	border-radius: var(--rayon-m);
+	background: var(--voile-blanc);
+}
+.repli summary {
+	display: flex;
+	align-items: center;
+	gap: var(--espace-3);
+	min-height: 48px;
+	padding: var(--espace-2) var(--espace-4);
+	font-weight: 500;
+	cursor: pointer;
+}
+.repli summary:focus-visible {
+	outline: none;
+	box-shadow: var(--focus);
+	border-radius: var(--rayon-m);
+}
+.repli > :not(summary) {
+	margin: 0 var(--espace-4) var(--espace-4);
+}
+.badge {
+	padding: 2px var(--espace-2);
+	border-radius: var(--rayon-pilule);
+	background: var(--espresso);
+	font-size: var(--t-etiquette);
+	color: var(--platine);
+}
+.lien {
+	justify-self: start;
+	min-height: 44px;
+	padding: 0;
+	border: 0;
+	background: none;
+	font: 500 var(--t-petit) / 1.2 var(--sans);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+	color: var(--moka-texte);
+	cursor: pointer;
+}
+.lien:focus-visible {
+	outline: none;
+	box-shadow: var(--focus);
+	border-radius: var(--rayon-s);
+}
+.ajout {
+	display: grid;
+	gap: var(--espace-2);
+}
+.suggestions {
+	display: grid;
+	gap: var(--espace-1);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.suggestion {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--espace-3);
+	width: 100%;
+	min-height: 44px;
+	padding: var(--espace-2) var(--espace-4);
+	border: 1px solid var(--filet);
+	border-radius: var(--rayon-s);
+	background: var(--voile-blanc);
+	font: inherit;
+	font-size: var(--t-petit);
+	text-align: left;
+	cursor: pointer;
+}
+.suggestion:hover:not(:disabled) {
+	background: var(--blanc);
+}
+.suggestion:focus-visible {
+	outline: none;
+	box-shadow: var(--focus);
+}
+.suggestion:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+.vide {
+	margin: 0;
+	padding: var(--espace-4);
+	border: 1px dashed var(--moka);
+	border-radius: var(--rayon-m);
+	font-size: var(--t-petit);
+	color: var(--texte-doux);
+}
+.erreurBloc {
+	display: grid;
+	justify-items: start;
+	gap: var(--espace-2);
+}
+.squelette {
+	display: grid;
+	gap: var(--espace-2);
+}
+.squelette span {
+	height: 48px;
+	border-radius: var(--rayon-m);
+	background: linear-gradient(90deg, var(--voile-moka), var(--voile-blanc), var(--voile-moka));
+	background-size: 200% 100%;
+	animation: lueur 1.4s linear infinite;
+}
+@keyframes lueur {
+	to {
+		background-position: -200% 0;
+	}
+}
+/* Les panneaux de l'ancien flux sont deja dans l'etape : pas de verre double */
+.semaine > section {
+	padding: 0;
+	border: 0;
+	background: none;
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
+}
+
+/* Navigation : en bas de l'ecran sur mobile et tablette, dans l'atelier ensuite */
+.nav {
+	display: grid;
+	gap: var(--espace-2);
+	position: sticky;
+	bottom: 0;
+	z-index: 5;
+	padding: var(--espace-3) 0 calc(var(--espace-3) + env(safe-area-inset-bottom));
+	border-top: 1px solid var(--filet);
+	background: var(--platine);
+}
+.navBoutons {
+	display: flex;
+	gap: var(--espace-3);
+}
+.navBoutons > * {
+	flex: 1;
+}
+.navMessage {
+	margin: 0;
+	font-size: var(--t-petit);
+	color: var(--danger);
+}
+.retour {
+	display: flex;
+}
+@media (min-width: 1100px) {
+	.nav {
+		position: static;
+		padding: 0;
+		border: 0;
+		background: none;
+	}
+	.navBoutons > * {
+		flex: 0 0 auto;
+	}
+}
+@media (max-width: 600px) {
+	.cartes {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.lectures li {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 2px;
+	}
+	.ligne {
+		padding: var(--espace-2) var(--espace-3);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.etape,
+	.replie,
+	.squelette span {
+		animation: none;
+	}
+	.carte,
+	.ligne {
+		transition: none;
+	}
+	.carte:hover {
+		transform: none;
+	}
+}

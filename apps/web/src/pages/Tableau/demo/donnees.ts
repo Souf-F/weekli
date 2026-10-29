@@ -1,4 +1,4 @@
-import type { Activite, Post } from "@weekli/core";
+import type { Activite, Commit, Post, RepoResume, TypePost } from "@weekli/core";
 
 // Donnees factices du mode demonstration (developpement uniquement)
 const initiales = encodeURIComponent(
@@ -104,3 +104,153 @@ Si vous hésitez : faites l'inventaire d'abord. La migration elle-même est la p
 Quelle étape de votre chaîne de build n'a jamais été relue depuis qu'elle fonctionne ?`,
 	},
 ];
+
+// ---- Parcours par type (F16) ----
+
+export const REPOS_DEMO: RepoResume[] = [
+	{ repo: "atelier-reservations", description: "Réservation d'ateliers de poterie pour un studio lyonnais", site: "https://ateliers-lyon.example", url: "https://github.com/amelie-martin/atelier-reservations", maj: "2026-10-28T18:02:11Z" },
+	{ repo: "scanner-ssl", description: "Audit de surface d'attaque des certificats d'un domaine", site: "https://scanner-ssl.example", url: "https://github.com/amelie-martin/scanner-ssl", maj: "2026-10-27T09:12:00Z" },
+	{ repo: "carnet-de-bord", description: "Journal de développement en Markdown", site: "", url: "https://github.com/amelie-martin/carnet-de-bord", maj: "2026-10-25T20:40:00Z" },
+	{ repo: "petit-cli", description: "Un outil en ligne de commande pour renommer des photos", site: "", url: "https://github.com/amelie-martin/petit-cli", maj: "2026-10-22T07:30:00Z" },
+	{ repo: "palette-cafe", description: "Générateur de palettes à partir d'une photo de tasse", site: "", url: "https://github.com/amelie-martin/palette-cafe", maj: "2026-10-12T11:00:00Z" },
+	{ repo: "mini-agenda", description: "Agenda hebdomadaire sans compte, tout dans le navigateur", site: "", url: "https://github.com/amelie-martin/mini-agenda", maj: "2026-09-30T16:20:00Z" },
+	{ repo: "facture-express", description: "Factures PDF pour les artisans, en trois champs", site: "", url: "https://github.com/amelie-martin/facture-express", maj: "2026-09-14T08:05:00Z" },
+	{ repo: "radio-quartier", description: "Lecteur de webradio pour une association de quartier", site: "", url: "https://github.com/amelie-martin/radio-quartier", maj: "2026-08-21T13:45:00Z" },
+	{ repo: "notes-de-cours", description: "Mes fiches de révision en Markdown", site: "", url: "https://github.com/amelie-martin/notes-de-cours", maj: "2026-06-03T10:00:00Z" },
+];
+
+const COMMITS_GENERIQUES = [
+	["fix: empêcher la double réservation d'un même créneau", 0],
+	["feat: ajouter le règlement en trois fois", 1],
+	["perf: remplacer 14 requêtes SQL par une seule jointure", 2],
+	["test: couvrir les fuseaux horaires d'été et d'hiver", 4],
+	["refactor: extraire le calcul des tarifs dans un module", 5],
+	["docs: documenter la procédure de déploiement", 6],
+	["fix: corriger l'arrondi des centimes sur les remises", 8],
+	["feat: envoyer un rappel la veille de l'atelier", 10],
+	["chore: passer la CI sur Node 22", 12],
+	["fix: ne plus perdre le panier au rechargement", 15],
+	["feat: filtrer les ateliers par niveau", 19],
+	["style: harmoniser les espacements de la liste", 24],
+] as const;
+
+export function commitsDemo(repo: string, jours: number): Commit[] {
+	const base = new Date("2026-10-29T12:00:00Z").getTime();
+	const graine = [...repo].reduce((n, c) => n + c.charCodeAt(0), 0);
+	return COMMITS_GENERIQUES.filter(([, age]) => age < jours).map(([message, age], i) => ({
+		sha: ((graine * 2654435761 + i * 40503) >>> 0).toString(16).padStart(8, "0").slice(0, 7),
+		message,
+		date: new Date(base - age * 86_400_000).toISOString().slice(0, 10),
+	}));
+}
+
+export const ARBORESCENCE_DEMO = [
+	"package.json", "README.md", "tsconfig.json", "vite.config.ts", "src/index.ts", "src/cli.ts", "src/scan.ts",
+	"src/certificat.ts", "src/rapport.ts", "src/options.ts", "src/utils/dns.ts", "src/utils/delai.ts",
+	"src/utils/format.ts", "tests/scan.test.ts", "tests/rapport.test.ts", "docs/usage.md", "docs/architecture.md",
+	"scripts/release.mjs", ".github/workflows/ci.yml",
+];
+
+export const PROPOSES_DEMO = [
+	"package.json", "src/index.ts", "src/cli.ts", "src/scan.ts", "src/certificat.ts", "src/rapport.ts",
+	"src/options.ts", "tests/scan.test.ts", "docs/usage.md",
+];
+
+export const POSTS_PAR_TYPE: Record<TypePost, Post[]> = {
+	presentation: [
+		{
+			titre: "Présentation, angle problème",
+			format: "Présentation du projet",
+			source: "scanner-ssl",
+			texte: `Aujourd'hui je vous présente scanner-ssl.
+
+Un outil en ligne de commande qui regarde les certificats d'un domaine et vous dit, en dix secondes, lesquels expirent bientôt, lesquels sont mal chaînés et lesquels n'auraient jamais dû être là.
+
+Pourquoi ? Parce qu'un certificat oublié ne prévient personne. Il tombe un dimanche, et c'est le site du client qui affiche une page rouge.
+
+Ce que vous obtenez :
+→ un rapport lisible, trié par urgence
+→ un code de sortie pour votre CI
+→ aucune donnée envoyée ailleurs que sur votre machine
+
+Le projet est ouvert, le lien est en commentaire.
+
+#securite #devops #opensource #cli`,
+		},
+		{
+			titre: "Présentation, angle démarche",
+			format: "Présentation du projet",
+			source: "scanner-ssl",
+			texte: `Aujourd'hui je vous présente scanner-ssl, et surtout comment il est né.
+
+Au départ, un tableur. Une colonne par domaine, une date d'expiration saisie à la main. Il a tenu six mois, puis il a menti.
+
+Alors j'ai écrit l'outil que je cherchais : un seul binaire, une commande, un rapport qui dit quoi renouveler en premier.
+
+Si vous gérez plus de trois domaines, essayez-le et dites-moi ce qui manque.
+
+#securite #cli #opensource`,
+		},
+	],
+	tuto: [
+		{
+			titre: "Tuto, surveiller un domaine en 4 étapes",
+			format: "Mini tuto",
+			source: "scanner-ssl",
+			texte: `Surveiller l'expiration de vos certificats en 4 étapes, sans rien installer de lourd.
+
+1. Installez l'outil : npm install -g scanner-ssl
+2. Lancez un premier scan : scanner-ssl scan exemple.fr
+3. Lisez le rapport : les certificats sont triés par jours restants
+4. Branchez-le dans votre CI avec l'option --echec-sous 14
+
+Si un certificat expire dans moins de 14 jours, la commande retourne une erreur et votre pipeline vous prévient.
+
+À essayer ensuite : l'option --json pour alimenter votre propre tableau de bord.
+
+#devops #securite #cli`,
+		},
+		{
+			titre: "Tuto, lire le rapport",
+			format: "Mini tuto",
+			source: "scanner-ssl",
+			texte: `Lire un rapport de scanner-ssl en 3 étapes.
+
+1. Repérez la colonne « reste » : c'est le nombre de jours avant l'expiration
+2. Regardez la chaîne : un maillon manquant s'affiche en rouge
+3. Relancez avec --details pour voir l'émetteur de chaque certificat
+
+Pas de magie, juste un tri qui met l'urgent en haut.
+
+#securite #cli`,
+		},
+	],
+	coulisses: [
+		{
+			titre: "Coulisses, une décision de conception",
+			format: "Coulisses du projet",
+			source: "atelier-reservations",
+			texte: `Je voulais un paiement en trois fois. J'ai failli le faire à la main.
+
+L'idée de départ : calculer les échéances moi-même et les stocker. Puis je me suis rendu compte que je réécrivais ce que le prestataire de paiement fait déjà, avec les cas limites en moins.
+
+J'ai changé de cap : une seule source de vérité chez le prestataire, et mon code se contente de lire l'état.
+
+Résultat : moins de code, et plus de rapprochement manuel le vendredi soir.
+
+Quelle fonctionnalité réécrivez-vous alors qu'elle existe déjà ?
+
+#dev #paiement #architecture`,
+		},
+	],
+	lecon: POSTS_DEMO.slice(0, 1),
+	semaine: POSTS_DEMO,
+};
+
+export const QUESTIONS_DEMO: Record<TypePost, string> = {
+	presentation: "Pourquoi as-tu fait ce projet ? Un besoin personnel, une demande, une curiosité ? Je préfère ne pas l'inventer.",
+	tuto: "Quel sujet précis veux-tu traiter ? Je peux proposer : installer l'outil, lancer un premier scan, ou l'intégrer à la CI.",
+	coulisses: "Quel était le pourquoi de ce choix ? Les commits disent ce qui a changé, pas ce qui t'a fait hésiter.",
+	lecon: "Qu'est-ce qui s'est passé exactement ? Décris le problème en deux phrases, je m'appuierai dessus.",
+	semaine: "",
+};

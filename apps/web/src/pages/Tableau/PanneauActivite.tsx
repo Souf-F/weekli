@@ -29,8 +29,7 @@ export function PanneauActivite({
 		<section className={`${p.panneau} ${styles.panneau}`}>
 			<div className={p.titre}>
 				<div>
-					<p className={p.etape}>Étape 1</p>
-					<h2>Ta semaine</h2>
+					<h3>Les commits de la période</h3>
 				</div>
 				<select
 					value={jours}

@@ -23,7 +23,8 @@
 	gap: var(--espace-3);
 	margin-bottom: var(--espace-4);
 }
-.titre h2 {
+.titre h2,
+.titre h3 {
 	font-size: var(--t-sous-titre);
 	line-height: var(--lh-sous-titre);
 }

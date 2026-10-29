@@ -1,4 +1,4 @@
-import type { Activite, Brouillon, DetailsCommit, DetailsRepo, Post, PubEnregistree, PubResume, RepoResume, ScriptPub, StyleEcriture } from "@weekli/core";
+import type { Activite, Brouillon, Commit, DemandePost, DetailsCommit, DonneesPost, EcartsTuto, DetailsRepo, Post, PubEnregistree, PubResume, RepoResume, ScriptPub, StyleEcriture } from "@weekli/core";
 
 export type Moi = { login: string; nom: string; avatar: string };
 export type Domaine = { hote: string; verifie: string };
@@ -6,6 +6,15 @@ export type Preuve = {
 	hote: string;
 	dns: { nom: string; type: string; valeur: string };
 	fichier: { url: string; contenu: string };
+};
+
+// Apercu de la lecture d'un mini tuto : aucun fichier n'est lu, les chemins viennent du repo (non fiables)
+export type ApercuTuto = {
+	branche: string;
+	arborescence: string[];
+	arborescenceTronquee: boolean;
+	proposes: string[];
+	ecartes: EcartsTuto;
 };
 
 export type PubSauvee = { pub: PubEnregistree; avertissements: string[] };
@@ -71,6 +80,10 @@ export const api = {
 		return res.blob();
 	},
 	repos: () => lire<RepoResume[]>("/api/repos"),
+	commitsRepo: (nom: string, jours: number) =>
+		lire<Commit[]>(`/api/repos/${encodeURIComponent(nom)}/commits?jours=${jours}`),
+	fichiersTuto: (nom: string) => lire<ApercuTuto>(`/api/repos/${encodeURIComponent(nom)}/fichiers-tuto`),
+	donneesPost: (demande: DemandePost) => lire<DonneesPost>("/api/posts/donnees", json("POST", demande)),
 	repo: (nom: string) => lire<DetailsRepo>(`/api/repos/${encodeURIComponent(nom)}`),
 	pubs: () => lire<PubResume[]>("/api/pubs"),
 	pub: (id: string) => lire<PubEnregistree>(`/api/pubs/${encodeURIComponent(id)}`),

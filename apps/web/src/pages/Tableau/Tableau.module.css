@@ -27,66 +27,37 @@
 
 .grille {
 	display: grid;
-	grid-template-columns: minmax(320px, 4fr) minmax(0, 7fr);
-	gap: var(--espace-6);
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--espace-5);
 	align-items: start;
 }
-/* Atelier fixe a gauche : la liste de commits defile, le bouton Generer reste visible */
 .atelier {
 	display: flex;
 	flex-direction: column;
-	gap: var(--espace-4);
+	gap: var(--espace-3);
 	min-width: 0;
-}
-@media (min-width: 861px) and (min-height: 820px) {
-	.atelier {
-		position: sticky;
-		top: var(--espace-4);
-		max-height: calc(100svh - 2 * var(--espace-4));
-	}
-}
-.atelier > :first-child {
-	flex: 1 1 auto;
-	min-height: 0;
-}
-.atelier > :not(:first-child) {
-	flex: none;
 }
 .posts {
 	display: grid;
 	gap: var(--espace-5);
 	min-width: 0;
 }
-.vide {
-	display: grid;
-	align-content: center;
-	min-height: 320px;
-	padding: var(--espace-7) var(--espace-6);
-	border: 1px dashed var(--moka);
-	border-radius: var(--rayon-l);
-	background: var(--vide-fond);
-}
-.vide h2 {
-	margin-bottom: var(--espace-3);
-	font-size: clamp(1.7rem, 3vw, 2.4rem);
-	line-height: var(--lh-titre);
+/* Sous 1100 px : une etape a la fois, les posts n'apparaissent qu'a l'etape 4 */
+.posts[data-visible="non"] {
+	display: none;
 }
 
-@media (max-width: 1100px) {
+@media (min-width: 1100px) {
 	.grille {
-		grid-template-columns: minmax(280px, 5fr) minmax(0, 7fr);
-		gap: var(--espace-5);
+		grid-template-columns: minmax(400px, 5fr) minmax(0, 7fr);
+		gap: var(--espace-6);
+	}
+	.posts[data-visible="non"] {
+		display: grid;
 	}
 }
 @media (max-width: 860px) {
 	.page {
-		gap: var(--espace-6);
-	}
-	.grille {
-		grid-template-columns: minmax(0, 1fr);
-	}
-	.vide {
-		min-height: 220px;
-		padding: var(--espace-6) var(--espace-5);
+		gap: var(--espace-5);
 	}
 }
