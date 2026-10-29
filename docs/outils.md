@@ -134,9 +134,34 @@ Le script est toujours nettoyé et validé par `nettoyerScriptPub` (même règle
 
 `lister_pubs` (aucun paramètre) renvoie `{ id, titre, projet, cree, maj, scenes }` pour chaque pub, de la plus récemment modifiée à la plus ancienne ; `scenes` compte les scènes visibles. `lire_pub` (`id`) renvoie la pub complète avec son script, ou `Pub introuvable`.
 
-## Post du projet
+## Posts par type
+
+### `preparer_post`
+
+| Paramètre | Type | Description |
+|---|---|---|
+| `type` | `presentation`, `tuto`, `coulisses`, `lecon`, `semaine` | Type de post |
+| `repo` | texte | Nom du repo public, sans le propriétaire (tous les types sauf `semaine`) |
+| `commits` | texte[] | SHA de 7 à 40 caractères, 10 au plus (`coulisses` : 1 au moins, `lecon` : facultatif) |
+| `fichiers` | texte[] | Chemins à lire, 12 au plus (`tuto`, facultatif) ; un secret, un fichier généré ou binaire est refusé |
+| `jours` | entier | 1 à 30, 7 par défaut (`semaine`) |
+
+Lecture seule. Entrée validée par `validerDemandePost`, sortie `DonneesPost` identique à `POST /api/posts/donnees` : `type`, `nom`, `repo` (`null` pour `semaine`), `specifique` (selon le type), `style`, `regles`, `consigne`. Tout texte du repo est dans `contenu_non_fiable`. `coulisses` sans `commits` renvoie à la place `{ type, nom, repo, commitsDisponibles, regles, consigne }` ; `lecon` sans `commits` ajoute `commitsDisponibles` aux données.
+
+Erreurs : entrée invalide (messages de la route), repo ou commit introuvable, repo privé. Le repo d'un autre compte n'est pas atteignable.
+
+### Prompt `preparer_post`
+
+| Argument | Description |
+|---|---|
+| `type` | Type de post |
+| `repo` | Nom du repo GitHub public (sauf `semaine`) |
+
+Guide Claude (`promptPreparerPost`) : appeler `preparer_post`, lire consigne et règles, poser la question si elles le demandent, rédiger 2 ou 3 versions.
 
 ### `proposer_post_projet`
+
+Conservé pour l'instant (équivalent de `type: "presentation"`, retrait décidé après la recette) : préférer `preparer_post`.
 
 | Paramètre | Type | Description |
 |---|---|---|
@@ -191,6 +216,9 @@ Routes JSON servies par le Worker, toutes protégées par la session (cookie `Ht
 | GET | `/api/repos` | Repos publics sans forks (30 au plus), champs à plat (`repo`, `description`, `site`, `url`, `maj`) |
 | GET | `/api/repos/:repo` | Mêmes champs que `details_repo`, à plat |
 | GET | `/api/repos/:repo/commits/:sha` | Mêmes champs que `details_commit`, à plat (SHA validé : 7 à 40 caractères hexadécimaux) |
+| GET | `/api/repos/:repo/commits?jours=30` | Commits du compte sur ce repo (bruit retiré, 30 au plus, `jours` de 1 à 90) |
+| GET | `/api/repos/:repo/fichiers-tuto` | Aperçu de la lecture d'un tuto, sans lire de fichier : `branche`, `arborescence`, `proposes`, `ecartes` |
+| POST | `/api/posts/donnees` | Corps `{ type, repo?, commits?, fichiers?, jours? }` (64 Ko) ; renvoie les mêmes données que `preparer_post` |
 | GET | `/api/brouillons` | Historique, du plus récent au plus ancien (100 au maximum) |
 | POST | `/api/brouillons` | Corps `{ posts: Post[] }` (5 au maximum, 64 Ko) ; renvoie les brouillons créés |
 | PATCH | `/api/brouillons/:id` | Corps `{ texte?, publie? }` |

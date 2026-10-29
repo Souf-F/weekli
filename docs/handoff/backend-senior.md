@@ -1,20 +1,17 @@
-# Handoff backend : B16 (post du projet)
+# Handoff backend, B17 : `preparer_post`
 
-Date : 2026-10-29. Rien n'est commité par cette session.
-
-## Livraison
-
-- Outil MCP `proposer_post_projet` et prompt `post_projet` (`apps/server/src/mcp/outils-pub.ts`), même principe que `preparer_pub`.
-- `donneesPostProjet`, `CONSIGNE_POST_PROJET` et `EntreePostProjet` dans `packages/core/src/pub/post-projet.ts` (fonction pure, exportée par `@weekli/core`, utilisable par F14 en mode clé API). Elle prend `{ infos, domaines, pub, style }`.
-- Docs : `docs/outils.md` et `docs/api-contract.md` section 4.2.
+## Livré
+- `GET /api/repos/:repo/commits?jours=` (1 à 90, 30 par défaut), `GET /api/repos/:repo/fichiers-tuto`, `POST /api/posts/donnees` dans `apps/server/src/routes/api.ts`.
+- Outil MCP `preparer_post` et prompt `preparer_post` dans `apps/server/src/mcp/outils-pub.ts` (cas `coulisses` sans commits : `commitsDisponibles`). `proposer_post_projet` conservé.
+- `apps/server/src/lib/posts.ts` : `preparerPost` (route et outil partagent le même code, donc le même `DonneesPost`), `commitsDisponibles`, `ou` et `IntrouvablePost` (404 Octokit ou repo privé mappé en `Repo introuvable ou prive : ...`, géré par `api.onError`).
+- Tout passe par `@weekli/core`. Session, Origin (global dans `index.ts`) et débit : comme les routes existantes. Repo lu sous le login de la session.
 
 ## Tests
+`npx tsc --noEmit` : OK. `npx vitest run` dans apps/server : 18 fichiers, 236 tests verts. Nouveaux : `routes/__tests__/posts.test.ts` (plafonds du tuto, `.env` jamais lu, 400 par message, 404 repo/commit, 401, 429, types sans commits) et bloc `preparer_post` dans `mcp/__tests__/outils.test.ts`.
 
-- `packages/core` : tsc OK, 245 tests verts.
-- `apps/server` : tsc OK, 212 verts, 1 rouge déjà présent avant ce travail (vérifié par stash) : `contenu_non_fiable sur les outils GitHub > activite_github...` (`activite_github` ne renvoie plus `repos[0]`, probablement lié à la date fixe 2026-10-20 du jeu de test).
-- Tests ajoutés : entrée invalide et repo d'un autre compte (`bob/tablee`, sans appel GitHub), contenu non fiable, présence des règles et de la consigne, pub existante et style, repo absent ou privé, prompt.
+## Env, dépendances, code mort
+Aucune variable ni dépendance ajoutée. Aucun code supprimé.
 
-## Choix et limites
-
-- Aucune dépendance ajoutée. Langages et étoiles volontairement non renvoyés (valeur technique).
-- Le README n'est pas tronqué par cet outil (même comportement que `preparer_pub`).
+## Limites
+- `GET /commits` ne refuse pas un repo privé du compte (`commitsRepo` de core ne vérifie pas la visibilité) : à corriger dans core si voulu.
+- Pas de test 403 sur Origin pour ces routes (garde globale testée ailleurs). Rien de commité.

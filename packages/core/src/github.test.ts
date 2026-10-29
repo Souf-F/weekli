@@ -52,7 +52,7 @@ describe("commitsRepo", () => {
 				{ sha: "dddddddd4", commit: { message: "fix: corrige le fuseau", author: null } },
 			],
 		}));
-		const octokit = { rest: { repos: { listCommits } } } as unknown as Octokit;
+		const octokit = { rest: { repos: { listCommits, get: vi.fn(async () => ({ data: { private: false } })) } } } as unknown as Octokit;
 		expect(await commitsRepo(octokit, "u", "r", 14)).toEqual([
 			{ sha: "aaaaaaa", message: "feat: ajoute le tri", date: "2026-10-20" },
 			{ sha: "ddddddd", message: "fix: corrige le fuseau", date: "" },

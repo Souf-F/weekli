@@ -76,6 +76,8 @@ export async function activiteGithub(octokit: Octokit, login: string, jours: num
 
 // Commits d'un seul repo, pour choisir ceux d'un post (coulisses, lecon) : bruit retire, 30 au plus, du plus recent au plus ancien
 export async function commitsRepo(octokit: Octokit, login: string, repo: string, jours: number): Promise<Commit[]> {
+	const { data: infos } = await octokit.rest.repos.get({ owner: login, repo });
+	if (infos.private) throw new Error("Ce repo est prive : Weekli ne lit que les repos publics.");
 	const depuis = new Date(Date.now() - jours * 86_400_000);
 	const { data } = await octokit.rest.repos.listCommits({
 		owner: login,

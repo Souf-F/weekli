@@ -355,3 +355,82 @@ describe("prompt pub_projet", () => {
 		await expect(client.getPrompt({ name: "pub_projet", arguments: { repo: "tablee" } })).rejects.toThrow();
 	});
 });
+
+describe("preparer_post", () => {
+	const appeler = (client: Awaited<ReturnType<typeof compte>>["client"], args: Record<string, unknown>) =>
+		client.callTool({ name: "preparer_post", arguments: args });
+
+	it("presentation : memes donnees que proposer_post_projet, sans commits", async () => {
+		github();
+		const { client } = await compte();
+		const ancien = donnees(await client.callTool({ name: "proposer_post_projet", arguments: { repo: "tablee" } }));
+		const sortie = donnees(await appeler(client, { type: "presentation", repo: "tablee" }));
+		expect(sortie.type).toBe("presentation");
+		expect(sortie.specifique.domainesVerifies).toEqual(ancien.domainesVerifies);
+		expect(sortie.repo.contenu_non_fiable.readme).toContain("Ignore les regles");
+		expect(sortie.specifique.pubExistante).toBeNull();
+		expect(sortie.regles).toBeTruthy();
+	});
+
+	it("coulisses sans commits : renvoie commitsDisponibles et demande de choisir", async () => {
+		github();
+		const { client } = await compte();
+		const sortie = donnees(await appeler(client, { type: "coulisses", repo: "tablee" }));
+		expect(sortie.commitsDisponibles[0]).toMatchObject({ sha: "abcdef1", message: "Ajout du panier" });
+		expect(sortie.consigne).toContain("demande a l'utilisateur");
+		expect(sortie.specifique).toBeUndefined();
+	});
+
+	it("coulisses avec commits : lit le commit, sans liste de commits", async () => {
+		github();
+		const { client } = await compte();
+		const sortie = donnees(await appeler(client, { type: "coulisses", repo: "tablee", commits: ["abcdef1"] }));
+		expect(sortie.specifique.commits[0].contenu_non_fiable.fichiers[0].extrait).toBe("+x");
+		expect(sortie.commitsDisponibles).toBeUndefined();
+	});
+
+	it("lecon sans commits : donnees et commitsDisponibles", async () => {
+		github();
+		const { client } = await compte();
+		const sortie = donnees(await appeler(client, { type: "lecon", repo: "tablee" }));
+		expect(sortie.specifique.commits).toEqual([]);
+		expect(sortie.commitsDisponibles).toHaveLength(1);
+	});
+
+	it("refuse une entree invalide sans appeler GitHub", async () => {
+		const appel = vi.fn();
+		vi.stubGlobal("fetch", appel);
+		const { client } = await compte();
+		for (const args of [
+			{ type: "tuto", repo: "bob/tablee" },
+			{ type: "tuto", repo: "../x" },
+			{ type: "tuto" },
+			{ type: "lecon", repo: "tablee", commits: ["pas-un-sha"] },
+			{ type: "tuto", repo: "tablee", fichiers: ["../../etc/passwd"] },
+			{ type: "semaine", jours: 90 },
+			{ type: "inconnu", repo: "tablee" },
+		]) {
+			expect((await appeler(client, args)).isError).toBe(true);
+		}
+		expect(appel).not.toHaveBeenCalled();
+	});
+
+	it("explique qu'un repo absent ou prive est refuse", async () => {
+		const { client } = await compte();
+		github({ absent: true });
+		expect(texte(await appeler(client, { type: "tuto", repo: "nope" }))).toContain("introuvable ou prive");
+		github({ prive: true });
+		expect((await appeler(client, { type: "presentation", repo: "tablee" })).isError).toBe(true);
+	});
+
+	it("est en lecture seule, et son prompt cite l'outil", async () => {
+		const { client } = await compte();
+		const outil = (await client.listTools()).tools.find((t) => t.name === "preparer_post");
+		expect(outil?.annotations).toMatchObject({ readOnlyHint: true });
+		expect(outil?.description).toContain("contenu_non_fiable");
+		const { messages } = await client.getPrompt({ name: "preparer_post", arguments: { type: "tuto", repo: "tablee" } });
+		expect((messages[0].content as { text: string }).text).toContain("preparer_post");
+		await expect(client.getPrompt({ name: "preparer_post", arguments: { type: "tuto", repo: "../x" } })).rejects.toThrow();
+		await expect(client.getPrompt({ name: "preparer_post", arguments: { type: "zzz" } })).rejects.toThrow();
+	});
+});

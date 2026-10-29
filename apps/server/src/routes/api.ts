@@ -6,6 +6,8 @@ import {
 	nettoyerPost,
 	nettoyerScriptPub,
 	type Post,
+	proposerFichiersTuto,
+	validerDemandePost,
 } from "@weekli/core";
 import { type Context, Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
@@ -25,6 +27,7 @@ import {
 	verifier,
 } from "../lib/domaines";
 import { effacerDonnees } from "../lib/donnees";
+import { commitsDisponibles, IntrouvablePost, ou, preparerPost } from "../lib/posts";
 import { creerPub, LimitePubs, lirePub, lirePubs, remplacerPub, resume, supprimerPub } from "../lib/pubs";
 import { lireSession, supprimerSession } from "../lib/session";
 import { ecrireStyle, lireStyle, supprimerStyle } from "../lib/style";
@@ -49,6 +52,7 @@ api.use("*", async (c, next) => {
 // Aucun detail interne n'est renvoye au navigateur : il reste dans les logs
 api.onError((err, c) => {
 	console.error("API :", err);
+	if (err instanceof IntrouvablePost) return c.json({ erreur: err.message }, 404);
 	const statut = (err as { status?: number }).status;
 	if (statut === 404) return c.json({ erreur: "Introuvable" }, 404);
 	return c.json({ erreur: "Erreur lors de la lecture de GitHub" }, 502);
@@ -76,11 +80,42 @@ api.get("/repos/:repo", async (c) => {
 	return c.json(await detailsRepo(octokit(token), login, repo));
 });
 
+const ID = /^[0-9a-f-]{36}$/;
+const corpsLimite = bodyLimit({
+	maxSize: 64 * 1024,
+	onError: (c) => c.json({ erreur: "Requete trop volumineuse" }, 413),
+});
+
+// Commits du compte sur ce repo, pour choisir ceux d'un post (coulisses, lecon)
+api.get("/repos/:repo/commits", async (c) => {
+	const repo = c.req.param("repo");
+	if (!NOM_REPO.test(repo)) return c.json({ erreur: "Nom de repo invalide" }, 400);
+	const jours = Math.min(Math.max(Number.parseInt(c.req.query("jours") ?? "30", 10) || 30, 1), 90);
+	const { login, token } = c.get("session");
+	return c.json(await commitsDisponibles(octokit(token), login, repo, jours));
+});
+
+// Apercu de ce que Weekli lirait pour un tuto : aucun fichier n'est telecharge
+api.get("/repos/:repo/fichiers-tuto", async (c) => {
+	const repo = c.req.param("repo");
+	if (!NOM_REPO.test(repo)) return c.json({ erreur: "Nom de repo invalide" }, 400);
+	const { login, token } = c.get("session");
+	return c.json(await ou(proposerFichiersTuto(octokit(token), login, repo)));
+});
+
 api.get("/repos/:repo/commits/:sha", async (c) => {
 	const { repo, sha } = c.req.param();
 	if (!NOM_REPO.test(repo) || !SHA.test(sha)) return c.json({ erreur: "Parametres invalides" }, 400);
 	const { login, token } = c.get("session");
 	return c.json(await detailsCommit(octokit(token), login, repo, sha));
+});
+
+// Donnees et regles d'un post selon son type. Le serveur ne redige pas : Claude ou le navigateur le fait.
+api.post("/posts/donnees", corpsLimite, async (c) => {
+	const { demande, erreur } = validerDemandePost(await c.req.json().catch(() => null));
+	if (!demande) return c.json({ erreur }, 400);
+	const { id, login, token } = c.get("session");
+	return c.json(await preparerPost(c.env, octokit(token), { id, login }, demande));
 });
 
 // Droit d'acces et de portabilite (ADR-12) : tout ce que Weekli stocke pour le compte, jamais le token GitHub
@@ -119,12 +154,6 @@ api.delete("/moi/donnees", async (c) => {
 });
 
 // Historique des brouillons
-
-const ID = /^[0-9a-f-]{36}$/;
-const corpsLimite = bodyLimit({
-	maxSize: 64 * 1024,
-	onError: (c) => c.json({ erreur: "Requete trop volumineuse" }, 413),
-});
 
 api.get("/brouillons", async (c) => c.json(await lireBrouillons(c.env, c.get("session").id)));
 
