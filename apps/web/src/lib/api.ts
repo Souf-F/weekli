@@ -1,4 +1,4 @@
-import type { Activite, Brouillon, DetailsCommit, DetailsRepo, Post, PubEnregistree, PubResume, RepoResume, ScriptPub } from "@weekli/core";
+import type { Activite, Brouillon, DetailsCommit, DetailsRepo, Post, PubEnregistree, PubResume, RepoResume, ScriptPub, StyleEcriture } from "@weekli/core";
 
 export type Moi = { login: string; nom: string; avatar: string };
 export type Domaine = { hote: string; verifie: string };
@@ -50,6 +50,17 @@ export const api = {
 	preparerDomaine: (hote: string) => lire<Preuve>("/api/domaines/preparer", json("POST", { hote })),
 	verifierDomaine: (hote: string) => lire<Domaine[]>("/api/domaines/verifier", json("POST", { hote })),
 	supprimerDomaine: (hote: string) => lire<void>(`/api/domaines/${encodeURIComponent(hote)}`, { method: "DELETE" }),
+	style: () => lire<StyleEcriture>("/api/style"),
+	sauverStyle: (style: { exemples?: string; profil?: string }) => lire<StyleEcriture>("/api/style", json("PUT", style)),
+	supprimerStyle: () => lire<void>("/api/style", { method: "DELETE" }),
+	exporterMesDonnees: async (): Promise<Blob> => {
+		const res = await fetch("/api/moi/donnees", { credentials: "same-origin" });
+		if (!res.ok) {
+			const corps = await res.json().catch(() => ({}));
+			throw new ErreurApi(corps.erreur ?? `Erreur ${res.status}`, res.status);
+		}
+		return res.blob();
+	},
 	supprimerMesDonnees: () => lire<void>("/api/moi/donnees", { method: "DELETE" }),
 	capturer: async (url: string, format: "bureau" | "mobile"): Promise<Blob> => {
 		const res = await fetch("/api/captures", { credentials: "same-origin", ...json("POST", { url, format }) });

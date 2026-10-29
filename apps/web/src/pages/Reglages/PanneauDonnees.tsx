@@ -12,11 +12,29 @@ export function PanneauDonnees() {
 	const [confirmation, setConfirmation] = useState(false);
 	const [occupe, setOccupe] = useState(false);
 	const [erreur, setErreur] = useState("");
+	const [enExport, setExport] = useState(false);
 	const boite = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		if (confirmation) boite.current?.focus();
 	}, [confirmation]);
+
+	const exporter = async () => {
+		setExport(true);
+		setErreur("");
+		try {
+			const url = URL.createObjectURL(await api.exporterMesDonnees());
+			const lien = document.createElement("a");
+			lien.href = url;
+			lien.download = "weekli-donnees.json";
+			lien.click();
+			setTimeout(() => URL.revokeObjectURL(url), 1000);
+		} catch (e) {
+			setErreur(e instanceof Error ? e.message : "L'export a échoué, réessaie.");
+		} finally {
+			setExport(false);
+		}
+	};
 
 	const supprimer = async () => {
 		setOccupe(true);
@@ -38,8 +56,12 @@ export function PanneauDonnees() {
 			</div>
 			<p className={p.aide}>
 				Weekli garde ton token GitHub, tes brouillons, tes domaines vérifiés et ton style d'écriture pendant 90 jours
-				après ta dernière utilisation. Détails dans la <Link to="/confidentialite">page Confidentialité</Link>.
+				après ton dernier enregistrement, renouvelés à chaque modification. Détails dans la <Link to="/confidentialite">page Confidentialité</Link>.
 			</p>
+
+			<Bouton variante="contour" onClick={exporter} disabled={enExport} className={styles.export}>
+				{enExport ? "Préparation…" : "Télécharger mes données"}
+			</Bouton>
 
 			{confirmation ? (
 				<div

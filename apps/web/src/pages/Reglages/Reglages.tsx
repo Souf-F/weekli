@@ -4,6 +4,7 @@ import { enregistrerReglages, lireReglages, MODELES, type Modele } from "@/lib/r
 import p from "../Tableau/Panneau.module.css";
 import { PanneauDomaines } from "./PanneauDomaines";
 import { PanneauDonnees } from "./PanneauDonnees";
+import { PanneauStyle } from "./PanneauStyle";
 import styles from "./Reglages.module.css";
 
 export function Reglages() {
@@ -67,23 +68,10 @@ export function Reglages() {
 					</label>
 				</section>
 
-				<section className={p.panneau}>
-					<div className={p.titre}>
-						<h2>Ton style</h2>
-					</div>
-					<label className={p.champ}>
-						Colle 2 ou 3 de tes anciens posts LinkedIn
-						<textarea
-							rows={12}
-							value={r.style}
-							onChange={(e) => setR({ ...r, style: e.target.value })}
-							placeholder="Claude s'en inspire pour écrire avec ta voix."
-						/>
-					</label>
-					<Bouton type="submit">{enregistre ? "Enregistré" : "Enregistrer"}</Bouton>
-				</section>
+				<Bouton type="submit">{enregistre ? "Enregistré" : "Enregistrer"}</Bouton>
 			</form>
 			<div className={styles.colonne}>
+				<PanneauStyle />
 				<PanneauDomaines />
 				<PanneauDonnees />
 			</div>

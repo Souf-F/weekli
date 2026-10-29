@@ -28,6 +28,7 @@ function depart(repo: string, nom: string): ScriptPub {
 	return { ...script, titre: `Pub ${nom}`, voix: { ...script.voix, mode: "aucune" } };
 }
 
+let style: { exemples: string; profil: string; maj: string | null } = { exemples: "", profil: "", maj: null };
 const pubs = new Map<string, PubEnregistree>();
 function ajouter(script: ScriptPub, ancien = maintenant()): PubEnregistree {
 	const pub = { id: crypto.randomUUID(), cree: ancien, maj: ancien, script };
@@ -75,6 +76,23 @@ async function traiter(chemin: string, methode: string, corps: unknown): Promise
 	}
 	if (chemin === "/api/voix") return json({ erreur: "Voix indisponible en démonstration" }, 503);
 	if (chemin === "/api/brouillons") return json([]);
+	if (chemin === "/api/style") {
+		if (methode === "DELETE") {
+			style = { exemples: "", profil: "", maj: null };
+			return new Response(null, { status: 204 });
+		}
+		if (methode === "PUT") {
+			const { exemples = style.exemples, profil = style.profil } = corps as { exemples?: string; profil?: string };
+			if (!exemples && !profil) return json({ erreur: "Style vide" }, 400);
+			style = { exemples, profil, maj: maintenant() };
+		}
+		return json(style);
+	}
+	if (chemin === "/api/moi/donnees" && methode === "GET") {
+		return new Response(JSON.stringify({ exporte: maintenant(), profil: { id: "1", login: "demo", nom: "Compte de démonstration" }, brouillons: [], pubs: [...pubs.values()], style, domaines: [], conservation: "90 jours apres la derniere modification" }), {
+			headers: { "Content-Type": "application/json", "Content-Disposition": 'attachment; filename="weekli-donnees.json"' },
+		});
+	}
 
 	if (chemin === "/api/pubs") {
 		if (methode === "GET") return json([...pubs.values()].sort((a, b) => b.maj.localeCompare(a.maj)).map(resume));

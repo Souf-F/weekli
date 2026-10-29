@@ -10,8 +10,9 @@ export function MentionsLegales() {
 				commercial : il n'est pas vendu et ne génère aucun revenu.
 			</p>
 			<p>
-				Contact : via le dépôt GitHub{" "}
-				<a href="https://github.com/Souf-F/weekli">github.com/Souf-F/weekli</a> (aucun email publié).
+				Contact, y compris pour les demandes liées aux données personnelles :{" "}
+				<a href="mailto:soufianefilalipro@gmail.com">soufianefilalipro@gmail.com</a>. Le code est sur{" "}
+				<a href="https://github.com/Souf-F/weekli">github.com/Souf-F/weekli</a>.
 			</p>
 
 			<h2>Hébergeur</h2>
@@ -25,8 +26,15 @@ export function MentionsLegales() {
 
 			<h2>Propriété intellectuelle</h2>
 			<p>
-				Le code source de Weekli est publié sous licence MIT sur le dépôt GitHub. Les avatars et noms affichés dans
-				l'app proviennent des profils publics GitHub des utilisateurs connectés.
+				Le code source de Weekli est publié sous licence GPL-3.0 sur le dépôt GitHub : il embarque le phonémiseur
+				espeak-ng, lui-même sous GPL-3.0. Les avatars et noms affichés dans l'app proviennent des profils publics
+				GitHub des utilisateurs connectés.
+			</p>
+			<p>
+				La voix de secours générée dans le navigateur utilise le modèle Kokoro (licence Apache-2.0). Sa voix française
+				<code> ff_siwis</code> est entraînée sur le corpus SIWIS, publié sous licence{" "}
+				<a href="https://creativecommons.org/licenses/by/4.0/deed.fr">CC BY 4.0</a> : attribution aux auteurs du corpus
+				SIWIS.
 			</p>
 
 			<h2>Responsabilité</h2>

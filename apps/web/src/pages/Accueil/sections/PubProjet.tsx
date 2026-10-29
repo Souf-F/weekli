@@ -1,4 +1,5 @@
 import { EnTete } from "./EnTete";
+import { LecteurPub } from "./LecteurPub";
 import s from "./Section.module.css";
 import styles from "./PubProjet.module.css";
 
@@ -8,8 +9,6 @@ const ETAPES = [
 	{ titre: "Tu ajustes et tu exportes", texte: "Le studio rend la vidéo dans ton navigateur. Le post du projet est livré avec elle." },
 ];
 
-// Emplacement de la future vidéo de démonstration (tâche F13). En attendant, une affiche statique dessinée en CSS :
-// remplacer le contenu de <div data-emplacement="pub-demo"> par le lecteur 16:9, sans toucher au reste de la section.
 export function PubProjet() {
 	return (
 		<section className={s.section} id="pub">
@@ -20,27 +19,8 @@ export function PubProjet() {
 			</EnTete>
 			<div className={styles.grille}>
 				<figure className={`${styles.figure} revele`}>
-					<div
-						className={styles.affiche}
-						data-emplacement="pub-demo"
-						role="img"
-						aria-label="Affiche de la pub : « Et si ton projet avait sa pub ? », étape 01 sur 04"
-					>
-						<span className={styles.filigrane} aria-hidden="true" />
-						<span className={styles.etape} aria-hidden="true">
-							Étape 01 / 04
-						</span>
-						<p className={styles.mots} aria-hidden="true">
-							Et si ton projet
-							<br />
-							avait <mark>sa pub</mark> ?
-						</p>
-						<span className={styles.duree} aria-hidden="true">
-							0:59 · voix off
-						</span>
-						<span className={styles.progres} aria-hidden="true" />
-					</div>
-					<figcaption className={styles.legende}>Aperçu statique. La vidéo de démonstration prendra cette place.</figcaption>
+					<LecteurPub />
+					<figcaption className={styles.legende}>La pub de démonstration : 46 secondes, voix off française. Le son reste coupé tant que tu ne l'actives pas.</figcaption>
 				</figure>
 
 				<div className={styles.colonne}>

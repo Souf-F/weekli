@@ -38,3 +38,6 @@
 	background: var(--espresso);
 	border-color: var(--espresso);
 }
+.export {
+	margin: var(--espace-4) var(--espace-3) 0 0;
+}

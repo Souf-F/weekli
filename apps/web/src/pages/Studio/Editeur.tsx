@@ -14,6 +14,7 @@ import styles from "./Editeur.module.css";
 import { Onglets } from "./Onglets";
 import { PanneauExport } from "./PanneauExport";
 import { PanneauGestes } from "./PanneauGestes";
+import { PanneauPost } from "./PanneauPost";
 import { PanneauMarque } from "./PanneauMarque";
 import { PanneauScenes } from "./PanneauScenes";
 import { PanneauVoix } from "./PanneauVoix";
@@ -168,6 +169,7 @@ function EditeurOuvert({ id, initial }: { id: string; initial: ScriptPub }) {
 						</div>
 					)}
 					<PanneauExport script={diagnostic.script} fabriquer={fabriquer} voixValide={valide} genererVoix={generer} imagesManquantes={manquantes.length} />
+					<PanneauPost id={id} script={script} />
 				</div>
 			</div>
 		</div>

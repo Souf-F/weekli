@@ -5,6 +5,7 @@ import type { ContexteApp } from "@/layouts/AppLayout";
 import { api } from "@/lib/api";
 import { genererPosts, messageErreur } from "@/lib/generation";
 import { lireReglages } from "@/lib/reglages";
+import { texteStyleServeur } from "@/lib/style";
 import { CartePost } from "./CartePost";
 import { cleCommit, PanneauActivite } from "./PanneauActivite";
 import { PanneauOptions } from "./PanneauOptions";
@@ -32,7 +33,7 @@ export function Tableau() {
 		ton: "retour",
 		langue: "fr",
 		nombre: 2,
-		style: reglages.style,
+		style: "",
 	});
 	const [inclureDiffs, setInclureDiffs] = useState(true);
 	const [posts, setPosts] = useState<Post[]>([]);
@@ -95,13 +96,15 @@ export function Tableau() {
 				const choisis = repos.flatMap((r) => r.commits.map((c) => [r.repo, c.sha] as const)).slice(0, MAX_DIFFS);
 				details = await Promise.all(choisis.map(([repo, sha]) => api.commit(repo, sha)));
 			}
+			// Le style est lu sur le serveur a chaque generation : il n'est jamais copie dans le navigateur
+			const style = demo ? "" : await texteStyleServeur();
 			const generation = demo ? demo.genererPostsDemo : genererPosts;
 			const final = await generation({
 				cleApi: reglages.cleApi,
 				modele: reglages.modele,
 				repos,
 				details,
-				options,
+				options: { ...options, style },
 				surProgression: setPosts,
 				signal: arret.current.signal,
 			});

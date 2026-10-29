@@ -6,6 +6,7 @@
 }
 .colonne {
 	display: grid;
+	grid-template-columns: minmax(0, 1fr);
 	gap: var(--espace-4);
 	min-width: 0;
 }
@@ -29,6 +30,6 @@
 
 @media (max-width: 800px) {
 	.grille {
-		grid-template-columns: 1fr;
+		grid-template-columns: minmax(0, 1fr);
 	}
 }

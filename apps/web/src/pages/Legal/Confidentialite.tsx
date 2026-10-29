@@ -1,84 +1,172 @@
 import { Link } from "react-router-dom";
 import { PageLegale } from "./PageLegale";
+import styles from "./Legal.module.css";
+
+const CONTACT = "soufianefilalipro@gmail.com";
 
 export function Confidentialite() {
 	return (
 		<PageLegale titre="Confidentialité" miseAJour="octobre 2026">
 			<p>
-				Weekli est un projet de portfolio non commercial. Cette page explique quelles données le service traite, où elles
-				vont, combien de temps elles restent et comment les effacer.
+				Weekli est un projet de portfolio non commercial. Cette page dit quelles données le service traite, pourquoi, où
+				elles vont, combien de temps elles restent et comment les récupérer ou les effacer.
 			</p>
 
 			<h2>Qui est responsable</h2>
 			<p>
-				Soufiane Filali, éditeur du projet. Aucun email n'est publié : pour toute question, ouvre une discussion sur le
-				dépôt <a href="https://github.com/Souf-F/weekli">github.com/Souf-F/weekli</a>. Ce dépôt est public, n'y écris
-				donc aucune donnée personnelle.
+				Soufiane Filali, éditeur du projet et responsable du traitement. Pour toute question ou demande sur tes données :{" "}
+				<a href={`mailto:${CONTACT}`}>{CONTACT}</a>.
 			</p>
 
 			<h2>Âge minimal</h2>
 			<p>
-				Weekli passe par un compte GitHub, qui impose un âge minimal de 13 ans. En France, le consentement d'un mineur
-				à un service en ligne n'est valable seul qu'à partir de 15 ans : en dessous, l'accord d'un parent est nécessaire.
+				Weekli passe par un compte GitHub, qui impose un âge minimal de 13 ans. En France, le consentement d'un mineur à
+				un service en ligne n'est valable seul qu'à partir de 15 ans : en dessous, l'accord d'un parent est nécessaire.
 			</p>
 
-			<h2>Les données traitées</h2>
-			<ul>
-				<li>
-					<strong>Ton login GitHub et tes données publiques GitHub</strong> (nom, avatar, repos publics et commits).
-					Weekli demande le scope <code>read:user</code> : il ne peut lire que du public, rien modifier ni publier.
-				</li>
-				<li>
-					<strong>Tes brouillons de posts</strong>, enregistrés quand tu les sauvegardes dans l'historique.
-				</li>
-				<li>
-					<strong>Tes domaines vérifiés</strong>, ceux dont tu as prouvé la propriété pour autoriser les captures.
-				</li>
-				<li>
-					<strong>Ton style d'écriture</strong>, les exemples de posts que tu colles dans les réglages.
-				</li>
-				<li>
-					<strong>Ton adresse IP</strong>, utilisée uniquement pour limiter les abus (par exemple 20 requêtes par minute
-					sur la connexion).
-				</li>
-			</ul>
+			<h2>Les données traitées, pourquoi et combien de temps</h2>
 			<p>
-				Les captures d'écran de tes sites ne sont jamais stockées : l'image t'est renvoyée puis oubliée. Les vidéos sont
-				générées entièrement dans ton navigateur.
+				La base légale de chaque traitement est l'exécution du service que tu demandes (RGPD, article 6.1.b), sauf pour la
+				lutte contre les abus (intérêt légitime, article 6.1.f).
+			</p>
+			<div className={styles.tableau}>
+				<table>
+					<thead>
+						<tr>
+							<th scope="col">Traitement</th>
+							<th scope="col">Données</th>
+							<th scope="col">Conservation</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<th scope="row">Connexion au site</th>
+							<td>Identifiant, login, nom, avatar et token GitHub (scope <code>read:user</code>, lecture du public seule)</td>
+							<td>Session de 8 heures</td>
+						</tr>
+						<tr>
+							<th scope="row">Connecteur Claude (MCP)</th>
+							<td>Identifiant, login, nom et token GitHub, dans l'autorisation donnée à Claude</td>
+							<td>Autorisation de 30 jours non renouvelés ; session technique effacée après 24 h d'inactivité</td>
+						</tr>
+						<tr>
+							<th scope="row">Brouillons de posts</th>
+							<td>Titre, texte, format, source, date</td>
+							<td>90 jours</td>
+						</tr>
+						<tr>
+							<th scope="row">Pubs vidéo</th>
+							<td>Scripts : textes, couleurs, adresses de pages (jamais la vidéo ni les images)</td>
+							<td>90 jours</td>
+						</tr>
+						<tr>
+							<th scope="row">Style d'écriture</th>
+							<td>Exemples de posts et profil de style</td>
+							<td>90 jours</td>
+						</tr>
+						<tr>
+							<th scope="row">Domaines vérifiés</th>
+							<td>Noms de domaine et date de vérification</td>
+							<td>90 jours</td>
+						</tr>
+						<tr>
+							<th scope="row">Captures de sites</th>
+							<td>Image de la page demandée</td>
+							<td>Aucune : renvoyée puis oubliée</td>
+						</tr>
+						<tr>
+							<th scope="row">Voix off de la pub</th>
+							<td>Texte de chaque phrase, sans ton identité (voir « Microsoft »)</td>
+							<td>Audio gardé 90 jours, non rattaché à ton compte</td>
+						</tr>
+						<tr>
+							<th scope="row">Lutte contre les abus</th>
+							<td>Adresse IP à la connexion, identifiant de compte ensuite</td>
+							<td>60 secondes dans le limiteur de débit</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<p>
+				Les 90 jours sont renouvelés à chaque enregistrement : tant que tu modifies une donnée, elle reste ; si rien
+				n'est enregistré pendant 90 jours, elle est supprimée. Les brouillons et pubs de plus de 90 jours sont aussi
+				retirés à la lecture. Le token GitHub, les sessions, les brouillons, les pubs, le style et les domaines sont
+				chiffrés (AES-256-GCM) avant d'être stockés dans Cloudflare KV. Les échanges passent par HTTPS.
 			</p>
 
-			<h2>Chiffrement et sécurité</h2>
+			<h2>Ce qui reste dans ton navigateur</h2>
 			<p>
-				Le token GitHub, les sessions, les brouillons et le style d'écriture sont chiffrés (AES-256-GCM) avant d'être
-				stockés dans Cloudflare KV. Les échanges passent par HTTPS et le site applique une politique de sécurité de
-				contenu stricte. Le détail est public dans le dépôt, fichier <code>docs/securite.md</code>.
+				Les vidéos sont générées dans ton navigateur : la vidéo, le logo et les images importées ne sont jamais envoyés à
+				Weekli. Le modèle de voix de secours (Kokoro) et ces fichiers sont gardés dans le stockage du navigateur
+				(IndexedDB) jusqu'à ce que tu les effaces dans les réglages du navigateur. Ta clé API et ton choix de modèle
+				restent aussi dans ton navigateur (voir plus bas).
+			</p>
+
+			<h2>Sous-traitants et destinataires</h2>
+			<div className={styles.tableau}>
+				<table>
+					<thead>
+						<tr>
+							<th scope="col">Destinataire</th>
+							<th scope="col">Rôle</th>
+							<th scope="col">Hors Union européenne</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<th scope="row">Cloudflare, Inc.</th>
+							<td>Hébergement (Workers, KV, Durable Objects), captures d'écran, journaux techniques</td>
+							<td>États-Unis, réseau mondial. Cadre de protection des données UE-États-Unis et clauses contractuelles types</td>
+						</tr>
+						<tr>
+							<th scope="row">GitHub, Inc. (Microsoft)</th>
+							<td>Connexion, lecture de tes repos publics</td>
+							<td>États-Unis. Cadre de protection des données UE-États-Unis</td>
+						</tr>
+						<tr>
+							<th scope="row">Microsoft</th>
+							<td>Lecture à voix haute des textes de voix off (service de lecture d'Edge)</td>
+							<td>États-Unis. Cadre de protection des données UE-États-Unis</td>
+						</tr>
+						<tr>
+							<th scope="row">Anthropic</th>
+							<td>Seulement si tu utilises ta clé API, à ton initiative</td>
+							<td>États-Unis, selon les conditions de ton compte Anthropic</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<h2>Microsoft et la voix off</h2>
+			<p>
+				Quand tu génères la voix d'une pub, le texte de chaque phrase (400 caractères au plus) est envoyé par le serveur
+				Weekli au service de lecture d'Edge de Microsoft, qui renvoie l'audio. Ton identité, ton login et ton adresse IP
+				ne lui sont pas transmis. L'audio est conservé 90 jours côté Weekli, indexé par l'empreinte du texte et non
+				rattaché à ton compte : il ne peut donc pas être retrouvé ni effacé par compte, et il est partagé entre
+				utilisateurs qui écrivent la même phrase. N'écris pas de donnée personnelle dans une voix off. Si le service est
+				indisponible, la voix Kokoro, calculée dans ton navigateur, prend le relais sans rien envoyer.
 			</p>
 
 			<h2>Ta clé API Anthropic</h2>
 			<p>
 				Elle n'est jamais envoyée au serveur Weekli. Elle reste dans ton navigateur (effacée à la fermeture de
 				l'onglet, sauf si tu choisis de la mémoriser sur cet appareil) et part directement vers{" "}
-				<code>api.anthropic.com</code> quand tu génères un post. Les extraits de commits que tu choisis d'envoyer à
-				Claude sont alors traités par Anthropic, selon sa propre politique.
-			</p>
-
-			<h2>Durée de conservation</h2>
-			<p>
-				Tes données sont conservées 90 jours. Ce délai est renouvelé à chaque enregistrement de tes données : si rien
-				n'est enregistré pendant 90 jours, elles sont supprimées. Le cookie de session dure 8 heures.
+				<code>api.anthropic.com</code> quand tu génères un post, un script de pub ou le post d'un projet. Les extraits
+				de commits, le README et ton style envoyés à Claude sont alors traités par Anthropic, selon sa propre politique.
 			</p>
 
 			<h2>Cookies et traceurs</h2>
 			<p>
-				Weekli n'utilise aucun cookie publicitaire, aucun outil de mesure d'audience et aucun traceur. Le seul cookie
-				est le cookie de session, strictement nécessaire à la connexion : il contient un identifiant aléatoire, rien
-				d'autre. Il ne demande donc pas de bandeau de consentement.
+				Weekli n'utilise aucun cookie publicitaire, aucun outil de mesure d'audience et aucun traceur. Deux cookies
+				strictement nécessaires : le cookie de session (8 heures, identifiant aléatoire, illisible par les scripts) et un
+				cookie temporaire de 10 minutes pendant la connexion GitHub. Ils ne demandent pas de bandeau de consentement.
 			</p>
 
-			<h2>Hébergement</h2>
+			<h2>Journaux et hébergement</h2>
 			<p>
-				Le site et ses données sont hébergés par Cloudflare, Inc. (voir les <Link to="/mentions-legales">mentions légales</Link>
-				).
+				Le site est hébergé par Cloudflare, Inc. (voir les <Link to="/mentions-legales">mentions légales</Link>).
+				Cloudflare tient des journaux techniques du Worker, selon sa propre durée de rétention. Weekli n'y écrit aucune
+				donnée personnelle : seulement des noms d'erreur.
 			</p>
 
 			<h2>Tes droits</h2>
@@ -88,14 +176,20 @@ export function Confidentialite() {
 			</p>
 			<ul>
 				<li>
-					<strong>Effacement</strong> : connecte-toi, ouvre <Link to="/app/reglages">les réglages</Link> et utilise le
-					bouton « Supprimer mes données ». Tout ce que Weekli détient sur toi est supprimé immédiatement : session,
-					token GitHub, brouillons, domaines et style d'écriture. Les réglages gardés dans ton navigateur sont effacés
-					aussi.
+					<strong>Export et portabilité</strong> : dans <Link to="/app/reglages">les réglages</Link>, « Télécharger mes
+					données » te remet un fichier JSON avec ton profil, tes brouillons, tes pubs, ton style et tes domaines. Le
+					token GitHub n'y figure jamais.
 				</li>
 				<li>
-					<strong>Autres droits</strong> : ouvre une discussion sur le dépôt GitHub sans y mettre de donnée personnelle,
-					nous conviendrons ensuite d'un moyen d'échange adapté.
+					<strong>Effacement complet</strong> : dans les réglages, « Supprimer mes données » efface tes brouillons, pubs,
+					style et domaines, révoque les autorisations données à Claude, détruit les sessions du connecteur, retire
+					l'autorisation de Weekli sur ton compte GitHub, ferme toutes tes sessions et te déconnecte, ainsi que les
+					réglages gardés dans ce navigateur. Si une étape échoue, l'opération peut être relancée. Restent hors de
+					portée : l'audio de voix en cache (non rattaché à toi, 90 jours) et les fichiers du stockage navigateur, que tu
+					effaces dans les réglages du navigateur.
+				</li>
+				<li>
+					<strong>Autres droits</strong> : écris à <a href={`mailto:${CONTACT}`}>{CONTACT}</a>.
 				</li>
 				<li>
 					<strong>Réclamation</strong> : tu peux saisir la CNIL (<a href="https://www.cnil.fr">cnil.fr</a>) si tu estimes
