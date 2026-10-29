@@ -83,3 +83,13 @@ Retours de Soufiane sur la première vraie pub (`apps/web/dev/pub-weekli.json`) 
 - **`gestes` dans la timeline** : une transition `glitch`, `flou` ou `pixels` absente de `gestes` devient une coupe, donc un seul calendrier pour scènes, transitions et repères audio. Les gestes de texte lisent `contexte.gestes` (voir handoff).
 - **Plafond du mixage** abaissé de -1 à -2 dBFS : la crête vraie mesurée à -0,9 dBTP dépassait la limite de -1,5 dBTP de design.md 8.16 ; elle est maintenant à -1,8 dBTP.
 - **Ancien studio retiré** : `lib/video/`, `core/storyboard.ts`, `genererStoryboard`, lien « En vidéo » de l'historique. Instrument Serif reste, le moteur de pub l'utilise pour la typographie `editoriale`.
+
+## 2026-10-29 (tableau par type de post)
+
+- **Retour de Soufiane** : le tableau partait des commits, ce qui ne l'intéresse pas. Nouveau parcours : repo, type de post, réglages du type, rédaction. Les commits n'apparaissent que si le type en a besoin (`CATALOGUE_POSTS[type].commits`). Voir specs 4.6, design 10, contrat 3.8 et 4.2.
+- **Cinq types** : `presentation` (règles `REGLES_POST_PROJET` inchangées), `tuto`, `coulisses`, `lecon`, `semaine`. Le choix du ton `retour | tuto | coulisses | lecons` (`Ton`) reste dans le code pour l'ancien flux « Ma semaine » ; il n'est plus proposé pour les autres types.
+- **`proposer_post_projet` conservé**, `preparer_post` s'ajoute (14 outils). Raison : ne rien casser avant la recette ; retrait à décider ensuite.
+- **Lecture du repo pour le tuto** : plafonds de 12 fichiers, 3000 caractères par fichier, 24 000 au total, README à 8000, fichiers de plus de 100 Ko écartés. Choix par heuristique (manifestes et points d'entrée d'abord, puis docs, exemples, sources peu profondes, tests en dernier). Secrets, générés, binaires et dossiers de dépendances ne sont ni lus ni listés (seul leur nombre est renvoyé). Pas de motif générique de détection de secrets, pour la même raison qu'en 4.1 (faux positifs).
+- **Le site garde « Ma semaine » en ancien flux** (le navigateur choisit les commits et lit leurs diffs) : la route `POST /api/posts/donnees` renvoie pour ce type l'activité sans diffs.
+- **Réglage à arbitrer (Soufiane)** : lien « Plutôt un résumé de toute ma semaine » à l'étape 1 plus carte à part à l'étape 2, ou une seule des deux.
+

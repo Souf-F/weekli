@@ -1,7 +1,7 @@
 import type { Octokit } from "octokit";
-import { filtrerActivite } from "./filtre";
+import { estBruit, filtrerActivite, MAX_COMMITS } from "./filtre";
 import { masquerSecrets } from "./masquage";
-import type { Activite, ActiviteRepo, DetailsCommit, DetailsRepo } from "./types";
+import type { Activite, ActiviteRepo, Commit, DetailsCommit, DetailsRepo } from "./types";
 
 const TAILLE_README = 6000;
 const TAILLE_PATCH = 1500;
@@ -72,6 +72,31 @@ export async function activiteGithub(octokit: Octokit, login: string, jours: num
 	);
 
 	return { depuis: depuis.toISOString().slice(0, 10), repos: filtrerActivite(activite) };
+}
+
+// Commits d'un seul repo, pour choisir ceux d'un post (coulisses, lecon) : bruit retire, 30 au plus, du plus recent au plus ancien
+export async function commitsRepo(octokit: Octokit, login: string, repo: string, jours: number): Promise<Commit[]> {
+	const depuis = new Date(Date.now() - jours * 86_400_000);
+	const { data } = await octokit.rest.repos.listCommits({
+		owner: login,
+		repo,
+		author: login,
+		since: depuis.toISOString(),
+		per_page: 100,
+	});
+	const vus = new Set<string>();
+	return data
+		.map((c) => ({
+			sha: c.sha.slice(0, 7),
+			message: c.commit.message.split("\n")[0],
+			date: c.commit.author?.date?.slice(0, 10) ?? "",
+		}))
+		.filter((c) => {
+			if (estBruit(c.message) || vus.has(c.message)) return false;
+			vus.add(c.message);
+			return true;
+		})
+		.slice(0, MAX_COMMITS);
 }
 
 // Contexte complet d'un repo : description, site, sujets, langages et README

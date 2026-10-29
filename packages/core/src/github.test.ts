@@ -1,6 +1,6 @@
 import type { Octokit } from "octokit";
 import { describe, expect, it, vi } from "vitest";
-import { listerRepos } from "./github";
+import { commitsRepo, listerRepos } from "./github";
 
 type Brut = { name: string; fork?: boolean; description?: string | null; homepage?: string | null; pushed_at?: string | null };
 
@@ -39,5 +39,24 @@ describe("listerRepos", () => {
 		expect(repos).toHaveLength(30);
 		expect(repos.map((r) => r.maj)).toEqual([...repos.map((r) => r.maj)].sort().reverse());
 		expect(repos.some((r) => r.repo === "sans-push")).toBe(false);
+	});
+});
+
+describe("commitsRepo", () => {
+	it("retire le bruit et les doublons, garde l'ordre et lit les commits de l'utilisateur", async () => {
+		const listCommits = vi.fn(async () => ({
+			data: [
+				{ sha: "aaaaaaaa1", commit: { message: "feat: ajoute le tri\n\ncorps", author: { date: "2026-10-20T10:00:00Z" } } },
+				{ sha: "bbbbbbbb2", commit: { message: "Merge branch main", author: { date: "2026-10-19T10:00:00Z" } } },
+				{ sha: "cccccccc3", commit: { message: "feat: ajoute le tri", author: { date: "2026-10-18T10:00:00Z" } } },
+				{ sha: "dddddddd4", commit: { message: "fix: corrige le fuseau", author: null } },
+			],
+		}));
+		const octokit = { rest: { repos: { listCommits } } } as unknown as Octokit;
+		expect(await commitsRepo(octokit, "u", "r", 14)).toEqual([
+			{ sha: "aaaaaaa", message: "feat: ajoute le tri", date: "2026-10-20" },
+			{ sha: "ddddddd", message: "fix: corrige le fuseau", date: "" },
+		]);
+		expect(listCommits).toHaveBeenCalledWith(expect.objectContaining({ owner: "u", repo: "r", author: "u" }));
 	});
 });

@@ -26,6 +26,7 @@ Français uniquement. Desktop en priorité pour le site (Chrome et Edge pour l'e
 | 1 | Pub vidéo du projet | 4.2 |
 | 2 | Style d'écriture mémorisé | 4.3 |
 | 2 | Captures de sites vérifiés utilisées dans la pub | 4.2 (US-P5) |
+| 2 | Posts par type de post (repo d'abord, puis type, l'interface s'adapte) | 4.6 |
 | 2 | Historique des brouillons (existant) | 4.1 (US-M4) |
 | 2 | RGPD : conservation, effacement complet, export, information | 4.4 |
 | 3 | Mode site avec clé API (bonus, maintenu compatible) | 4.5 |
@@ -149,6 +150,46 @@ Convention : chaque critère est vérifiable par un test automatisé (TA) ou par
 **US-R4** En tant que visiteur, je veux une page de confidentialité exacte et complète, afin de savoir ce que Weekli fait de mes données.
 - [RM] La page contient le tableau de la section 5 ci-dessous, les sous-traitants, les transferts hors UE, un contact privé.
 - [RM] Aucune requête vers un domaine tiers au chargement du site (polices hébergées localement, audit M4).
+
+### 4.6 Posts par type de post (priorité 2)
+
+Contexte (2026-10-29) : le tableau de bord partait des commits, ce qui n'intéresse pas Soufiane. Le parcours devient : **1. le repo, 2. le type de post, 3. les réglages propres au type, 4. la rédaction**. Les commits ne s'affichent que si le type de post en a besoin. Catalogue dans `packages/core/src/posts/types.ts` (`CATALOGUE_POSTS`).
+
+| Type | `id` | Sert à | Weekli lit | L'utilisateur choisit | Commits |
+|---|---|---|---|---|---|
+| Présentation du projet | `presentation` | Faire découvrir le projet, format « Aujourd'hui je vous présente » (`REGLES_POST_PROJET`) | Description, README, domaines vérifiés, script de la dernière pub, style | Le repo ; ses réponses sur le pourquoi et la démarche si elles manquent | non |
+| Mini tuto | `tuto` | Apprendre à faire une chose précise avec le projet, en 3 à 6 étapes | Arborescence, README, 12 fichiers clés au plus (heuristique, plafonds de taille), style | Le repo ; le sujet ; les fichiers lus (proposés, modifiables) | non |
+| Coulisses du projet | `coulisses` | Raconter une décision, un chantier, un choix de conception | Description, commits choisis (message complet, extraits de diff), style | Le repo ; 1 à 10 commits | oui |
+| Leçon apprise | `lecon` | Raconter un problème rencontré puis résolu et ce qu'on en retient | Description, commits choisis s'il y en a, style | Le repo ; le problème en quelques mots ; commits facultatifs | facultatif |
+| Ma semaine | `semaine` | Résumer l'activité récente sur tous les repos (ancien mode) | Commits des derniers jours, diffs de quelques commits, style | La période (1 à 30 jours) ; les commits retenus | oui, multi-repos |
+
+**US-T1** En tant qu'utilisateur, je veux choisir mon repo puis le type de post, afin que Weekli me demande seulement ce qui compte pour ce post.
+- [RM] Aucun appel à la liste des commits tant que le type choisi n'a pas `commits` différent de `non`.
+- [RM] Changer de repo ou de type conserve la sélection de l'étape précédente et réinitialise les réglages de l'étape 3.
+- [RM] Les 5 types sont proposés avec leur nom et leur phrase `but` du catalogue.
+
+**US-T2** En tant qu'utilisateur, je veux un mini tuto fidèle au repo, afin de ne pas publier d'étapes inventées.
+- [RM] Weekli lit au plus 12 fichiers, 3000 caractères par fichier, 24 000 caractères en tout, README à 8000 caractères.
+- [RM] Fichiers générés, dossiers de dépendances et de build, binaires, fichiers de plus de 100 Ko et fichiers de secrets (`.env`, clés, `.npmrc`...) ne sont jamais lus ni listés ; l'interface affiche seulement leur nombre.
+- [RM] Les jetons de formats connus sont masqués dans les fichiers et le README avant toute troncature.
+- [RM] L'utilisateur voit la liste des fichiers proposés avant la rédaction, peut en retirer ou en ajouter (dans la limite de 12), et les chemins hors arbre ou écartés sont refusés par le serveur.
+- [RM] Les règles interdisent toute commande ou nom de fichier absent des fichiers lus et demandent de signaler ce qui reste flou.
+- [RM] Contenu des fichiers, README et arborescence sont rangés en `contenu_non_fiable`.
+
+**US-T3** En tant qu'utilisateur, je veux raconter les coulisses à partir de commits que je choisis, afin que le post parle de ce que j'ai décidé et pas de tout ce que j'ai fait.
+- [RM] Les commits du repo choisi sont listés sur 7, 30 ou 90 jours (bruit retiré) ; il en faut 1 à 10.
+- [RM] Si le pourquoi d'une décision n'est ni dans les commits ni dans les notes, la rédaction pose la question avant d'écrire.
+
+**US-T4** En tant qu'utilisateur, je veux écrire une leçon apprise même sans commit, afin de raconter un problème dont la trace n'est pas dans l'historique.
+- [RM] Commits facultatifs ; sans commit, le champ « le problème » est obligatoire.
+
+**US-T5** En tant qu'utilisateur, je veux garder « Ma semaine », afin de résumer plusieurs repos d'un coup.
+- [RM] Comportement de l'ancien tableau inchangé (période, repos et commits cochés, diffs de 5 commits au plus).
+
+**US-T6** En tant qu'utilisateur de Claude, je veux le même catalogue dans le connecteur, afin de demander « fais un mini tuto de mon repo X » sans passer par le site.
+- [RM] Outil MCP `preparer_post` (api-contract 4.2) et prompt `preparer_post`, mêmes règles et mêmes limites que le site.
+
+Hors périmètre de 4.6 : choix du ton parmi `retour | tuto | coulisses | lecons` (remplacé par le type), publication, lecture de repos privés.
 
 ### 4.5 Mode site avec clé API (priorité 3, bonus)
 

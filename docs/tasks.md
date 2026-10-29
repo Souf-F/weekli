@@ -161,3 +161,19 @@ Ordre, avec un minimum d'agents :
   - Mention discrète « Illustration » sur les cartes illustratives dans la planche de relecture.
 - **B9 / B11 (génération et outils MCP), ajouts** : `preparer_pub` renvoie déjà `regles` et `catalogue` depuis `guide.ts` (gestes, but, honnêteté inclus) ; le schéma de sortie structurée (`SCHEMA_SCRIPT_PUB`) contient `gestes` et `but`. Rien d'autre à coder, vérifier seulement à la recette que Claude renseigne `gestes`.
 - **B16 (post du projet)** : utiliser `REGLES_POST_PROJET` (exportée par `@weekli/core`) comme règles de l'outil `proposer_post_projet`.
+
+## Refonte du tableau par type de post (2026-10-29, specs 4.6, design 10, contrat 3.8 et 4.2)
+
+Fait par l'architecte, dans `packages/core` (tests verts : `tsc --noEmit` et `vitest run`, 267 tests) : types et catalogue (`posts/types.ts`), validation (`validerDemandePost`), `lireRepoPourTuto` et `proposerFichiersTuto`, règles et consignes par type (`REGLES_POST`, `CONSIGNES_POST`), `donneesPost`, `commitsRepo`, `systemePost`, `messagePost`, `promptPreparerPost`.
+
+- **B17 (sonnet) : route et outil MCP `preparer_post`.**
+  - `GET /api/repos/:repo/commits?jours=`, `GET /api/repos/:repo/fichiers-tuto` et `POST /api/posts/donnees` selon `api-contract.md` 3.2 et 3.8 ; validation par `validerDemandePost`, identité de la session, `Origin`, débit, erreurs en français sans accent.
+  - Outil MCP `preparer_post` (4.2) avec le cas `coulisses` sans `commits` (renvoie `commitsDisponibles`), prompt `preparer_post`, `proposer_post_projet` conservé. Compteur d'outils à 14.
+  - Aucune logique dupliquée : tout passe par les fonctions de `@weekli/core`. Repo privé refusé, secrets masqués, contenus de repo en `contenu_non_fiable`.
+  - Fini quand : tests serveur pour chaque type (succès, `400` pour chaque message de validation, `404` repo privé, `401`, `403`, `429`) avec Octokit simulé ; un fichier `.env` demandé dans `fichiers` n'est jamais lu ; `preparer_post` et la route renvoient le même `DonneesPost` pour la même demande ; `tsc --noEmit` et la suite de tests du serveur verts ; handoff écrit.
+- **F16 (sonnet) : refonte du tableau selon `design.md` 10.** Dépend de B17 (en attendant, le front peut s'appuyer sur le démo `?demo`).
+  - Parcours en 4 étapes (repo, type, réglages, posts), fil d'étapes, lien profond `?repo=&type=`, composants du tableau 10.8, `ReglagesSemaine` réutilise l'ancien flux sans le modifier.
+  - `api.ts` : `commitsRepo`, `fichiersTuto`, `donneesPost` ; `generation.ts` : génération par type avec `systemePost` et `messagePost`, question de Claude gérée, mode sans clé avec la demande à copier.
+  - Mise à jour du chiffre d'outils de l'accueil (14).
+  - Fini quand : la liste des commits n'est jamais demandée pour `presentation` et `tuto` (test ou trace réseau en démo) ; chaque type a son état vide, ses validations et son erreur ; clavier complet et focus géré à chaque étape ; mobile 375 px sans défilement horizontal ; `prefers-reduced-motion` respecté ; `tsc --noEmit` et build verts ; recette avec Soufiane sur les 5 types.
+

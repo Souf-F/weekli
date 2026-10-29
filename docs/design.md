@@ -633,3 +633,87 @@ Style : panneaux de l'app (verre autorisé, section 2), l'aperçu sur fond `--es
 | Films produit de Linear | Interfaces simplifiées en cartes, lumière douce, mouvements courts |
 | Keynotes Apple (typographie cinétique) | Un mot à la fois, silence avant la révélation |
 | Génériques de Saul Bass | Formes simples qui portent une histoire, rythme calé sur la musique |
+
+
+## 10. Tableau par type de post (interface)
+
+Date : 2026-10-29. Remplace le tableau « activité puis commits ». Principe : le tableau demande d'abord ce que l'utilisateur veut raconter, jamais ce que Git a enregistré. Tokens, polices et matériaux : ceux de l'app (sections 3, 4 et 6). Types, catalogue et limites : `@weekli/core` (`CATALOGUE_POSTS`, `LIMITES_TUTO`, `MAX_COMMITS_POST`).
+
+### 10.1 Parcours
+
+```mermaid
+flowchart LR
+    R[1 Repo] --> T[2 Type de post]
+    R -.->|Ma semaine, tous les repos| S
+    T --> S{3 Réglages du type}
+    S -->|presentation| S1[Réponses pourquoi et démarche]
+    S -->|tuto| S2[Sujet et fichiers lus]
+    S -->|coulisses| S3[Commits 1 à 10]
+    S -->|lecon| S4[Problème, commits facultatifs]
+    S -->|semaine| S5[Période, repos, commits]
+    S1 & S2 & S3 & S4 & S5 --> W[4 Rédaction et posts]
+```
+
+### 10.2 Squelette de page
+
+- En-tête : surtitre « Tableau de bord », titre « Quel post, *aujourd'hui ?* » (l'italique habituel), chapo d'une ligne.
+- **Fil d'étapes** sous l'en-tête : 4 pastilles numérotées reliées par un trait (« Repo », « Type », « Réglages », « Posts »). Chaque pastille faite devient un bouton qui résume le choix (« scanner-ssl », « Mini tuto ») et ramène à l'étape. L'étape courante est marquée par `aria-current="step"`, pas seulement par la couleur.
+- Desktop (1100 px et plus) : à gauche l'atelier (étapes 1 à 3 empilées, les étapes faites se replient en une ligne résumé cliquable), à droite la zone des posts (étape 4), comme aujourd'hui. Mobile : une étape à la fois en pleine largeur, boutons « Continuer » et « Retour » fixés en bas.
+- Lien profond : `/app?repo=<nom>&type=<id>` ouvre directement à l'étape 3 (repo et type valides, sinon retour à l'étape voulue). Seuls repo et type sont dans l'URL. Dernier repo mémorisé dans `localStorage` (confort par navigateur, try/catch), jamais le texte saisi.
+- Un seul `h1`, un `h2` par étape ; le focus va sur le `h2` de l'étape qui s'ouvre ; les changements d'étape sont annoncés par une zone `aria-live="polite"`.
+
+### 10.3 Étape 1 : repo
+
+- Source : `GET /api/repos` (30 repos publics, sans forks, récents d'abord). Liste de lignes sélectionnables (radio) : nom, description sur une ligne, date relative de `maj`. Recherche par texte au-dessus dès 8 repos.
+- États : chargement (3 lignes squelette), vide (« Aucun repo public. Weekli ne lit que les repos publics. »), erreur 502 (message + « Réessayer »).
+- Choisir un repo active « Continuer » (ou passe à l'étape 2 au double clic / à Entrée).
+- Sous la liste, lien discret : « Plutôt un résumé de toute ma semaine » : fixe `type = semaine`, saute à l'étape 3.
+
+### 10.4 Étape 2 : type de post
+
+- Cartes, une par type (4 pour le repo choisi, plus une cinquième séparée par un filet : « Ma semaine, tous les repos »). Ordre : Présentation, Mini tuto, Coulisses, Leçon, Ma semaine.
+- Contenu d'une carte : nom (police de titre), phrase `but` du catalogue, puis « Weekli lit » suivi de `lit` en une ligne de texte courte. Pas d'icône décorative (pas d'emoji ni de pictogramme générique) : un numéro typographique ou un monogramme en police de titre fait l'identité de la carte.
+- Disposition : grille de 2 colonnes en atelier, 1 colonne sur mobile. Cartes de hauteur égale, aucune hiérarchie artificielle entre elles. Radio groupe, navigation aux flèches, sélection visible par bordure et fond, pas par la couleur seule.
+- Aucun appel réseau supplémentaire à cette étape.
+
+### 10.5 Étape 3 : réglages propres au type
+
+Règle d'adaptation, appliquée par le composant à partir du catalogue : la liste des commits n'est chargée et affichée que si `CATALOGUE_POSTS[type].commits !== "non"`. Un récapitulatif en tête rappelle « Repo : X, Type : Y » et le bouton principal s'intitule « Rédiger les posts ».
+
+| Type | Contenu de l'étape | Validation avant « Rédiger » |
+|---|---|---|
+| `presentation` | Bloc « Ce que Weekli va lire » (README, description, pub vidéo trouvée avec son titre, domaines vérifiés). Deux champs facultatifs : « Pourquoi tu l'as fait » et « Comment tu l'as conçu » (500 caractères, compteur). Texte d'aide : « Si tu ne dis rien, Claude te posera la question plutôt que d'inventer. » | Aucune |
+| `tuto` | Champ « Sujet du tuto » (140 caractères, facultatif, exemple en aide). Liste des fichiers proposés (`GET /api/repos/:repo/fichiers-tuto`) : case à cocher et chemin en police mono, 12 au plus, compteur « 7 fichiers sur 12 ». Bouton « Ajouter un fichier » : recherche dans `arborescence` (liste filtrée, accessible au clavier). Ligne d'information : « 9 fichiers écartés : générés, binaires ou sensibles. » (jamais de nom). Si `arborescenceTronquee` : « Arborescence partielle, repo très grand. » | Au moins 1 fichier coché |
+| `coulisses` | Sélecteur de période (7, 30, 90 jours) et liste des commits du repo (`GET /api/repos/:repo/commits`), cases à cocher, SHA court en mono, date. Compteur « 3 sur 10 ». Champ facultatif « Pourquoi ce choix ? » (500 caractères). Aucun commit coché au départ : l'utilisateur raconte ce qu'il choisit | 1 à 10 commits |
+| `lecon` | Champ « Le problème, en deux phrases » (500 caractères). Sous un bloc replié « Ajouter des commits qui racontent ça » : même liste que coulisses, aucun commit au départ | Problème rempli, ou au moins 1 commit |
+| `semaine` | Ancien tableau : période (1 à 30 jours), repos et commits cochés (`PanneauActivite`), ton et nombre de posts (`PanneauOptions`), diffs de 5 commits au plus | Au moins 1 commit |
+
+Changer de type ou de repo vide les réglages de cette étape (avec confirmation seulement si du texte saisi serait perdu). Notes et réponses saisies restent dans le navigateur : elles ne sont envoyées qu'à Claude, jamais à Weekli.
+
+### 10.6 Étape 4 : rédaction et posts
+
+- Mode clé API : au clic sur « Rédiger », le navigateur appelle `POST /api/posts/donnees` (sauf `semaine`, ancien flux), puis envoie à Claude `systemePost(donnees)` et `messagePost(donnees, notes)`, où `notes` rassemble sujet, pourquoi, problème et choix saisis. Flux en continu lu par `lirePosts`, cartes de posts (`CartePost`) comme aujourd'hui : copier, régénérer, historique (`sauverBrouillons`).
+- Si la sortie ne contient aucun bloc `### ` (Claude pose une question, comme le demandent les règles), elle s'affiche dans un encadré « Claude a une question » avec un champ de réponse ; la réponse est ajoutée aux `notes` et la rédaction repart. Cela couvre le pourquoi manquant, le sujet de tuto non précisé et le problème de la leçon.
+- Sans clé API : le panneau explique le connecteur et propose « Copier la demande pour Claude », qui place dans le presse-papiers un texte tel que « Prépare un mini tuto pour mon repo scanner-ssl avec Weekli » (type et repo substitués), suivi du lien vers Réglages pour ajouter une clé.
+- État vide de la zone des posts : phrase propre au type choisi (« Ton mini tuto apparaîtra ici »), pas le texte générique actuel.
+- Erreurs : message clair sous le bouton (clé invalide, repo prive, trop de requêtes), jamais de détail interne.
+
+### 10.7 Mouvement et accessibilité
+
+- Passage d'une étape à l'autre : fondu et translation de 12 px en 200 ms, `ease-out` ; les étapes repliées se réduisent en 160 ms. Rien d'autre ne bouge. Avec `prefers-reduced-motion`, changement instantané.
+- Cibles tactiles de 44 px au moins, focus visible sur chaque ligne et carte, contrastes AA (tokens de l'app, section 4).
+- Textes de l'interface en français avec accents (comme le tableau actuel), sans tiret long.
+
+### 10.8 Découpage des composants (guide pour F16)
+
+| Fichier (dans `apps/web/src/pages/Tableau/`) | Rôle |
+|---|---|
+| `Tableau.tsx` | État du parcours (repo, type, réglages, posts), URL, orchestration ; réduit à l'assemblage |
+| `FilEtapes.tsx` | Fil d'étapes et résumés cliquables |
+| `EtapeRepo.tsx` | Étape 1 |
+| `EtapeType.tsx` | Étape 2, lit `CATALOGUE_POSTS` |
+| `ReglagesType.tsx` | Étape 3 : choisit le sous-composant selon `type` |
+| `reglages/` : `ReglagesPresentation`, `ReglagesTuto`, `ReglagesCommits` (coulisses et leçon), `ReglagesSemaine` | Un composant par famille de réglages ; `PanneauActivite` et `PanneauOptions` réutilisés par `ReglagesSemaine` |
+| `Redaction.tsx` | Étape 4 : génération, question de Claude, posts, copie de la demande sans clé |
+| `lib/generation.ts` (existant) | Ajouter `genererPostParType` qui prend `DonneesPost` et `notes` |
+| `lib/api.ts` (existant) | Ajouter `commitsRepo`, `fichiersTuto`, `donneesPost` |
