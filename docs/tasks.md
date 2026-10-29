@@ -121,7 +121,7 @@ Parallélisable dès maintenant : B1, B3, B8, F2, et F1 dès que H1 et H2 sont t
 |---|---|---|
 | H1 voix | Fait : Vivienne (edge-tts) en principal, Kokoro en secours (voir changelog) | |
 | H2 licence | Fait : GPL-3.0-only | |
-| H3 RGPD | En attente : adresse de contact de Soufiane | |
+| H3 RGPD | Fait : contact RGPD soufianefilalipro@gmail.com (pages Confidentialité et Mentions légales, F12) | |
 | B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11, B13 | Fait, commité | sonnet (B9 opus) |
 | B12 modèle vocal au build, masquage des jetons | En cours | sonnet |
 | B14 retrait de la migration | À faire avant déploiement | |
