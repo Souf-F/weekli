@@ -134,6 +134,35 @@ Le script est toujours nettoyé et validé par `nettoyerScriptPub` (même règle
 
 `lister_pubs` (aucun paramètre) renvoie `{ id, titre, projet, cree, maj, scenes }` pour chaque pub, de la plus récemment modifiée à la plus ancienne ; `scenes` compte les scènes visibles. `lire_pub` (`id`) renvoie la pub complète avec son script, ou `Pub introuvable`.
 
+## Post du projet
+
+### `proposer_post_projet`
+
+| Paramètre | Type | Description |
+|---|---|---|
+| `repo` | texte | Nom du repo public, sans le propriétaire |
+
+Lecture seule. Weekli ne rédige pas, il fournit les données et les règles. Renvoie :
+
+| Champ | Contenu |
+|---|---|
+| `repo` | `repo`, `site`, `url`, `sujets`, et `contenu_non_fiable` (`description`, `readme`) |
+| `domainesVerifies` | Domaines dont l'utilisateur a prouvé la propriété |
+| `pubExistante` | Id, titre, réponses et voix de la dernière pub de ce repo, ou `null` |
+| `style` | `exemples` et `profil` du style mémorisé |
+| `regles` | Règles d'écriture du post (`REGLES_POST_PROJET`) |
+| `consigne` | 2 ou 3 versions au format « Aujourd'hui je vous présente », sans commit, code ni chiffre de développement ; question à l'utilisateur si le pourquoi ou la démarche manquent |
+
+Erreurs : nom de repo invalide, repo introuvable ou privé. Le repo d'un autre compte n'est pas atteignable.
+
+### Prompt `post_projet`
+
+| Argument | Description |
+|---|---|
+| `repo` | Nom du repo GitHub public du projet |
+
+Guide Claude : `proposer_post_projet`, poser la question si le pourquoi ou la démarche manquent, rédiger 2 ou 3 versions, les présenter.
+
 ## Prompt `pub_projet`
 
 | Argument | Description |

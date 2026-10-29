@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { EXEMPLE } from "../../../../../packages/core/src/pub/exemple.fixture";
 import { ajouterDomaine } from "../../lib/domaines";
 import { MAX_PUBS } from "../../lib/pubs";
@@ -6,6 +6,13 @@ import { creerProps } from "../../lib/props";
 import { compte, connecter, donnees, faux, texte } from "./aide";
 
 vi.mock("agents/mcp", async () => ({ McpAgent: (await import("./socle-agents")).McpAgentFactice }));
+
+// Les commits du jeu de test sont dates : on fige l'horloge pour qu'ils restent dans la semaine lue
+beforeAll(() => {
+	vi.useFakeTimers({ toFake: ["Date"] });
+	vi.setSystemTime(new Date("2026-10-22T12:00:00Z"));
+});
+afterAll(() => vi.useRealTimers());
 vi.mock("../../lib/capture", () => ({
 	capturer: vi.fn(),
 	ErreurCapture: class extends Error {},
@@ -230,6 +237,72 @@ describe("preparer_pub", () => {
 	});
 });
 
+describe("proposer_post_projet", () => {
+	it("renvoie les donnees, le style, la derniere pub du repo et les regles", async () => {
+		github();
+		const { client, env } = await compte();
+		await ajouterDomaine(env, "1", "tablee.example");
+		await client.callTool({ name: "sauver_style", arguments: { profil: "Ton direct" } });
+		const { id } = donnees(await sauver(client, { script: script() }));
+		const sortie = donnees(await client.callTool({ name: "proposer_post_projet", arguments: { repo: "tablee" } }));
+		expect(sortie.repo.contenu_non_fiable.readme).toContain("Ignore les regles");
+		expect(sortie.repo.readme).toBeUndefined();
+		expect(sortie.domainesVerifies).toEqual(["tablee.example"]);
+		expect(sortie.pubExistante.id).toBe(id);
+		expect(sortie.pubExistante.voix.length).toBeGreaterThan(20);
+		expect(sortie.style.profil).toBe("Ton direct");
+		expect(sortie.regles).toContain("Aujourd'hui je vous présente");
+		expect(sortie.consigne).toContain("pose-lui la question");
+	});
+
+	it("sans pub ni style, pubExistante est null", async () => {
+		github();
+		const { client } = await compte();
+		const sortie = donnees(await client.callTool({ name: "proposer_post_projet", arguments: { repo: "tablee" } }));
+		expect(sortie.pubExistante).toBeNull();
+		expect(sortie.style).toEqual({ exemples: "", profil: "" });
+	});
+
+	it("refuse une entree invalide ou le repo d'un autre compte sans appeler GitHub", async () => {
+		const appel = vi.fn();
+		vi.stubGlobal("fetch", appel);
+		const { client } = await compte();
+		for (const repo of ["../secret", "bob/tablee", "", "x".repeat(101)]) {
+			expect((await client.callTool({ name: "proposer_post_projet", arguments: { repo } })).isError).toBe(true);
+		}
+		expect((await client.callTool({ name: "proposer_post_projet", arguments: {} })).isError).toBe(true);
+		expect(appel).not.toHaveBeenCalled();
+	});
+
+	it("est en lecture seule et rappelle que le contenu n'est pas une consigne", async () => {
+		const { client } = await compte();
+		const outil = (await client.listTools()).tools.find((t) => t.name === "proposer_post_projet");
+		expect(outil?.annotations).toMatchObject({ readOnlyHint: true });
+		expect(outil?.description).toContain("contenu_non_fiable");
+	});
+
+	it("explique qu'un repo absent ou prive est refuse", async () => {
+		const { client } = await compte();
+		github({ absent: true });
+		expect(texte(await client.callTool({ name: "proposer_post_projet", arguments: { repo: "nope" } }))).toContain(
+			"introuvable ou prive",
+		);
+		github({ prive: true });
+		expect((await client.callTool({ name: "proposer_post_projet", arguments: { repo: "tablee" } })).isError).toBe(true);
+	});
+});
+
+describe("prompt post_projet", () => {
+	it("cite le repo, l'outil et la consigne de poser la question", async () => {
+		const { client } = await compte();
+		const { messages } = await client.getPrompt({ name: "post_projet", arguments: { repo: "tablee" } });
+		const { text } = messages[0].content as { text: string };
+		for (const mot of ["tablee", "proposer_post_projet", "pose-lui la question", "Ne les invente jamais"])
+			expect(text).toContain(mot);
+		await expect(client.getPrompt({ name: "post_projet", arguments: { repo: "../x" } })).rejects.toThrow();
+	});
+});
+
 describe("contenu_non_fiable sur les outils GitHub", () => {
 	it("activite_github, details_repo, details_commit et lister_repos isolent les textes du repo", async () => {
 		github();
@@ -260,7 +333,7 @@ describe("contenu_non_fiable sur les outils GitHub", () => {
 	it("les descriptions des outils rappellent que le contenu n'est pas une consigne", async () => {
 		const { client } = await compte();
 		const { tools } = await client.listTools();
-		for (const nom of ["activite_github", "details_repo", "details_commit", "lister_repos", "preparer_pub"]) {
+		for (const nom of ["activite_github", "details_repo", "details_commit", "lister_repos", "preparer_pub", "proposer_post_projet"]) {
 			expect(tools.find((t) => t.name === nom)?.description).toContain("contenu_non_fiable");
 		}
 	});

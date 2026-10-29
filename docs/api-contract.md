@@ -419,6 +419,26 @@ Masquage des secrets dans `details_commit` : les extraits de diff passent par `m
 - Les domaines sont revérifiés après 7 jours (`domainesRevalides`, appels DNS et HTTP, 5 s au plus), comme pour `capturer_site`.
 - Erreurs : repo invalide, `Repo introuvable ou prive : Weekli ne lit que les repos publics.`
 
+#### `proposer_post_projet`
+
+- Description : « Prépare le post LinkedIn d'un projet. Renvoie le README et la description du repo, les domaines vérifiés, le script de la dernière pub du repo s'il existe, le style d'écriture mémorisé, les règles d'écriture et la consigne : propose 2 ou 3 versions, et pose une question à l'utilisateur si le pourquoi ou la démarche manquent. Weekli ne rédige pas : c'est Claude qui écrit. »
+- Annotations : `readOnlyHint: true`. Entrée : `{ repo: string (NOM_REPO) }`. Le repo est lu sous le login du compte connecté : le repo d'un autre compte n'est pas atteignable (`a/b` est refusé par le schéma).
+- Sortie (construite par `donneesPostProjet` de `@weekli/core`, partagée avec le mode clé API du navigateur, F14) :
+
+```json
+{
+  "repo": { "repo": "scanner-ssl", "site": "https://scanner-ssl.dev", "url": "https://github.com/Souf-F/scanner-ssl", "sujets": ["securite"], "contenu_non_fiable": { "description": "...", "readme": "..." } },
+  "domainesVerifies": ["scanner-ssl.dev"],
+  "pubExistante": { "id": "0b6f8d5e-6a51-4c0e-9d0e-3f3b2c1a9e77", "titre": "Pub Scanner", "reponses": { "pourQui": "...", "probleme": "...", "promesse": "..." }, "voix": "<voix des scenes visibles, jointe>" },
+  "style": { "exemples": "...", "profil": "..." },
+  "regles": "<REGLES_POST_PROJET>",
+  "consigne": "<2 ou 3 versions au format de l'utilisateur, question si le pourquoi ou la demarche manquent>"
+}
+```
+
+- `pubExistante` : la pub la plus récente du même repo, ou `null`. Les langages et les étoiles ne sont pas renvoyés (valeur technique, hors du post).
+- Erreurs : repo invalide, `Repo introuvable ou prive : Weekli ne lit que les repos publics.`
+
 #### `sauver_pub`
 
 - Description : « Enregistre le script d'une pub vidéo (nouveau, ou remplacement si id est fourni) et renvoie le lien du studio où l'utilisateur la rend en MP4. Jamais de code, de commit, de terminal ni de chiffre de développement dans la pub. »
@@ -446,6 +466,10 @@ Masquage des secrets dans `details_commit` : les extraits de diff passent par `m
 
 - Arguments : `{ repo: string }`.
 - Message : marche à suivre (appeler `preparer_pub`, poser les 3 questions, regarder le site si un domaine est vérifié, écrire le script selon les règles, appeler `sauver_pub`, donner le lien).
+
+#### Prompt `post_projet`
+
+- Arguments : `{ repo: string }`. Message : appeler `proposer_post_projet`, poser la question si le pourquoi ou la démarche manquent (jamais les inventer), rédiger 2 ou 3 versions selon les règles et le style, les présenter.
 
 ### 4.3 Ce que les outils ne font jamais
 
