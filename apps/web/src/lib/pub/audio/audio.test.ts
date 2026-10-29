@@ -92,11 +92,11 @@ describe("mixage", () => {
 		effets: [{ debut: 4.5, son: genererImpact(), gainDb: -2 }],
 	});
 
-	it("atteint -16 LUFS a 0,1 LU pres avec une crete sous -1 dBFS", () => {
+	it("atteint -16 LUFS a 0,1 LU pres avec une crete sous -2 dBFS", () => {
 		const { canaux, mesures } = mixer(entree());
 		expect(Math.abs(mesures.lufs - CIBLE_LUFS)).toBeLessThan(0.1);
 		expect(Math.abs(sonieIntegree(canaux) - CIBLE_LUFS)).toBeLessThan(0.1);
-		expect(mesures.creteDbfs).toBeLessThanOrEqual(-0.95);
+		expect(mesures.creteDbfs).toBeLessThanOrEqual(-1.95);
 		expect(mesures.baisseMax).toBeGreaterThan(8.5);
 	});
 	it("place la voix a l'echantillon pres et laisse le debut silencieux sans musique", () => {

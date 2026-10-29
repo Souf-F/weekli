@@ -6,7 +6,8 @@ import { sonieIntegree } from "./loudness";
 // sans AudioContext : le resultat est identique d'un navigateur a l'autre et testable sous Node.
 
 export const CIBLE_LUFS = -16;
-export const PLAFOND_DBFS = -1;
+// Crete d'echantillon plafonnee a -2 dBFS : la crete vraie (inter-echantillons) reste sous -1,5 dBTP (design.md 8.16)
+export const PLAFOND_DBFS = -2;
 export const BAISSE_MUSIQUE_DB = 9;
 export const ATTAQUE_S = 0.08;
 export const RELACHEMENT_S = 0.3;

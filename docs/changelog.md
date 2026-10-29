@@ -74,3 +74,12 @@ Retours de Soufiane sur la première vraie pub (`apps/web/dev/pub-weekli.json`) 
 - **Pub de Weekli** : réécrite pour passer sans avertissement (51 s, une seule capture « Connexion », trois explications, gratuité dite une fois dans la preuve, badge de l'appel retiré, `fin` sans argument). Les voix MP3 de la première version ne correspondent plus : à resynthétiser pour les scènes modifiées et nouvelles. Test : `pub-weekli.test.ts`.
 - **Reste à faire (hors zone de cette mission)** : dessin des trois scènes dans le moteur (`registreScenes`) par un agent frontend en opus, d'après `design.md` 8.17 ; `specs.md` (US-P4) et `tasks.md` à aligner.
 
+
+## 2026-10-29 (F10 studio de pub et F11 retrait de l'ancien studio)
+
+- **Studio** : `/app/studio` (Mes pubs), `?nouveau` (assistant : projet, 3 questions, captures, script), `?pub=<id>` (éditeur, aperçu, export). Sauvegarde différée de 2 s par `PUT /api/pubs/:id`.
+- **Script de départ et captures** : le studio exige une capture avant le script de départ seulement quand le script sans capture dure moins de 50 s (calcul réel avec `calculerTimeline`), pas selon un nom de trame. « Écrire avec Claude » n'est jamais bloqué par ce critère.
+- **`but` dans la timeline** : `calculerTimeline` impose `gestes d'entrée + pause de lecture` (1,2 s, 0,8 s ou 0,5 s) comme plancher de durée, dans les bornes du type. Durées d'entrée par type : `DUREE_GESTES` dans `limites.ts` (estimation, à affiner avec les scènes).
+- **`gestes` dans la timeline** : une transition `glitch`, `flou` ou `pixels` absente de `gestes` devient une coupe, donc un seul calendrier pour scènes, transitions et repères audio. Les gestes de texte lisent `contexte.gestes` (voir handoff).
+- **Plafond du mixage** abaissé de -1 à -2 dBFS : la crête vraie mesurée à -0,9 dBTP dépassait la limite de -1,5 dBTP de design.md 8.16 ; elle est maintenant à -1,8 dBTP.
+- **Ancien studio retiré** : `lib/video/`, `core/storyboard.ts`, `genererStoryboard`, lien « En vidéo » de l'historique. Instrument Serif reste, le moteur de pub l'utilise pour la typographie `editoriale`.

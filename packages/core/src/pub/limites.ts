@@ -1,4 +1,4 @@
-import type { Transition, TypeScene } from "./types";
+import type { But, Transition, TypeScene } from "./types";
 
 // Longueurs maximales des champs texte (api-contract.md 2.1)
 export const LIMITES_PUB = {
@@ -59,3 +59,26 @@ export const DUREES_SCENE: Record<TypeScene, { min: number; defaut: number; max:
 export const DUREES_TRANSITION: Record<Transition, number> = { coupe: 0, glitch: 0.3, flou: 0.5, pixels: 0.6 };
 
 export const TRANSITIONS: readonly Transition[] = ["coupe", "glitch", "flou", "pixels"];
+
+// Pause de lecture par but, en secondes : temps immobile apres la fin des gestes d'entree (design.md 8.16)
+export const PAUSE_LECTURE: Record<But, number> = { lire: 1.2, comprendre: 0.8, montrer: 0.5 };
+
+// Duree des gestes d'entree de chaque type de scene, en secondes (estimation lue dans les scenes du moteur) ;
+// une etape portee par une capture entre en 1 s
+export const DUREE_GESTES: Record<TypeScene, number> = {
+	ouverture: 0.8,
+	repetition: 1.8,
+	boucle: 1.8,
+	chorus: 2,
+	rupture: 1.2,
+	revelation: 3,
+	etape: 1.6,
+	transformation: 2,
+	flux: 2.4,
+	avantapres: 2,
+	resultat: 2.4,
+	preuve: 1.8,
+	appel: 2.4,
+	fin: 1.6,
+};
+export const DUREE_GESTES_CAPTURE = 1;

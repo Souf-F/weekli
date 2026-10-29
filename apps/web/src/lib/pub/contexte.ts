@@ -1,4 +1,4 @@
-import { type Palette, paletteDepuisMarque, type ScriptPub } from "@weekli/core";
+import { type Geste, type Palette, paletteDepuisMarque, type ScriptPub } from "@weekli/core";
 import type { ContexteRendu } from "./scene";
 
 // Polices a charger avant tout dessin (architecture.md 7.8). `famille` : "600 48px Nom"
@@ -10,6 +10,9 @@ export async function chargerPolices(specs: string[]): Promise<void> {
 export function palettePourScript(script: ScriptPub, accentParDefaut?: `#${string}`): Palette {
 	return paletteDepuisMarque(script.marque, accentParDefaut);
 }
+
+// Un geste est joue s'il est choisi, ou si le script n'en choisit aucun (defauts du catalogue)
+export const gestePresent = (contexte: Pick<ContexteRendu, "gestes">, geste: Geste) => !contexte.gestes || contexte.gestes.has(geste);
 
 // Le flou passe par ctx.filter ; Safari ne le gere pas (repli : pas de flou)
 function filtreDisponible(): boolean {
@@ -26,5 +29,6 @@ export function creerContexte(
 		palette: palettePourScript(script, options.accentParDefaut),
 		images: options.images ?? new Map(),
 		filtre: filtreDisponible(),
+		gestes: script.gestes ? new Set(script.gestes) : null,
 	};
 }

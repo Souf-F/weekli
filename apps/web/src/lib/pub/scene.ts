@@ -1,4 +1,4 @@
-import type { Palette, ScenePub, SceneTimeline, Transition, TypeScene } from "@weekli/core";
+import type { Geste, Palette, ScenePub, SceneTimeline, Transition, TypeScene } from "@weekli/core";
 
 // Format fixe de la pub (design.md 8.3)
 export const LARGEUR = 1920;
@@ -24,6 +24,9 @@ export type ContexteRendu = {
 	palette: Palette;
 	images: Map<string, ImageBitmap>; // captures, logo, images importees, par id
 	filtre: boolean; // ctx.filter disponible (flou) ; sinon la scene doit se passer du flou
+	// Gestes choisis par le script (design.md 8.16) ; null : defauts du catalogue. Un geste absent de la liste
+	// prend sa version neutre. Les transitions sont deja resolues par la timeline.
+	gestes: ReadonlySet<Geste> | null;
 };
 
 // Interface d'une scene : le moteur appelle dessiner() avec un repere logique de 1920 x 1080

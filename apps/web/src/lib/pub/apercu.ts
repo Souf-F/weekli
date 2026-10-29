@@ -99,7 +99,8 @@ export function creerApercu(
 		},
 		detruire() {
 			arreter();
-			void horloge.close();
+			// Idempotent : le studio peut detruire un apercu deja ferme (reconstruction, double montage en dev)
+			if (horloge.state !== "closed") void horloge.close().catch(() => undefined);
 		},
 	};
 }

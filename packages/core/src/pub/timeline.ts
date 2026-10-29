@@ -1,5 +1,15 @@
-import { DECALAGE_VOIX, DUREES_SCENE, DUREES_TRANSITION, LIMITES_PUB, MARGE_VOIX, MOTS_PAR_MINUTE } from "./limites";
-import type { ScenePub, ScriptPub, Transition, TypeScene } from "./types";
+import {
+	DECALAGE_VOIX,
+	DUREE_GESTES,
+	DUREE_GESTES_CAPTURE,
+	DUREES_SCENE,
+	DUREES_TRANSITION,
+	LIMITES_PUB,
+	MARGE_VOIX,
+	MOTS_PAR_MINUTE,
+	PAUSE_LECTURE,
+} from "./limites";
+import { BUT_DEFAUT, type But, type ScenePub, type ScriptPub, type Transition, type TypeScene } from "./types";
 
 export type SceneTimeline = {
 	id: string;
@@ -46,12 +56,27 @@ export function bornesScene(scene: ScenePub): { min: number; defaut: number; max
 
 export const dureeVoixEstimee = (voix: string, vitesse: number) => (mots(voix) * 60) / (MOTS_PAR_MINUTE * vitesse);
 
-// Duree d'une scene : la voix fixe le tempo (voix + marge, bornee par type), sinon `duree` du script ou defaut du type
+// But effectif d'une scene : celui du script, sinon le defaut du type ; une etape portee par une capture est toujours "montrer"
+export const butScene = (scene: ScenePub): But => (estCapture(scene) ? "montrer" : (scene.but ?? BUT_DEFAUT[scene.type]));
+
+// Plancher de duree d'une scene : gestes d'entree puis pause de lecture, dans les bornes du type (design.md 8.16)
+export function plancherScene(scene: ScenePub): number {
+	const { min, max } = bornesScene(scene);
+	const gestes = estCapture(scene) ? DUREE_GESTES_CAPTURE : DUREE_GESTES[scene.type];
+	return borne(gestes + PAUSE_LECTURE[butScene(scene)], min, max);
+}
+
+// Duree d'une scene : la voix fixe le tempo (voix + marge, bornee par type), sinon `duree` du script ou defaut du type.
+// Quand la voix est plus courte que gestes + pause, la duree suit gestes + pause (dans les bornes).
 export function dureeScene(scene: ScenePub, script: ScriptPub, voixMesuree?: number): number {
 	const { min, defaut, max } = bornesScene(scene);
 	const voix = script.voix.mode === "aucune" ? 0 : (voixMesuree ?? dureeVoixEstimee(scene.voix, script.voix.vitesse));
-	return voix > 0 ? borne(voix + MARGE_VOIX, min, max) : borne(scene.duree ?? defaut, min, max);
+	const base = voix > 0 ? borne(voix + MARGE_VOIX, min, max) : borne(scene.duree ?? defaut, min, max);
+	return Math.max(base, plancherScene(scene));
 }
+
+// Une transition explicite (glitch, flou, pixels) est aussi un geste : hors de `gestes`, elle redevient une coupe (design.md 8.16)
+const geste = (t: Transition, script: ScriptPub): Transition => (t !== "coupe" && script.gestes && !script.gestes.includes(t) ? "coupe" : t);
 
 // Place les scenes non masquees sur l'axe du temps. Chaque transition d'entree chevauche la fin de la
 // scene precedente : debut(n) = fin(n-1) - chevauchement(n). `voixMesurees` : durees reelles par id de scene
@@ -62,7 +87,8 @@ export function calculerTimeline(script: ScriptPub, voixMesurees: Readonly<Recor
 	let fin = 0;
 	const rangs = visibles.map(({ s }) => {
 		const numero = s.type === "etape" ? ++etapes : 0;
-		return { numero, transition: s.transition ?? (numero > 1 ? "coupe" : numero === 1 ? "flou" : TRANSITION_DEFAUT[s.type]) };
+		const voulue = s.transition ?? (numero > 1 ? "coupe" : numero === 1 ? "flou" : TRANSITION_DEFAUT[s.type]);
+		return { numero, transition: geste(voulue, script) };
 	});
 	const voixDe = ({ s }: { s: ScenePub }) =>
 		script.voix.mode === "aucune"

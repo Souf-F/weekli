@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { EXEMPLE } from "./exemple.fixture";
-import { DECALAGE_VOIX, DUREES_SCENE, DUREES_TRANSITION } from "./limites";
+import { DECALAGE_VOIX, DUREE_GESTES, DUREES_SCENE, DUREES_TRANSITION, PAUSE_LECTURE } from "./limites";
 import { nettoyerScriptPub } from "./nettoyer";
-import { calculerTimeline, dureeScene, dureeVoixEstimee, instantTimeline } from "./timeline";
+import { butScene, calculerTimeline, dureeScene, dureeVoixEstimee, instantTimeline, plancherScene } from "./timeline";
 import type { ScenePub, ScriptPub } from "./types";
 
 const base = (): ScriptPub => structuredClone(nettoyerScriptPub(EXEMPLE).script as ScriptPub);
@@ -226,5 +226,64 @@ describe("scenes d'explication et captures breves", () => {
 		expect(dureeScene(longue, s)).toBe(2.5);
 		longue.duree = 0.5;
 		expect(dureeScene(longue, s)).toBe(1.8);
+	});
+});
+
+describe("pause de lecture selon le but", () => {
+	const sansVoix = () => {
+		const s = base();
+		s.voix.mode = "aucune";
+		return s;
+	};
+
+	it("garde la scene au moins gestes plus pause, dans ses bornes, pour les trois buts", () => {
+		const s = sansVoix();
+		const rupture = sceneDe(s, "rupture") as ScenePub;
+		rupture.duree = 0;
+		const bornes = DUREES_SCENE.rupture;
+		for (const but of ["lire", "comprendre", "montrer"] as const) {
+			rupture.but = but;
+			const attendu = Math.min(Math.max(DUREE_GESTES.rupture + PAUSE_LECTURE[but], bornes.min), bornes.max);
+			expect(plancherScene(rupture)).toBeCloseTo(attendu);
+			expect(dureeScene(rupture, s)).toBeGreaterThanOrEqual(attendu - 1e-9);
+		}
+	});
+
+	it("prolonge une scene lire courte jusqu'a gestes plus 1,2 s", () => {
+		const s = sansVoix();
+		const ouverture = sceneDe(s, "ouverture");
+		ouverture.duree = 1;
+		ouverture.but = "lire";
+		expect(dureeScene(ouverture, s)).toBeCloseTo(DUREE_GESTES.ouverture + PAUSE_LECTURE.lire);
+		ouverture.but = "montrer";
+		expect(dureeScene(ouverture, s)).toBe(DUREES_SCENE.ouverture.min);
+	});
+
+	it("applique le but par defaut du type, et montrer a une etape portee par une capture", () => {
+		const s = base();
+		expect(butScene({ ...sceneDe(s, "ouverture"), but: undefined } as ScenePub)).toBe("lire");
+		expect(butScene({ ...sceneDe(s, "ouverture"), but: "montrer" } as ScenePub)).toBe("montrer");
+		const capture = s.scenes.find((x) => x.type === "etape" && x.visuel.type === "capture");
+		if (capture) expect(butScene({ ...capture, but: "lire" })).toBe("montrer");
+	});
+});
+
+describe("gestes choisis et transitions", () => {
+	it("remplace par une coupe toute transition absente de gestes, sans changer les autres", () => {
+		const s = base();
+		s.gestes = ["impact", "glitch", "lettres"];
+		const tl = calculerTimeline(s);
+		expect(tl.scenes.every((x) => x.transition === "coupe" || x.transition === "glitch")).toBe(true);
+		expect(tl.scenes.some((x) => x.transition === "glitch")).toBe(true);
+		s.gestes = ["accent", "soulignement", "flou"];
+		const autre = calculerTimeline(s);
+		expect(autre.scenes.every((x) => x.transition === "coupe" || x.transition === "flou")).toBe(true);
+		expect(autre.duree).not.toBeCloseTo(tl.duree, 3);
+	});
+
+	it("garde les defauts du catalogue sans gestes", () => {
+		const s = base();
+		delete s.gestes;
+		expect(calculerTimeline(s).scenes.some((x) => x.transition === "pixels")).toBe(true);
 	});
 });

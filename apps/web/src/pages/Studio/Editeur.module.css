@@ -1,0 +1,291 @@
+.entete {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: end;
+	justify-content: space-between;
+	gap: var(--espace-4);
+	margin-bottom: var(--espace-5);
+}
+.entete h1 {
+	font-size: var(--t-titre);
+	line-height: var(--lh-titre);
+}
+.etat {
+	margin: 0;
+	padding: var(--espace-2) var(--espace-3);
+	border-radius: var(--rayon-pilule);
+	background: var(--voile-succes);
+	font: 500 var(--t-etiquette) / 1 var(--mono);
+	letter-spacing: var(--suivi-etiquette);
+	text-transform: uppercase;
+	color: var(--succes);
+}
+.etatAlerte {
+	background: var(--voile-danger);
+	color: var(--danger);
+}
+
+/* Colonne de reglages a gauche (380 px), apercu au centre : design.md 9.2 */
+.grille {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--espace-5);
+	align-items: start;
+}
+@media (min-width: 1000px) {
+	.grille {
+		grid-template-columns: 380px minmax(0, 1fr);
+	}
+	.colonne {
+		position: sticky;
+		top: var(--espace-4);
+		max-height: calc(100svh - var(--espace-6));
+		overflow-y: auto;
+	}
+}
+.colonne {
+	padding: var(--espace-4);
+	border: 1px solid var(--bord-verre);
+	border-radius: var(--rayon-l);
+	background: var(--verre-fort);
+	backdrop-filter: var(--flou-verre);
+	-webkit-backdrop-filter: var(--flou-verre);
+}
+.centre {
+	display: grid;
+	gap: var(--espace-5);
+	min-width: 0;
+}
+
+/* Liste des scenes */
+.scenes {
+	display: grid;
+	gap: var(--espace-2);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.scene {
+	border: 1px solid var(--filet);
+	border-radius: var(--rayon-s);
+	background: var(--champ);
+}
+.masquee {
+	background: var(--vide-fond);
+}
+.masquee .resume {
+	text-decoration: line-through;
+}
+.enteteScene {
+	margin: 0;
+	font-family: var(--sans);
+	font-size: var(--t-petit);
+}
+.enteteScene button {
+	display: grid;
+	grid-template-columns: auto auto minmax(0, 1fr);
+	align-items: baseline;
+	gap: var(--espace-1) var(--espace-3);
+	width: 100%;
+	padding: var(--espace-3);
+	border: 0;
+	border-radius: var(--rayon-s);
+	background: transparent;
+	text-align: left;
+	font: inherit;
+	color: var(--espresso);
+	cursor: pointer;
+}
+.enteteScene button:hover {
+	background: var(--voile-moka);
+}
+.numero {
+	font: 500 var(--t-etiquette) / 1 var(--mono);
+	color: var(--moka-texte);
+}
+.type {
+	font-weight: 600;
+}
+.resume {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--texte-doux);
+}
+.badge {
+	grid-column: 3;
+	justify-self: start;
+	padding: 2px var(--espace-2);
+	border-radius: var(--rayon-pilule);
+	background: var(--voile-moka);
+	font: 500 var(--t-etiquette) / 1.4 var(--mono);
+	color: var(--moka-texte);
+}
+.badgeAlerte {
+	background: var(--voile-danger);
+	color: var(--danger);
+}
+.corpsScene {
+	display: grid;
+	gap: var(--espace-3);
+	padding: 0 var(--espace-3) var(--espace-4);
+}
+.outils {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--espace-2);
+}
+.champs {
+	display: grid;
+	gap: 0;
+}
+.champs > div,
+.champs > label {
+	margin-bottom: var(--espace-3);
+}
+.deux {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--espace-3);
+}
+.compteur {
+	font: 400 var(--t-etiquette) / 1 var(--mono);
+	text-align: right;
+	color: var(--texte-doux);
+}
+.plein {
+	color: var(--danger);
+}
+.aide {
+	display: block;
+	font-size: var(--t-etiquette);
+	font-weight: 400;
+	line-height: var(--lh-petit);
+	color: var(--texte-doux);
+}
+.case {
+	display: flex;
+	align-items: center;
+	gap: var(--espace-2);
+	font-size: var(--t-petit);
+	font-weight: 500;
+}
+
+/* Marque, gestes, voix */
+.groupe {
+	display: grid;
+	gap: var(--espace-1);
+}
+.choix,
+.gestes {
+	display: grid;
+	gap: var(--espace-2);
+	margin: 0 0 var(--espace-4);
+	padding: 0;
+	border: 0;
+}
+.choix legend,
+.gestes legend {
+	margin-bottom: var(--espace-2);
+	padding: 0;
+	font-size: var(--t-petit);
+	font-weight: 500;
+}
+.choix label,
+.gestes label {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--espace-3);
+	padding: var(--espace-2) var(--espace-3);
+	border: 1px solid var(--filet);
+	border-radius: var(--rayon-s);
+	background: var(--champ);
+	font-size: var(--t-petit);
+	cursor: pointer;
+}
+.choix label:has(input:checked),
+.gestes label:has(input:checked) {
+	border-color: var(--espresso);
+	background: var(--blanc);
+}
+.choix input[type="radio"] {
+	margin-top: 2px;
+	accent-color: var(--moka);
+}
+.gestes label > span,
+.choix label > span {
+	display: grid;
+	gap: 2px;
+}
+.propositions {
+	margin-bottom: var(--espace-3);
+}
+.pastilles {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--espace-2);
+	margin-top: var(--espace-2);
+}
+.pastille {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--espace-2);
+	padding: var(--espace-2) var(--espace-3);
+	border: 1px solid var(--filet);
+	border-radius: var(--rayon-pilule);
+	background: var(--champ);
+	font: 500 var(--t-etiquette) / 1 var(--mono);
+	cursor: pointer;
+}
+.pastille span {
+	width: var(--espace-4);
+	height: var(--espace-4);
+	border-radius: 50%;
+	border: 1px solid var(--filet);
+}
+.couleur {
+	display: grid;
+	gap: var(--espace-1);
+	margin-bottom: var(--espace-3);
+	font-size: var(--t-petit);
+	font-weight: 500;
+}
+.selecteur {
+	display: flex;
+	align-items: center;
+	gap: var(--espace-2);
+}
+.selecteur input[type="color"] {
+	width: var(--espace-7);
+	height: var(--espace-6);
+	padding: 2px;
+	border: 1px solid var(--filet);
+	border-radius: var(--rayon-s);
+	background: var(--champ);
+}
+.selecteur input[type="text"] {
+	width: 9ch;
+	padding: var(--espace-2);
+	border: 1px solid var(--filet);
+	border-radius: var(--rayon-s);
+	background: var(--champ);
+	font: 400 var(--t-petit) / 1 var(--mono);
+}
+.lien {
+	padding: 0;
+	border: 0;
+	background: none;
+	font: inherit;
+	font-size: var(--t-etiquette);
+	color: var(--moka-texte);
+	text-decoration: underline;
+	cursor: pointer;
+}
+.progression {
+	width: 100%;
+	accent-color: var(--moka);
+}
+.fichiers {
+	display: grid;
+	gap: var(--espace-1);
+}

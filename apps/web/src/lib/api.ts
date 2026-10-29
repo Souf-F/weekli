@@ -1,4 +1,4 @@
-import type { Activite, Brouillon, DetailsCommit, Post } from "@weekli/core";
+import type { Activite, Brouillon, DetailsCommit, DetailsRepo, Post, PubEnregistree, PubResume, RepoResume, ScriptPub } from "@weekli/core";
 
 export type Moi = { login: string; nom: string; avatar: string };
 export type Domaine = { hote: string; verifie: string };
@@ -8,12 +8,16 @@ export type Preuve = {
 	fichier: { url: string; contenu: string };
 };
 
+export type PubSauvee = { pub: PubEnregistree; avertissements: string[] };
+
 export class ErreurApi extends Error {
 	readonly statut: number;
+	readonly details: string[];
 
-	constructor(message: string, statut: number) {
+	constructor(message: string, statut: number, details: string[] = []) {
 		super(message);
 		this.statut = statut;
+		this.details = details;
 	}
 }
 
@@ -21,7 +25,7 @@ async function lire<T>(chemin: string, init?: RequestInit): Promise<T> {
 	const res = await fetch(chemin, { credentials: "same-origin", ...init });
 	if (!res.ok) {
 		const corps = await res.json().catch(() => ({}));
-		throw new ErreurApi(corps.erreur ?? `Erreur ${res.status}`, res.status);
+		throw new ErreurApi(corps.erreur ?? `Erreur ${res.status}`, res.status, Array.isArray(corps.details) ? corps.details.map(String) : []);
 	}
 	return res.status === 204 ? (undefined as T) : res.json();
 }
@@ -55,5 +59,12 @@ export const api = {
 		}
 		return res.blob();
 	},
+	repos: () => lire<RepoResume[]>("/api/repos"),
+	repo: (nom: string) => lire<DetailsRepo>(`/api/repos/${encodeURIComponent(nom)}`),
+	pubs: () => lire<PubResume[]>("/api/pubs"),
+	pub: (id: string) => lire<PubEnregistree>(`/api/pubs/${encodeURIComponent(id)}`),
+	creerPub: (script: ScriptPub) => lire<PubSauvee>("/api/pubs", json("POST", { script })),
+	sauverPub: (id: string, script: ScriptPub) => lire<PubSauvee>(`/api/pubs/${encodeURIComponent(id)}`, json("PUT", { script })),
+	supprimerPub: (id: string) => lire<void>(`/api/pubs/${encodeURIComponent(id)}`, { method: "DELETE" }),
 	supprimerBrouillon: (id: string) => lire<void>(`/api/brouillons/${encodeURIComponent(id)}`, { method: "DELETE" }),
 };

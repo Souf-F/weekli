@@ -43,7 +43,7 @@ function instant(t: number): InstantScene {
 		secondes: t * DUREE,
 		temps: t * DUREE,
 		graine: 1,
-		contexte: { palette: paletteDepuisMarque({ primaire }), images, filtre: true },
+		contexte: { palette: paletteDepuisMarque({ primaire }), images, filtre: true, gestes: null },
 	} as unknown as InstantScene;
 }
 
