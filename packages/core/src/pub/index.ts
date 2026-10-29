@@ -6,13 +6,11 @@ export { nettoyerScriptPub } from "./nettoyer";
 export { contraste, type Palette, paletteDepuisMarque } from "./palette";
 export { SCHEMA_SCRIPT_PUB } from "./schema";
 export {
-	butScene,
 	calculerTimeline,
 	dureeScene,
 	dureeVoixEstimee,
 	type Instant,
 	instantTimeline,
-	plancherScene,
 	type SceneTimeline,
 	type Timeline,
 } from "./timeline";
