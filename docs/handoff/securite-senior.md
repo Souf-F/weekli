@@ -1,45 +1,42 @@
-# Handoff securite-senior : audit initial sécurité et RGPD
+# Handoff securite-senior : audit final sécurité et RGPD
 
-Date : 2026-10-24. Commit audité : `d40f24a` (branche `docs/brief-v1`, livraisons RGPD backend et frontend incluses).
-
-**Aucun secret réel trouvé** : code, historique Git complet (gitleaks, trufflehog, recherche de motifs) et dépôt GitHub `Souf-F/weekli` (secret scanning : 0 alerte) sont propres.
+Date : 2026-10-29. Commit audité : `c09e359` (branche `feat/weekli-v1`, PR #6). Aucun code modifié, rien commité.
 
 ## Livré
 
-- Rapport : `docs/reviews/securite-2026-10-24.pdf` (14 pages), source `docs/reviews/securite-2026-10-24.md`, rendu `docs/reviews/securite-2026-10-24.html`.
-- Aucun fichier de code modifié, rien commité.
+- Rapport : `docs/reviews/securite-final-2026-10-29.pdf` (14 pages), source `docs/reviews/securite-final-2026-10-29.md`, rendu `docs/reviews/securite-final-2026-10-29.html`.
+- Aucun secret réel exposé. `apps/server/.dev.vars` : ni suivi, ni dans l'historique, ni poussé, exclu de Docker ; contenu non lu.
 
-## Verdict : A CORRIGER (0 BLOQUANT, 6 MAJEUR, 17 MINEUR)
+## Verdict : A CORRIGER (0 BLOQUANT, 1 MAJEUR, 11 MINEUR nouveaux)
 
 ### MAJEUR
 
 | # | Constat | Agent |
 |---|---|---|
-| M1 | `DELETE /api/moi/donnees` n'efface ni les grants MCP (token GitHub, nom, email, refresh 30 jours), ni les Durable Objects, ni les autres sessions, et ne révoque pas le token GitHub ; la page Confidentialité affirme le contraire | backend-senior, frontend-senior (texte) |
-| M2 | Props MCP (dont token GitHub et email) stockées en clair et sans durée dans le stockage Durable Object par `agents` (`McpAgent.updateProps`) | backend-senior |
-| M3 | Brouillons, domaines vérifiés, jeton HMAC et limitation de débit indexés par le login GitHub (renommable, réattribuable) au lieu de l'id numérique | backend-senior |
-| M4 | Google Fonts chargées sans consentement (IP transmise à Google) : héberger les polices | frontend-senior |
-| M5 | Page Confidentialité incomplète : bases légales, sous-traitants (GitHub, Anthropic, Browser Run, journaux), transferts hors UE, email non listé, export absent ; deux inexactitudes (style dit chiffré dans KV, TTL dit renouvelé à chaque utilisation) | architecte, frontend-senior, backend-senior (export) |
-| M6 | zod 4.5.4 (GHSA-mrhx-c7xc-m3w5, haute) dans le runtime du Worker ; `npm audit` : 13 vulnérabilités, la CI échouera | backend-senior |
+| N1 | `packages/core/src/masquage.ts:9` : motif `sk-` avec anticipation, coût quadratique (99 Ko : 8,5 s de CPU mesurés) ; masquage appliqué avant troncature sur des textes non plafonnés (`posts/tuto.ts:140` et `:152`, README sans plafond ; `github.ts:154`, patchs). Tout compte GitHub peut le déclencher via `POST /api/posts/donnees` (tuto) ou `preparer_post`. Correction : motif sans anticipation (chiffre vérifié dans le remplacement), tronquer avant de masquer avec une marge, test de performance | backend-senior |
 
 ### MINEUR (détail dans le rapport)
 
-m1 email inutile dans les props, m2 token GitHub non révoqué à la déconnexion (et expiration réelle à vérifier), m3 captures : iframes tierces et navigation tardive non contrôlées, m4 floutage partiel, m5 domaines jamais revérifiés, m6 `login` figé à l'init du Durable Object, m7 injection de prompt (contenus de repo bruts, skill vidéo), m8 arguments du pipeline vidéo non validés, m9 `String.fromCharCode(...)` plante au-delà d'environ 125 Ko (historique de brouillons bloqué), m10 clé API lisible en JS (accepté), m11 HSTS et COOP absents du front, m12 dépôt GitHub (branche non protégée, Dependabot alerts et signalement privé désactivés, hook anti-secrets non installé, `.dockerignore` sans `.env*`), m13 email personnel dans les commits publics, m14 gestion de la clé racine, m15 mineurs, m16 `PUBLIC_URL` et id KV à finaliser avant déploiement, m17 dépendances de dev vulnérables.
+N2 page Confidentialité : journaux (erreurs Octokit complètes, `api.ts:54` et 3 autres), cookies OAuth `__Host-oauth-*` non listés, quota vocal 2 h ; N3 Microsoft présenté comme sous-traitant DPF sans contrat (usage non officiel, avis juriste) ; N4 cache vocal partagé : oracle, réponses du cache hors quota, volume d'écritures KV ; N5 effacement local partiel (IndexedDB studio et voix, dernier repo) et texte de `PanneauDonnees.tsx:58` inexact ; N6 README non masqué dans `detailsRepo`, formats Stripe, Google, npm, GitLab, SendGrid, JWT absents ; N7 sortie de la balise `<donnees_post>` en mode clé (`prompts.ts:130`) ; N8 téléphone de l'hébergeur absent des mentions légales ; N9 `detailsCommit` sans contrôle de visibilité ; N10 pas de `limits.cpu_ms` ; N11 repli SPA en 200 sur `/.env` et autres (aucun contenu sensible).
+
+## Suivi de l'audit initial
+
+- MAJEUR M1 à M6 : tous corrigés. Résidu de M3 : migration par login (`lib/identite.ts`, `dechiffrerAncien`) à retirer avant déploiement (B14).
+- MINEUR : 13 corrigés (m1, m2, m4 à m11, m14, m15, m17) ; partiels : m3 (images tierces encore affichables), m12 (branche non protégée, Dependabot alerts et signalement privé désactivés) ; ouverts : m13 (email personnel dans les commits), m16 (`PUBLIC_URL` et id KV avant déploiement).
+
+## Vérifié dynamiquement (serveur local, sans session)
+
+En-têtes front et Worker, CSP, COOP et COEP (`crossOriginIsolated` vrai), 401 sur 14 routes et `/mcp`, CSRF par Origin (403 sans Origin, Origin tierce, `null`, autre hôte), débit auth (429 après 20/min), métadonnées OAuth et MCP (S256 seul), routes OAuth invalides, fichiers exposés, navigateur headless à profil vierge : aucune requête tierce, aucun cookie, stockage vide, console propre. Mode démo absent du build (recompilé avec `VITE_DEMO=1`).
 
 ## Non vérifié (et pourquoi)
 
-- Tous les tests dynamiques (IDOR avec un second compte, CSRF forgé, débit, en-têtes réels, inspection navigateur, fichiers exposés) : aucun serveur lancé, secrets OAuth absents.
-- nmap : aucun hôte déployé.
-- Accès réseau interne du navigateur Browser Run : infrastructure Cloudflare.
-- Expiration réelle des tokens de l'app OAuth GitHub : réglage sur le compte du propriétaire.
-- Exploitabilité de la faille zod dans Workers : test de charge non autorisé.
+Tests authentifiés (IDOR à deux comptes, effacement et export réels, N1 dans Workers, quotas vocaux) : consigne sans session. Expiration des tokens de l'app GitHub, offre et quotas Cloudflare, journaux Workers réels, réseau de Browser Run, nmap, sauvegardes : rien n'est déployé ou hors accès.
 
 ## Outils
 
-git 2.50.1, gitleaks 8.30.1, trufflehog 3.99.4, semgrep 1.182.0, osv-scanner 2.7.0, npm 11.16.0 (Node 26.3.0), gh 2.98.0, Chrome headless. Aucun outil manquant.
+git 2.50.1, gitleaks 8.30.1, trufflehog 3.99.4, semgrep 1.182.0, osv-scanner 2.7.0, npm 11.16.0 (Node 26.3.0), gh 2.98.0, curl, Chrome headless (CDP), vitest (server 236, core 267 verts). Aucun outil manquant.
 
 ## Points à remonter à l'orchestrateur
 
-1. `docs/api-contract.md` n'existe pas (attendu par les règles de l'équipe).
-2. La branche a bougé pendant l'audit (4 commits backend et frontend) : le rapport porte sur `d40f24a`.
-3. Le skill `.claude/skills/video-projet` annonce encore le format « histoire », retiré par le brief.
+1. N1 à corriger avant livraison (seul MAJEUR) ; N2, N3 et N5 touchent la conformité de l'information, à traiter avant ouverture publique.
+2. Avant tout déploiement : B14, m16, réglages GitHub de m12, vérification des quotas KV (N4) et de l'offre Workers (N10).
