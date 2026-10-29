@@ -18,6 +18,9 @@ export const MODELES: { id: Modele; nom: string; detail: string }[] = [
 
 const CLE = "weekli.cle";
 const PREFS = "weekli.prefs";
+export const CLE_DERNIER_REPO = "weekli.dernierRepo";
+// Bases IndexedDB : medias du studio de pub (images, logo) et cache des fichiers du modele de voix Kokoro
+export const BASES_INDEXEDDB = ["weekli-pub", "weekli-voix"] as const;
 
 // Ancien emplacement du style, lu seulement par la migration de lib/style.ts
 export const ANCIEN_STYLE = { cle: PREFS, champ: "style" } as const;
@@ -52,10 +55,29 @@ export function enregistrerReglages(r: Reglages) {
 	if (r.cleApi) stockage(r.memoriser ? "local" : "session")?.setItem(CLE, r.cleApi);
 }
 
-// Efface tout ce que Weekli garde dans le navigateur (cle API, modele, ancien style)
-export function effacerReglages() {
+function supprimerBase(nom: string): Promise<void> {
+	return new Promise((resoudre, rejeter) => {
+		if (typeof indexedDB === "undefined") return resoudre();
+		const requete = indexedDB.deleteDatabase(nom);
+		requete.onsuccess = () => resoudre();
+		// Une autre connexion reste ouverte : le navigateur supprime la base des qu'elle se ferme
+		requete.onblocked = () => resoudre();
+		requete.onerror = () => rejeter(requete.error ?? new Error(`Suppression de ${nom} impossible`));
+	});
+}
+
+// Efface tout ce que Weekli garde dans le navigateur : cle API, modele, ancien style, dernier repo, IndexedDB.
+// Tente toutes les etapes, puis liste celles qui ont echoue.
+export async function effacerDonneesLocales(): Promise<void> {
+	const echecs: string[] = [];
 	for (const type of ["local", "session"] as const) {
-		stockage(type)?.removeItem(CLE);
-		stockage(type)?.removeItem(PREFS);
+		try {
+			for (const cle of [CLE, PREFS, CLE_DERNIER_REPO]) stockage(type)?.removeItem(cle);
+		} catch {
+			echecs.push(`${type}Storage`);
+		}
 	}
+	const bases = await Promise.allSettled(BASES_INDEXEDDB.map(supprimerBase));
+	bases.forEach((r, i) => r.status === "rejected" && echecs.push(BASES_INDEXEDDB[i]));
+	if (echecs.length) throw new Error(`Effacement local incomplet : ${echecs.join(", ")}`);
 }

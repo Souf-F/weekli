@@ -21,6 +21,8 @@ export function MentionsLegales() {
 				<br />
 				101 Townsend Street, San Francisco, CA 94107, États-Unis
 				<br />
+				Téléphone : <a href="tel:+18889935273">+1 888 993 5273</a>
+				<br />
 				<a href="https://www.cloudflare.com">cloudflare.com</a>
 			</p>
 

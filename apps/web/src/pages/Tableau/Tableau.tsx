@@ -5,7 +5,7 @@ import { Bouton } from "@/components/Bouton/Bouton";
 import type { ContexteApp } from "@/layouts/AppLayout";
 import { api } from "@/lib/api";
 import { aSaisie, composerNotes, demandeDonnees, messageValidation, nomCourtRepo, type ReglagesType as Reglages, reglagesVides } from "@/lib/parcours";
-import { lireReglages } from "@/lib/reglages";
+import { CLE_DERNIER_REPO, lireReglages } from "@/lib/reglages";
 import { EtapeRepo } from "./EtapeRepo";
 import { EtapeType } from "./EtapeType";
 import { ETAPES, type NumeroEtape } from "./etapes";
@@ -22,8 +22,6 @@ import { useSemaine } from "./useSemaine";
 const demo =
 	import.meta.env.DEV && new URLSearchParams(location.search).has("demo") ? await import("./demo/installer") : null;
 demo?.installerDemo();
-
-const CLE_DERNIER_REPO = "weekli.dernierRepo";
 
 // Confort par navigateur : jamais le texte saisi, seulement le nom du dernier repo
 const lireDernierRepo = (): string => {

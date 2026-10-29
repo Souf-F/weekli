@@ -82,7 +82,7 @@ export function Confidentialite() {
 						<tr>
 							<th scope="row">Lutte contre les abus</th>
 							<td>Adresse IP à la connexion, identifiant de compte ensuite</td>
-							<td>60 secondes dans le limiteur de débit</td>
+							<td>60 secondes dans le limiteur de débit ; le quota de voix off (compteur par compte et par heure) reste 2 heures</td>
 						</tr>
 					</tbody>
 				</table>
@@ -98,11 +98,12 @@ export function Confidentialite() {
 			<p>
 				Les vidéos sont générées dans ton navigateur : la vidéo, le logo et les images importées ne sont jamais envoyés à
 				Weekli. Le modèle de voix de secours (Kokoro) et ces fichiers sont gardés dans le stockage du navigateur
-				(IndexedDB) jusqu'à ce que tu les effaces dans les réglages du navigateur. Ta clé API et ton choix de modèle
-				restent aussi dans ton navigateur (voir plus bas).
+				(IndexedDB) jusqu'à ce que tu les effaces, avec « Supprimer mes données » dans les réglages ou dans les
+				réglages du navigateur. Ta clé API, ton choix de modèle et le nom du dernier repo ouvert restent aussi dans ton
+				navigateur (voir plus bas).
 			</p>
 
-			<h2>Sous-traitants et destinataires</h2>
+			<h2>Sous-traitants et autres destinataires</h2>
 			<div className={styles.tableau}>
 				<table>
 					<thead>
@@ -124,9 +125,9 @@ export function Confidentialite() {
 							<td>États-Unis. Cadre de protection des données UE-États-Unis</td>
 						</tr>
 						<tr>
-							<th scope="row">Microsoft</th>
-							<td>Lecture à voix haute des textes de voix off (service de lecture d'Edge)</td>
-							<td>États-Unis. Cadre de protection des données UE-États-Unis</td>
+							<th scope="row">Microsoft (service de lecture d'Edge)</th>
+							<td>Service tiers qui reçoit les textes de voix off. Pas un sous-traitant : aucun contrat avec Weekli, usage non officiel</td>
+							<td>États-Unis. Aucun cadre contractuel entre Weekli et Microsoft pour ce service</td>
 						</tr>
 						<tr>
 							<th scope="row">Anthropic</th>
@@ -140,11 +141,15 @@ export function Confidentialite() {
 			<h2>Microsoft et la voix off</h2>
 			<p>
 				Quand tu génères la voix d'une pub, le texte de chaque phrase (400 caractères au plus) est envoyé par le serveur
-				Weekli au service de lecture d'Edge de Microsoft, qui renvoie l'audio. Ton identité, ton login et ton adresse IP
+				Weekli au service de lecture d'Edge de Microsoft, qui renvoie l'audio. Weekli n'a ni contrat ni accord
+				d'utilisation avec Microsoft pour ce service et l'appelle de façon non officielle : Microsoft peut le couper ou
+				le refuser sans préavis, et ses conditions d'utilisation ne l'autorisent peut-être pas. C'est un choix assumé de
+				l'éditeur, limité à ce texte. Ton identité, ton login et ton adresse IP
 				ne lui sont pas transmis. L'audio est conservé 90 jours côté Weekli, indexé par l'empreinte du texte et non
 				rattaché à ton compte : il ne peut donc pas être retrouvé ni effacé par compte, et il est partagé entre
-				utilisateurs qui écrivent la même phrase. N'écris pas de donnée personnelle dans une voix off. Si le service est
-				indisponible, la voix Kokoro, calculée dans ton navigateur, prend le relais sans rien envoyer.
+				utilisateurs qui écrivent la même phrase. N'écris pas de donnée personnelle dans une voix off. Pour que rien ne parte chez
+				Microsoft, choisis « Ma voix » ou « Sans voix » dans le studio. La voix Kokoro, calculée dans ton navigateur
+				sans rien envoyer, prend le relais automatiquement quand le service est indisponible.
 			</p>
 
 			<h2>Ta clé API Anthropic</h2>
@@ -157,16 +162,21 @@ export function Confidentialite() {
 
 			<h2>Cookies et traceurs</h2>
 			<p>
-				Weekli n'utilise aucun cookie publicitaire, aucun outil de mesure d'audience et aucun traceur. Deux cookies
-				strictement nécessaires : le cookie de session (8 heures, identifiant aléatoire, illisible par les scripts) et un
-				cookie temporaire de 10 minutes pendant la connexion GitHub. Ils ne demandent pas de bandeau de consentement.
+				Weekli n'utilise aucun cookie publicitaire, aucun outil de mesure d'audience et aucun traceur. Seuls des cookies
+				strictement nécessaires, illisibles par les scripts : le cookie de session (8 heures, identifiant aléatoire), un
+				cookie temporaire de 10 minutes pendant la connexion GitHub et, quand tu autorises Claude à se connecter, trois
+				cookies de la bibliothèque d'autorisation : <code>__Host-oauth-consent</code> et{" "}
+				<code>__Host-oauth-upstream</code> (10 minutes) et <code>__Host-oauth-approvals</code> (ton accord mémorisé,
+				30 jours). Ils ne demandent pas de bandeau de consentement.
 			</p>
 
 			<h2>Journaux et hébergement</h2>
 			<p>
 				Le site est hébergé par Cloudflare, Inc. (voir les <Link to="/mentions-legales">mentions légales</Link>).
-				Cloudflare tient des journaux techniques du Worker, selon sa propre durée de rétention. Weekli n'y écrit aucune
-				donnée personnelle : seulement des noms d'erreur.
+				Cloudflare tient des journaux techniques du Worker, selon sa propre durée de rétention. Selon l'erreur, Weekli y écrit
+				un message technique qui peut contenir l'adresse d'une requête GitHub (par exemple le nom d'un repo public que
+				tu consultes) ou l'adresse d'une page que tu fais capturer ; jamais ton token, ta clé API ni le texte de tes
+				posts.
 			</p>
 
 			<h2>Tes droits</h2>
@@ -183,10 +193,10 @@ export function Confidentialite() {
 				<li>
 					<strong>Effacement complet</strong> : dans les réglages, « Supprimer mes données » efface tes brouillons, pubs,
 					style et domaines, révoque les autorisations données à Claude, détruit les sessions du connecteur, retire
-					l'autorisation de Weekli sur ton compte GitHub, ferme toutes tes sessions et te déconnecte, ainsi que les
-					réglages gardés dans ce navigateur. Si une étape échoue, l'opération peut être relancée. Restent hors de
-					portée : l'audio de voix en cache (non rattaché à toi, 90 jours) et les fichiers du stockage navigateur, que tu
-					effaces dans les réglages du navigateur.
+					l'autorisation de Weekli sur ton compte GitHub, ferme toutes tes sessions et te déconnecte, ainsi que ce que
+					Weekli garde dans ce navigateur : ta clé API, ton modèle, le dernier repo ouvert, les images et logos importés
+					dans le studio et le modèle de voix de secours. Si une étape échoue, l'opération peut être relancée. Restent hors de
+					portée : l'audio de voix en cache sur le serveur (non rattaché à toi, 90 jours).
 				</li>
 				<li>
 					<strong>Autres droits</strong> : écris à <a href={`mailto:${CONTACT}`}>{CONTACT}</a>.
