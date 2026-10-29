@@ -1,6 +1,6 @@
 import type { Octokit } from "octokit";
 import { estGenere } from "../github";
-import { masquerSecrets } from "../masquage";
+import { masquerEtTronquer } from "../masquage";
 import { MAX_FICHIERS_TUTO } from "./demande";
 import type { EcartsTuto, FichierTuto, LectureTuto } from "./types";
 
@@ -137,10 +137,9 @@ export async function lireRepoPourTuto(
 		}
 		if (reste <= 0) return;
 		const plafond = Math.min(LIMITES_TUTO.caracteresFichier, reste);
-		const propre = masquerSecrets(texte);
-		const contenu = propre.slice(0, plafond);
+		const contenu = masquerEtTronquer(texte, plafond);
 		reste -= contenu.length;
-		fichiers.push({ chemin, contenu, tronque: propre.length > contenu.length });
+		fichiers.push({ chemin, contenu, tronque: texte.length > plafond });
 	});
 
 	return {
@@ -149,7 +148,7 @@ export async function lireRepoPourTuto(
 		arborescenceTronquee: analyse.arborescenceTronquee,
 		proposes: analyse.proposes,
 		fichiers,
-		readme: masquerSecrets(readme).slice(0, LIMITES_TUTO.caracteresReadme),
+		readme: masquerEtTronquer(readme, LIMITES_TUTO.caracteresReadme),
 		ecartes,
 	};
 }

@@ -87,6 +87,15 @@ describe("lireRepoPourTuto", () => {
 		expect(r.readme).toContain("[secret masque]");
 	});
 
+	it("masque en temps borne des fichiers et un README hostiles", async () => {
+		const noeuds = Array.from({ length: 12 }, (_, i) => ({ path: `src/m${i}.ts` }));
+		const contenus = Object.fromEntries(noeuds.map((n) => [n.path, "sk-".repeat(33_000)]));
+		const { octokit } = faux(noeuds, contenus, { readme: "sk-".repeat(1_500_000) });
+		const debut = performance.now();
+		await lireRepoPourTuto(octokit, "u", "p");
+		expect(performance.now() - debut).toBeLessThan(250);
+	});
+
 	it("plafonne chaque fichier, le total et le nombre de fichiers", async () => {
 		const noeuds = Array.from({ length: 30 }, (_, i) => ({ path: `src/m${i}.ts` }));
 		const contenus = Object.fromEntries(noeuds.map((n) => [n.path, "x".repeat(10_000)]));

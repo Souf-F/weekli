@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import wrangler from "../../../wrangler.jsonc?raw";
 import { jeton, domainesRevalides, ecrireDomaines, lireDomaines, valeurAttendue } from "../domaines";
 import { MOTIFS_SENSIBLES, SCRIPT_FLOU } from "../flou";
 import { pageConsentement, pageErreur } from "../pages";
@@ -131,5 +132,22 @@ describe("domainesRevalides", () => {
 		expect(Date.now() - Date.parse(liste[0].verifie)).toBeLessThan(60_000);
 		expect((await lireDomaines(env, "souf")).map((d) => d.hote)).toEqual(["garde.dev", "recent.dev"]);
 		vi.unstubAllGlobals();
+	});
+});
+
+describe("wrangler.jsonc", () => {
+	// Fichier JSONC : on retire les lignes de commentaire avant l'analyse
+	const config = JSON.parse(
+		wrangler
+			.split("\n")
+			.filter((l: string) => !/^\s*(\/\/|\/?\*)/.test(l))
+			.join("\n"),
+	);
+
+	it("borne le CPU par requete", () => expect(config.limits?.cpu_ms).toBeLessThanOrEqual(5000));
+
+	it("envoie les chemins commencant par un point au Worker (404) au lieu du repli SPA", () => {
+		expect(config.assets.run_worker_first).toContain("/.*");
+		expect(config.assets.not_found_handling).toBe("single-page-application");
 	});
 });

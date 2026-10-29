@@ -1,17 +1,14 @@
-# Handoff backend, B17 : `preparer_post`
+# Handoff backend-senior : corrections de l'audit securite final
 
-## Livré
-- `GET /api/repos/:repo/commits?jours=` (1 à 90, 30 par défaut), `GET /api/repos/:repo/fichiers-tuto`, `POST /api/posts/donnees` dans `apps/server/src/routes/api.ts`.
-- Outil MCP `preparer_post` et prompt `preparer_post` dans `apps/server/src/mcp/outils-pub.ts` (cas `coulisses` sans commits : `commitsDisponibles`). `proposer_post_projet` conservé.
-- `apps/server/src/lib/posts.ts` : `preparerPost` (route et outil partagent le même code, donc le même `DonneesPost`), `commitsDisponibles`, `ou` et `IntrouvablePost` (404 Octokit ou repo privé mappé en `Repo introuvable ou prive : ...`, géré par `api.onError`).
-- Tout passe par `@weekli/core`. Session, Origin (global dans `index.ts`) et débit : comme les routes existantes. Repo lu sous le login de la session.
+Tests : packages/core 279 verts, apps/server 238 verts, `tsc --noEmit` vert dans les deux. `wrangler deploy --dry-run` valide. Rien n'est commite.
 
-## Tests
-`npx tsc --noEmit` : OK. `npx vitest run` dans apps/server : 18 fichiers, 236 tests verts. Nouveaux : `routes/__tests__/posts.test.ts` (plafonds du tuto, `.env` jamais lu, 400 par message, 404 repo/commit, 401, 429, types sans commits) et bloc `preparer_post` dans `mcp/__tests__/outils.test.ts`.
+- N1 : `masquage.ts` sans anticipation (chiffre de `sk-` verifie dans la fonction de remplacement), `masquerEtTronquer(texte, plafond)` tronque avant de masquer (marge de 256) dans tuto (fichiers, README), github (patchs, README). Tests : 200 Ko hostiles en moins de 50 ms, tuto hostile borne.
+- N6 : README masque dans `detailsRepo`. Ajout de sk_live_, rk_live_, AIza, npm_, glpat-, SG. Les JWT ne sont pas ajoutes (motif non borne, risque quadratique).
+- N7 : `<` echappe en notation JSON dans `messagePost`.
+- N9 : `detailsCommit` refuse un repo prive.
+- N4 : le quota vocal compte aussi les reponses du cache (avant la lecture du cache) ; TTL du cache ramene a 30 jours. Les ecritures KV par appel augmentent d'un compteur : surveiller les quotas KV avant deploiement.
+- N10 : `limits.cpu_ms` a 5000 dans wrangler.jsonc.
+- N11 : `"/.*"` dans `run_worker_first` (remplace `/.well-known/*`, redondant) : le Worker repond 404 aux chemins en point.
+- m3 (images et fonds CSS externes lors des captures, `Fetch.enable`) : non traite, necessite des evenements CDP non testables ici. m12 : hors code.
 
-## Env, dépendances, code mort
-Aucune variable ni dépendance ajoutée. Aucun code supprimé.
-
-## Limites
-- `GET /commits` ne refuse pas un repo privé du compte (`commitsRepo` de core ne vérifie pas la visibilité) : à corriger dans core si voulu.
-- Pas de test 403 sur Origin pour ces routes (garde globale testée ailleurs). Rien de commité.
+Dependances ajoutees : aucune. Code mort supprime : ancienne troncature apres masquage.

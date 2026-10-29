@@ -1,7 +1,7 @@
 import type { Octokit } from "octokit";
-import { describe, expect, it } from "vitest";
-import { detailsCommit } from "./github";
-import { masquerSecrets } from "./masquage";
+import { describe, expect, it, vi } from "vitest";
+import { detailsCommit, detailsRepo } from "./github";
+import { masquerEtTronquer, masquerSecrets } from "./masquage";
 
 // Jetons fabriques a l'execution : aucun faux secret en clair dans le depot
 const a = (n: number) => "a1".repeat(n).slice(0, n);
@@ -50,6 +50,7 @@ describe("detailsCommit", () => {
 		const octokit = {
 			rest: {
 				repos: {
+					get: async () => ({ data: { private: false } }),
 					getCommit: async () => ({
 						data: {
 							sha: "abcdef123456",
@@ -62,5 +63,62 @@ describe("detailsCommit", () => {
 		} as unknown as Octokit;
 		const { fichiers } = await detailsCommit(octokit, "u", "r", "abcdef1");
 		expect(fichiers[0]?.extrait).toBe(`${"x".repeat(1480)} [secret masque]`);
+	});
+
+	it("refuse le commit d'un repo prive", async () => {
+		const getCommit = vi.fn(async () => ({ data: {} }));
+		const octokit = {
+			rest: { repos: { get: async () => ({ data: { private: true } }), getCommit } },
+		} as unknown as Octokit;
+		await expect(detailsCommit(octokit, "u", "r", "abcdef1")).rejects.toThrow("prive");
+	});
+});
+
+describe("detailsRepo", () => {
+	it("masque les secrets du README", async () => {
+		const jeton = `ghp_${a(36)}`;
+		const octokit = {
+			rest: {
+				repos: {
+					get: async () => ({ data: { private: false, name: "r", html_url: "u", stargazers_count: 0 } }),
+					listLanguages: async () => ({ data: {} }),
+					getReadme: async () => ({ data: `# Projet\n${jeton}` }),
+				},
+			},
+		} as unknown as Octokit;
+		const { readme } = await detailsRepo(octokit, "u", "r");
+		expect(readme).not.toContain(jeton);
+		expect(readme).toContain("[secret masque]");
+	});
+});
+
+describe("masquage : nouveaux formats", () => {
+	it.each([
+		["Stripe sk_live_", `sk_live_${"A1".repeat(12)}`],
+		["Stripe rk_live_", `rk_live_${"A1".repeat(12)}`],
+		["Google AIza", `AIza${"A1".repeat(17)}x`],
+		["npm", `npm_${"a1".repeat(18)}`],
+		["GitLab", `glpat-${"a1".repeat(10)}`],
+		["SendGrid", `SG.${"a1".repeat(11)}.${a(43)}`],
+	])("masque %s", (_nom, secret) => {
+		expect(masquerSecrets(`k = ${secret};`)).toBe("k = [secret masque];");
+	});
+});
+
+describe("masquage : performance", () => {
+	const hostile = "sk-".repeat(70_000);
+
+	it("masque un texte hostile de 200 Ko en moins de 50 ms", () => {
+		const debut = performance.now();
+		masquerSecrets(hostile);
+		expect(performance.now() - debut).toBeLessThan(50);
+	});
+
+	it("tronque avant de masquer et garde un jeton a cheval sur la coupure masque", () => {
+		const jeton = `ghp_${a(36)}`;
+		expect(masquerEtTronquer(`${"x".repeat(94)} ${jeton} ${hostile}`, 100)).toBe(`${"x".repeat(94)} [secret masque]`.slice(0, 100));
+		const debut = performance.now();
+		masquerEtTronquer(hostile.repeat(20), 6000);
+		expect(performance.now() - debut).toBeLessThan(50);
 	});
 });

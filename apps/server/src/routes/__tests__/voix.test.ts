@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { CONSERVATION_SECONDES } from "../../lib/conservation";
 import { api } from "../api";
 import { avecSessions, faux, SID } from "./aide";
 
@@ -117,12 +116,12 @@ describe("POST /api/voix", () => {
 		expect(urls[0]).toMatch(/^https:\/\/speech\.platform\.bing\.com\/.*Sec-MS-GEC=[0-9A-F]{16}-[0-9A-F]{64}&/);
 	});
 
-	it("sert la deuxieme demande depuis le cache KV (90 jours), meme pour un autre compte", async () => {
+	it("sert la deuxieme demande depuis le cache KV (30 jours), meme pour un autre compte", async () => {
 		const corps = phrase("cache");
 		await appeler(monte.env, corps);
 		const cle = [...monte.cache.keys()][0];
 		expect(cle).toMatch(/^voix:[0-9a-f]{64}$/);
-		expect(monte.options.get(cle)?.expirationTtl).toBe(CONSERVATION_SECONDES);
+		expect(monte.options.get(cle)?.expirationTtl).toBe(60 * 60 * 24 * 30);
 
 		const r = await appeler(monte.env, corps, SID("c"));
 		expect(r.status).toBe(200);
@@ -141,14 +140,14 @@ describe("POST /api/voix", () => {
 		expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain("Phrase numero");
 	});
 
-	it("limite chaque compte a 60 phrases par heure, le cache restant servi", async () => {
-		for (let i = 0; i < 60; i++) expect((await appeler(monte.env, phrase(i))).status).toBe(200);
-		const refus = await appeler(monte.env, phrase("de-trop"));
-		expect(refus.status).toBe(429);
-		expect(connexions).toBe(60);
-
+	it("limite chaque compte a 60 phrases par heure, cache compris, sans bloquer les autres comptes", async () => {
+		for (let i = 0; i < 59; i++) expect((await appeler(monte.env, phrase(i))).status).toBe(200);
 		expect((await appeler(monte.env, phrase(3))).status).toBe(200);
-		expect((await appeler(monte.env, phrase("de-trop"), SID("c"))).status).toBe(200);
+		expect(connexions).toBe(59);
+
+		expect((await appeler(monte.env, phrase("de-trop"))).status).toBe(429);
+		expect((await appeler(monte.env, phrase(3))).status).toBe(429);
+		expect((await appeler(monte.env, phrase(3), SID("c"))).status).toBe(200);
 	});
 
 	it("rejette les corps invalides et les appels sans session", async () => {

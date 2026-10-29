@@ -1,4 +1,3 @@
-import { CONSERVATION_SECONDES } from "./conservation";
 import { jetonGec, TOKEN_CLIENT } from "./voix-gec";
 
 // Voix off Microsoft (ADR voix, changelog 2026-10-25) : meme protocole que edge-tts, sans compte Azure.
@@ -104,6 +103,9 @@ export async function synthetiser(texte: string): Promise<Uint8Array<ArrayBuffer
 	});
 }
 
+// Cache partage, 30 jours seulement : borne le volume stocke dans KV par les phrases de tous les comptes
+const CACHE_SECONDES = 60 * 60 * 24 * 30;
+
 // Cache partage : l'audio ne depend que de (voix, texte), il n'est lie a aucun compte
 export async function cleCache(texte: string) {
 	return `voix:${hex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${VOIX}\n${texte}`)))}`;
@@ -111,7 +113,7 @@ export async function cleCache(texte: string) {
 
 export const lireCache = (env: Env, cle: string) => env.OAUTH_KV.get(cle, "arrayBuffer");
 export const ecrireCache = (env: Env, cle: string, audio: Uint8Array) =>
-	env.OAUTH_KV.put(cle, audio, { expirationTtl: CONSERVATION_SECONDES });
+	env.OAUTH_KV.put(cle, audio, { expirationTtl: CACHE_SECONDES });
 
 // Compteur par utilisateur et par heure. Lecture puis ecriture non atomiques : une rafale simultanee peut depasser la
 // limite de quelques phrases, ce qui est sans consequence ici (le plafond protege Microsoft, pas un quota payant).

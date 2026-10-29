@@ -1,6 +1,6 @@
 import type { Octokit } from "octokit";
 import { estBruit, filtrerActivite, MAX_COMMITS } from "./filtre";
-import { masquerSecrets } from "./masquage";
+import { masquerEtTronquer } from "./masquage";
 import type { Activite, ActiviteRepo, Commit, DetailsCommit, DetailsRepo } from "./types";
 
 const TAILLE_README = 6000;
@@ -122,7 +122,7 @@ export async function detailsRepo(octokit: Octokit, login: string, repo: string)
 		sujets: infos.topics ?? [],
 		langages: Object.keys(langages),
 		etoiles: infos.stargazers_count,
-		readme: readme.slice(0, TAILLE_README),
+		readme: masquerEtTronquer(readme, TAILLE_README),
 	};
 }
 
@@ -133,7 +133,11 @@ export async function detailsCommit(
 	repo: string,
 	sha: string,
 ): Promise<DetailsCommit> {
-	const { data } = await octokit.rest.repos.getCommit({ owner: login, repo, ref: sha });
+	const [{ data }, { data: infos }] = await Promise.all([
+		octokit.rest.repos.getCommit({ owner: login, repo, ref: sha }),
+		octokit.rest.repos.get({ owner: login, repo }),
+	]);
+	if (infos.private) throw new Error("Ce repo est prive : Weekli ne lit que les repos publics.");
 	// Les fichiers generes (lockfiles, types generes, builds) faussent les chiffres : ils sont exclus
 	const ecrits = (data.files ?? []).filter((f) => !estGenere(f.filename));
 
@@ -151,7 +155,7 @@ export async function detailsCommit(
 			statut: f.status,
 			ajouts: f.additions,
 			suppressions: f.deletions,
-			extrait: masquerSecrets(f.patch ?? "").slice(0, TAILLE_PATCH),
+			extrait: masquerEtTronquer(f.patch ?? "", TAILLE_PATCH),
 		})),
 	};
 }
