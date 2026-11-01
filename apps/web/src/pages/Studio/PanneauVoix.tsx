@@ -7,9 +7,13 @@ import p from "../Tableau/Panneau.module.css";
 import styles from "./Editeur.module.css";
 import studio from "./Studio.module.css";
 
+export type MoteurVoix = "vivienne" | "kokoro";
+
 type Props = {
 	script: ScriptPub;
 	surScript: (s: ScriptPub) => void;
+	moteur: MoteurVoix;
+	surMoteur: (m: MoteurVoix) => void;
 	voix: VoixGeneree | null;
 	perimee: string[];
 	progression: ProgressionVoix | null;
@@ -19,10 +23,12 @@ type Props = {
 	annuler: () => void;
 };
 
-const MODES = [
-	{ id: "synthese", libelle: "Voix générée", detail: "Voix française Vivienne ; si le serveur de voix ne répond pas, une voix de secours se prépare dans ton navigateur" },
-	{ id: "importee", libelle: "Ma voix", detail: "Un fichier audio par scène, qui reste dans ton navigateur" },
-	{ id: "aucune", libelle: "Sans voix", detail: "Les scènes suivent leur durée par défaut" },
+// Le moteur (Vivienne ou Kokoro) n'est pas dans le script : le mode « Voix générée » du script couvre les deux
+const CHOIX = [
+	{ id: "vivienne", mode: "synthese", libelle: "Vivienne (Microsoft, en ligne)", detail: "Voix française de qualité ; le texte de chaque phrase passe par le serveur Weekli puis par Microsoft. Si le service ne répond pas, Kokoro prend le relais" },
+	{ id: "kokoro", mode: "synthese", libelle: "Kokoro (dans ton navigateur, rien n'est envoyé)", detail: "Voix calculée sur ton appareil, sans aucun appel au serveur de voix ; le modèle se télécharge une fois" },
+	{ id: "importee", mode: "importee", libelle: "Ma voix (importée)", detail: "Un fichier audio par scène, qui reste dans ton navigateur" },
+	{ id: "aucune", mode: "aucune", libelle: "Sans voix", detail: "Les scènes suivent leur durée par défaut" },
 ] as const;
 
 // "GitHub = Guite-heub" par ligne, 20 lignes au plus
@@ -38,7 +44,7 @@ function versDictionnaire(texte: string): Record<string, string> {
 	return sortie;
 }
 
-export function PanneauVoix({ script, surScript, voix, perimee, progression, etat, erreur, generer, annuler }: Props) {
+export function PanneauVoix({ script, surScript, moteur, surMoteur, voix, perimee, progression, etat, erreur, generer, annuler }: Props) {
 	const [fichiers, setFichiers] = useState<Record<string, File>>({});
 	const [dico, setDico] = useState(() => versLignes(script.voix.prononciation));
 	const mode = script.voix.mode;
@@ -49,9 +55,17 @@ export function PanneauVoix({ script, surScript, voix, perimee, progression, eta
 		<div className={styles.groupe}>
 			<fieldset className={styles.choix}>
 				<legend>Voix off</legend>
-				{MODES.map((m) => (
+				{CHOIX.map((m) => (
 					<label key={m.id}>
-						<input type="radio" name="mode-voix" checked={mode === m.id} onChange={() => maj({ mode: m.id })} />
+						<input
+							type="radio"
+							name="mode-voix"
+							checked={m.mode === "synthese" ? mode === "synthese" && moteur === m.id : mode === m.mode}
+							onChange={() => {
+								if (m.id === "vivienne" || m.id === "kokoro") surMoteur(m.id);
+								maj({ mode: m.mode });
+							}}
+						/>
 						<span>
 							<strong>{m.libelle}</strong>
 							<span className={styles.aide}>{m.detail}</span>

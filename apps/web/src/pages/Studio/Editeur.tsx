@@ -17,7 +17,7 @@ import { PanneauGestes } from "./PanneauGestes";
 import { PanneauPost } from "./PanneauPost";
 import { PanneauMarque } from "./PanneauMarque";
 import { PanneauScenes } from "./PanneauScenes";
-import { PanneauVoix } from "./PanneauVoix";
+import { type MoteurVoix, PanneauVoix } from "./PanneauVoix";
 import studio from "./Studio.module.css";
 
 const ONGLETS = [
@@ -84,7 +84,8 @@ function EditeurOuvert({ id, initial }: { id: string; initial: ScriptPub }) {
 	}, [diagnostic.script]);
 
 	const { images, version, manquantes, importerLogo, couleurs } = useImagesPub(id, script);
-	const voixPub = useVoixPub(script);
+	const [moteurVoix, setMoteurVoix] = useState<MoteurVoix>("vivienne");
+	const voixPub = useVoixPub(script, moteurVoix === "kokoro");
 	const generer = voixPub.generer;
 
 	// Les durees de voix a jour ; une cle texte evite de reconstruire le moteur quand elles n'ont pas change
@@ -142,6 +143,8 @@ function EditeurOuvert({ id, initial }: { id: string; initial: ScriptPub }) {
 							<PanneauVoix
 								script={script}
 								surScript={surScript}
+								moteur={moteurVoix}
+								surMoteur={setMoteurVoix}
 								voix={voixPub.voix}
 								perimee={voixPub.perimee}
 								progression={voixPub.progression}

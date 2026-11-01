@@ -57,7 +57,7 @@ export function LecteurPub() {
 				ref={video}
 				className={styles.video}
 				src="/demo/weekli-pub.mp4"
-				poster="/demo/weekli-pub.png"
+				poster="/demo/weekli-pub.jpg"
 				width={1920}
 				height={1080}
 				muted
@@ -65,7 +65,9 @@ export function LecteurPub() {
 				playsInline
 				preload="none"
 				aria-label="Pub de démonstration de Weekli, 46 secondes, voix off en français"
-			/>
+			>
+				<track kind="captions" srcLang="fr" label="Français" src="/demo/weekli-pub.vtt" default />
+			</video>
 			<div className={styles.commandes}>
 				<button type="button" className={styles.bouton} onClick={basculerLecture}>
 					{lecture ? "Mettre en pause" : "Lire la pub"}

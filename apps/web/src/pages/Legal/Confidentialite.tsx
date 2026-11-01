@@ -148,8 +148,8 @@ export function Confidentialite() {
 				ne lui sont pas transmis. L'audio est conservé 90 jours côté Weekli, indexé par l'empreinte du texte et non
 				rattaché à ton compte : il ne peut donc pas être retrouvé ni effacé par compte, et il est partagé entre
 				utilisateurs qui écrivent la même phrase. N'écris pas de donnée personnelle dans une voix off. Pour que rien ne parte chez
-				Microsoft, choisis « Ma voix » ou « Sans voix » dans le studio. La voix Kokoro, calculée dans ton navigateur
-				sans rien envoyer, prend le relais automatiquement quand le service est indisponible.
+				Microsoft, choisis « Kokoro (dans ton navigateur, rien n'est envoyé) », « Ma voix » ou « Sans voix » dans le studio. Kokoro est
+				calculée dans ton navigateur sans rien envoyer, et prend aussi le relais automatiquement quand le service est indisponible.
 			</p>
 
 			<h2>Ta clé API Anthropic</h2>

@@ -85,4 +85,22 @@ describe("voix de la pub", () => {
 		controle.abort();
 		await expect(synthetiserVoix(script(), { appeler: route(), decoder, signal: controle.signal })).rejects.toMatchObject({ name: "AbortError" });
 	});
+
+	it("avec Kokoro choisi, aucune requete vers /api/voix", async () => {
+		const fetchEspion = vi.fn(async () => new Response(null, { status: 500 }));
+		vi.stubGlobal("fetch", fetchEspion);
+		const kokoro = {
+			charger: vi.fn(async () => ({ fils: 1, mesures: {} as never })),
+			synthetiser: vi.fn(async () => ({ audio: new Float32Array(TAUX) as Float32Array<ArrayBuffer>, frequence: TAUX, phonemes: "", mesures: {} as never })),
+			terminer: vi.fn(),
+		};
+		try {
+			const r = await synthetiserVoix(script(), { sansServeur: true, voix: kokoro });
+			expect(r.etat).toEqual({ source: "kokoro", secours: false });
+			expect(kokoro.synthetiser).toHaveBeenCalledTimes(3);
+			expect(fetchEspion).not.toHaveBeenCalled();
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
 });

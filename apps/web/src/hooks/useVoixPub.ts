@@ -6,7 +6,7 @@ export type VoixGeneree = { voix: VoixPreparee; textes: Record<string, string>; 
 export type ProgressionVoix = { libelle: string; part: number | null };
 
 // La voix depend du texte de chaque scene, de la vitesse et de la prononciation (synthese) : une signature compare
-const signatureDe = (s: ScriptPub) => JSON.stringify([s.voix.mode, s.voix.mode === "synthese" ? [s.voix.vitesse, s.voix.prononciation] : null]);
+const signatureDe = (s: ScriptPub, sansServeur: boolean) => JSON.stringify([s.voix.mode, s.voix.mode === "synthese" ? [sansServeur, s.voix.vitesse, s.voix.prononciation] : null]);
 const textesDe = (s: ScriptPub) => Object.fromEntries(s.scenes.filter((x) => !x.masquee).map((x) => [x.id, x.voix.trim()]));
 
 function libelleEtape(e: EtapeVoix): ProgressionVoix {
@@ -18,7 +18,8 @@ function libelleEtape(e: EtapeVoix): ProgressionVoix {
 }
 
 // Etat de la voix off d'une pub : generee dans le navigateur, ou importee scene par scene
-export function useVoixPub(script: ScriptPub | null) {
+// `sansServeur` : voix Kokoro choisie, calculee dans le navigateur, sans aucun appel a /api/voix
+export function useVoixPub(script: ScriptPub | null, sansServeur = false) {
 	const [voix, setVoix] = useState<VoixGeneree | null>(null);
 	const [progression, setProgression] = useState<ProgressionVoix | null>(null);
 	const [etat, setEtat] = useState<EtatVoix | null>(null);
@@ -33,8 +34,8 @@ export function useVoixPub(script: ScriptPub | null) {
 			setErreur("");
 			setProgression({ libelle: "Voix : préparation", part: null });
 			try {
-				const prep = s.voix.mode === "importee" ? await importerVoix(fichiers ?? {}) : await synthetiserVoix(s, { signal: controle.signal, surProgression: (e) => setProgression(libelleEtape(e)), surEtat: setEtat });
-				const resultat = { voix: prep, textes: textesDe(s), signature: signatureDe(s) };
+				const prep = s.voix.mode === "importee" ? await importerVoix(fichiers ?? {}) : await synthetiserVoix(s, { sansServeur, signal: controle.signal, surProgression: (e) => setProgression(libelleEtape(e)), surEtat: setEtat });
+				const resultat = { voix: prep, textes: textesDe(s), signature: signatureDe(s, sansServeur) };
 				setVoix(resultat);
 				setEtat(prep.etat);
 				return resultat;
@@ -45,7 +46,7 @@ export function useVoixPub(script: ScriptPub | null) {
 				setProgression(null);
 			}
 		},
-		[],
+		[sansServeur],
 	);
 
 	const annuler = useCallback(() => arret.current?.abort(), []);
@@ -54,9 +55,9 @@ export function useVoixPub(script: ScriptPub | null) {
 	const perimee = useMemo(() => {
 		if (!voix || !script) return [];
 		const courants = textesDe(script);
-		if (voix.signature !== signatureDe(script)) return Object.keys(courants);
+		if (voix.signature !== signatureDe(script, sansServeur)) return Object.keys(courants);
 		return Object.keys(courants).filter((id) => courants[id] && voix.textes[id] !== courants[id]);
-	}, [voix, script]);
+	}, [voix, script, sansServeur]);
 
 	// Voix utilisable par le moteur : seulement les scenes a jour
 	const valide = useMemo<VoixPreparee | null>(() => {
