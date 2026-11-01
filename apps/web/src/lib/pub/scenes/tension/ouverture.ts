@@ -2,7 +2,9 @@ import type { Palette } from "@weekli/core";
 import type { Ctx2D, InstantScene, Scene } from "../../scene";
 import { avecAlpha } from "../../visuel/couleur";
 import { avancement, easeInOutCubic, easeOutCubic, easeOutExpo, interpoler } from "../../visuel/courbes";
-import { dessinerMotParMot } from "../../visuel/cinetique";
+import { dessinerMotParMot, finMotParMot } from "../../visuel/cinetique";
+import { choisirApparition } from "../../visuel/gestes";
+import { dessinerApparition, finApparition } from "../../visuel/texte";
 import { appliquerPolice, type Bloc, reinitialiserPolice } from "../../visuel/typo";
 import { blocCentre, fondTension, type Identite } from "./commun";
 
@@ -20,10 +22,11 @@ const ARCS: [number, number][] = [
 	[186, 262],
 ];
 
-function dessinerCadran(ctx: Ctx2D, p: Palette, secondes: number, duree: number) {
-	const trace = easeInOutCubic(avancement(secondes, 0.02 * duree, Math.min(0.7, 0.4 * duree)));
+// `pose` : premiere scene de la pub (image zero, design.md 8.16), le cadran est deja complet a t = 0
+function dessinerCadran(ctx: Ctx2D, p: Palette, secondes: number, duree: number, pose: boolean) {
+	const trace = pose ? 1 : easeInOutCubic(avancement(secondes, 0.02 * duree, Math.min(0.7, 0.4 * duree)));
 	if (trace <= 0) return;
-	const apparition = easeOutExpo(avancement(secondes, 0, 0.6));
+	const apparition = pose ? 1 : easeOutExpo(avancement(secondes, 0, 0.6));
 	ctx.save();
 	ctx.translate(CENTRE.x, CENTRE.y);
 	ctx.rotate(secondes * CADRAN.rotation);
@@ -111,7 +114,9 @@ export function creerOuverture(identite: Identite): Scene {
 			const s = i.secondes;
 			const duree = i.scene.duree;
 			fondTension(ctx, i, p);
-			dessinerCadran(ctx, p, s, duree);
+			// image zero : premiere scene de la pub, texte et cadran sont deja poses
+			const premiere = i.scene.debut <= 0;
+			dessinerCadran(ctx, p, s, duree, premiere);
 			const ambiance = identite.ambiance;
 			const bloc = blocCentre(
 				ctx,
@@ -119,11 +124,17 @@ export function creerOuverture(identite: Identite): Scene {
 				{ niveau: "affiche", echelle: 1.65, majuscules: ambiance === "nette", ambiance, x: CENTRE.x, largeur: 1560, lignesMax: 2, alignement: "centre" },
 				490,
 			);
-			dessinerMoment(ctx, bloc, s, 0.16 * duree, p.blanc);
+			const debutMoment = 0.16 * duree;
+			const procede = choisirApparition(i.contexte.gestes, ["glisse", "frappe", "mot"]);
+			const finMoment = procede === "glisse" ? debutMoment + Math.max(0.7, (bloc.fragments.reduce((n, f) => n + [...f.texte].length, 0) - 1) * LETTRE.ecart + LETTRE.duree) : finApparition(procede, bloc, debutMoment);
+			const sMoment = premiere ? Math.max(s, finMoment) : s;
+			if (procede === "glisse") dessinerMoment(ctx, bloc, sMoment, debutMoment, p.blanc);
+			else dessinerApparition(ctx, procede, bloc, sMoment, { debut: debutMoment, couleur: p.blanc, curseur: p.accentSombre, particules: p.accentSombre, graine: i.graine });
 			if (detail) {
 				const derniere = bloc.lignes[bloc.lignes.length - 1].y;
 				const sous = blocCentre(ctx, detail, { niveau: "slogan", echelle: 1.8, ambiance, x: CENTRE.x, largeur: 1400, lignesMax: 1, alignement: "centre" }, derniere + 112);
-				dessinerMotParMot(ctx, sous, s, { debut: 0.4 * duree, couleur: p.accentSombre, ecart: 0.03 });
+				const debutDetail = 0.4 * duree;
+				dessinerMotParMot(ctx, sous, premiere ? Math.max(s, finMotParMot(sous, debutDetail, 0.03)) : s, { debut: debutDetail, couleur: p.accentSombre, ecart: 0.03 });
 			}
 		},
 	};

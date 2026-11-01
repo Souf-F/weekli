@@ -3,6 +3,7 @@ import { type Ctx2D, HAUTEUR, type InstantScene, LARGEUR, type Scene } from "../
 import { avecAlpha } from "../../visuel/couleur";
 import { avancement, easeInOutCubic, easeOutCubic, easeOutExpo, interpoler } from "../../visuel/courbes";
 import { dessinerMotParMot } from "../../visuel/cinetique";
+import { miseEnValeur, optionAccent } from "../../visuel/gestes";
 import { dessinerImpact, secousseImpact } from "../../visuel/impact";
 import { blocCentre, blocQuiTient, dessinerCarte, fondTension, type Identite, type PoseCarte } from "./commun";
 
@@ -73,7 +74,8 @@ export function creerRepetition(identite: Identite): Scene {
 			const tMur = MUR_T * duree;
 			const enImpact = s >= tImpact;
 
-			const secousse = secousseImpact(s, tImpact, i.graine);
+			const mev = miseEnValeur(i.contexte.gestes);
+			const secousse = secousseImpact(s, tImpact, i.graine, mev.impact);
 			// la secousse decale le cadre : le bord decouvert reste de la couleur du fond
 			ctx.fillStyle = p.sombre;
 			ctx.fillRect(0, 0, LARGEUR, HAUTEUR);
@@ -118,6 +120,7 @@ export function creerRepetition(identite: Identite): Scene {
 						couleur: p.blanc,
 						// la derniere ligne porte l'alerte ; les premieres, l'accent (comme la reference)
 						couleurAccent: rang === n - 1 ? p.alerteSombre : p.accentSombre,
+						accent: optionAccent(i.contexte.gestes),
 					});
 					ctx.restore();
 				}
@@ -135,7 +138,7 @@ export function creerRepetition(identite: Identite): Scene {
 					{ options, centre: 560 },
 					{ options: { ...options, echelle: 0.85 }, centre: 560 },
 				]);
-				dessinerImpact(ctx, bloc, s, { debut: tImpact, couleur: p.alerteSombre });
+				dessinerImpact(ctx, bloc, s, { debut: tImpact, couleur: p.alerteSombre, neutre: !mev.impact });
 			}
 			ctx.restore();
 		},

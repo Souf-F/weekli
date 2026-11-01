@@ -11,6 +11,7 @@ import {
 	ECHELLE,
 	interpoler,
 	mettreEnPage,
+	rebondAccent,
 	reinitialiserPolice,
 } from "../../visuel";
 import { type Contexte, dessinerBlocVisible, dessinerTitre, ECHELLE_TITRE, entree, finTitre, MARGE, mettreTitre } from "./commun";
@@ -179,7 +180,7 @@ export function creerEtape(c: Contexte): Scene {
 		}
 
 		const debutTitre = 0.12;
-		dessinerTitre(ctx, titre, s, { debut: debutTitre, couleur: p.encre, accent: p.accentClair });
+		dessinerTitre(ctx, titre, s, { debut: debutTitre, couleur: p.encre, accent: p.accentClair, rebond: rebondAccent(i.contexte.gestes, false) });
 
 		if (!vide && d.texte) {
 			const texte = mettreEnPage(ctx, d.texte, {

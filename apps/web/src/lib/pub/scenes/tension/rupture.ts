@@ -1,6 +1,8 @@
 import type { MotsAccent } from "@weekli/core";
 import type { Ctx2D, Scene } from "../../scene";
-import { dessinerFrappe, FRAPPE, finFrappe } from "../../visuel/cinetique";
+import { FRAPPE } from "../../visuel/cinetique";
+import { type Apparition, choisirApparition } from "../../visuel/gestes";
+import { dessinerApparition, finApparition } from "../../visuel/texte";
 import { avancement, easeInOutCubic, easeOutCubic, interpoler } from "../../visuel/courbes";
 import { dessinerFondClair } from "../../visuel/fonds";
 import { type Ambiance, type Bloc, mettreEnPage } from "../../visuel/typo";
@@ -44,13 +46,20 @@ export function creerRupture(identite: Identite): Scene {
 			const duree = i.scene.duree;
 			dessinerFondClair(ctx, p, { secondes: s, temps: i.temps, graine: i.graine });
 			const blocs = decouper(ctx, i.donnees.texte, identite.ambiance);
-			const debuts = [0.15 * duree];
-			for (let k = 1; k < blocs.length; k++) debuts.push(finFrappe(blocs[k - 1], debuts[k - 1]) + FRAPPE.pas);
+			// la conviction est tapee par defaut ; sans le geste `frappe`, lettres ou mot par mot
+			const calendrier = (procede: Apparition) => {
+				const debuts = [0.15 * duree];
+				for (let k = 1; k < blocs.length; k++) debuts.push(finApparition(procede, blocs[k - 1], debuts[k - 1]) + FRAPPE.pas);
+				return { debuts, fin: finApparition(procede, blocs[blocs.length - 1], debuts[debuts.length - 1]) };
+			};
+			let procede = choisirApparition(i.contexte.gestes, ["frappe", "lettres", "mot"]);
+			// un texte trop long pour sa scene (lettres) passe en mot par mot plutot que d'etre coupe
+			if (procede === "lettres" && calendrier(procede).fin > duree - 0.4) procede = "mot";
+			const { debuts, fin } = calendrier(procede);
 			const derniere = blocs[blocs.length - 1];
-			const fin = finFrappe(derniere, debuts[debuts.length - 1]);
 			const depart = fin + TENUE;
-			// le final n'a lieu que s'il reste le temps de le voir
-			const final = depart + DEPLACEMENT + 0.25 <= duree;
+			// le curseur final annonce les pixels de la revelation : il n'existe qu'avec la frappe
+			const final = procede === "frappe" && depart + DEPLACEMENT + 0.25 <= duree;
 			const effacement = final ? easeOutCubic(avancement(s, depart, 0.22)) : 0;
 			if (effacement < 1) {
 				ctx.save();
@@ -59,7 +68,14 @@ export function creerRupture(identite: Identite): Scene {
 					if (k > 0 && s < debuts[k]) return; // ligne pas encore commencee : ni texte ni curseur
 					// une ligne garde son curseur jusqu'a ce que la suivante commence
 					const actif = (k === blocs.length - 1 || s < debuts[k + 1]) && !(final && s >= depart);
-					dessinerFrappe(ctx, bloc, s, { debut: debuts[k], couleur: p.encre, couleurAccent: p.accentClair, curseur: actif ? p.accentClair : TRANSPARENT });
+					dessinerApparition(ctx, procede, bloc, s, {
+						debut: debuts[k],
+						couleur: p.encre,
+						couleurAccent: p.accentClair,
+						curseur: actif ? p.accentClair : TRANSPARENT,
+						particules: p.accentClair,
+						graine: i.graine + k,
+					});
 				});
 				ctx.restore();
 			}

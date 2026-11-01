@@ -41,3 +41,5 @@ export {
 	policesRequises,
 	reinitialiserPolice,
 } from "./typo";
+export { type Apparition, choisirApparition, geste, type Gestes, type MiseEnValeur, miseEnValeur, optionAccent, rebondAccent } from "./gestes";
+export { dessinerApparition, finApparition, type OptionsApparition } from "./texte";

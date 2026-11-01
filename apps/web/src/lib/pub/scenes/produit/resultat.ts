@@ -6,6 +6,8 @@ import {
 	avecAlpha,
 	dessinerFondClair,
 	dessinerMotParMot,
+	optionAccent,
+	rebondAccent,
 	easeInOutCubic,
 	easeOutCubic,
 	easeOutExpo,
@@ -111,7 +113,7 @@ export function creerResultat(c: Contexte): Scene {
 		dessinerBlocVisible(ctx, sur, p.accentClair, a.alpha, a.dy);
 		const titre = mettreTitre(ctx, d.titre, { niveau: "titre", x: MARGE, y: 196, largeur: LARGEUR - 2 * MARGE, echelle: ECHELLE_TITRE, ambiance: c.ambiance, lignesMax: 2, separer: false });
 		for (const b of titre.blocs) c.signalerCoupe(d.id, b, d.titre.texte);
-		dessinerTitre(ctx, titre, s, { debut: aS(T.titre), couleur: p.encre, accent: p.accentClair });
+		dessinerTitre(ctx, titre, s, { debut: aS(T.titre), couleur: p.encre, accent: p.accentClair, rebond: rebondAccent(i.contexte.gestes, false) });
 		const bas = 196 + titre.hauteur;
 		const decalageY = Math.max(0, bas + 70 - FRISE.yEtiquette);
 
@@ -246,7 +248,7 @@ export function creerResultat(c: Contexte): Scene {
 		if (d.chute) {
 			const chute = mettreEnPage(ctx, d.chute, { niveau: "slogan", x: LARGEUR / 2, y: 906 + decalageY * 0.4, largeur: 1500, lignesMax: 2, alignement: "centre", echelle: 1.05, ambiance: c.ambiance });
 			c.signalerCoupe(d.id, chute, d.chute.texte);
-			dessinerMotParMot(ctx, chute, s, { debut: aS(T.chute), couleur: p.encre, couleurAccent: p.accentClair });
+			dessinerMotParMot(ctx, chute, s, { debut: aS(T.chute), couleur: p.encre, couleurAccent: p.accentClair, accent: optionAccent(i.contexte.gestes) });
 		}
 	}
 

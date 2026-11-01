@@ -2,6 +2,7 @@ import { alea } from "../../aleatoire";
 import type { Scene } from "../../scene";
 import { avancement, easeOutCubic, interpoler } from "../../visuel/courbes";
 import { dessinerMotParMot } from "../../visuel/cinetique";
+import { optionAccent } from "../../visuel/gestes";
 import { blocQuiTient, flou, fondTension, type Identite, tuileBulle } from "./commun";
 
 // Chorus (design.md 8.9), cale sur la reference de 9,3 a 12,6 s : le titre au centre en 161 px,
@@ -48,11 +49,11 @@ export function creerChorus(identite: Identite): Scene {
 				ctx.save();
 				ctx.translate(0, -30 * sortieTitre);
 				ctx.globalAlpha = 1 - sortieTitre;
-				dessinerMotParMot(ctx, bloc, s, { debut: 0.12 * duree, ecart: 0.11, couleur: p.blanc, couleurAccent: p.accentSombre });
+				dessinerMotParMot(ctx, bloc, s, { debut: 0.12 * duree, ecart: 0.11, couleur: p.blanc, couleurAccent: p.accentSombre, accent: optionAccent(i.contexte.gestes) });
 				ctx.restore();
 			}
 			const blocChute = blocQuiTient(ctx, chute, essais);
-			dessinerMotParMot(ctx, blocChute, s, { debut: tChute + 0.12, ecart: 0.1, couleur: p.blanc, couleurAccent: p.alerteSombre });
+			dessinerMotParMot(ctx, blocChute, s, { debut: tChute + 0.12, ecart: 0.1, couleur: p.blanc, couleurAccent: p.alerteSombre, accent: optionAccent(i.contexte.gestes) });
 
 			const hasard = alea(i.graine ^ 0x51ed);
 			bulles.slice(0, PLACES.length).forEach((texte, k) => {

@@ -107,7 +107,7 @@ export function mettreTitre(ctx: Ctx2D, contenu: MotsAccent, o: OptionsTitre): T
 }
 
 // Mot par mot sur un titre (un ou deux blocs) ; l'accent est deja dans sa couleur, sans rebond
-export function dessinerTitre(ctx: Ctx2D, titre: Titre, secondes: number, o: { debut: number; couleur: string; accent: string }) {
+export function dessinerTitre(ctx: Ctx2D, titre: Titre, secondes: number, o: { debut: number; couleur: string; accent: string; rebond?: boolean }) {
 	let debut = o.debut;
 	titre.blocs.forEach((bloc, i) => {
 		const accentue = titre.separe && i === 1;
@@ -115,7 +115,7 @@ export function dessinerTitre(ctx: Ctx2D, titre: Titre, secondes: number, o: { d
 			debut,
 			couleur: accentue ? o.accent : o.couleur,
 			couleurAccent: o.accent,
-			accent: o.debut - 1, // accent deja pose : la couleur est la bonne des la premiere image
+			accent: o.rebond ? undefined : o.debut - 1, // sans geste `accent` : couleur deja posee des la premiere image
 		});
 		debut += bloc.mots * MOT.ecart;
 	});

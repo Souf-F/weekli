@@ -5,7 +5,10 @@ import {
 	avancement,
 	avecAlpha,
 	dessinerFondClair,
-	dessinerLettres,
+	choisirApparition,
+	dessinerApparition,
+	finApparition,
+	rebondAccent,
 	easeInCubic,
 	easeInOutCubic,
 	easeOutExpo,
@@ -151,14 +154,16 @@ export function creerAppel(c: Contexte): Scene {
 		c.signalerCoupe(d.id, a, d.action);
 
 		const debutQuestion = 0.1;
-		dessinerTitre(ctx, q, s, { debut: debutQuestion, couleur: p.encre, accent: p.accentClair });
+		dessinerTitre(ctx, q, s, { debut: debutQuestion, couleur: p.encre, accent: p.accentClair, rebond: rebondAccent(i.contexte.gestes, false) });
 		const debutBadge = finTitre(q, debutQuestion) + 0.05;
 		if (d.badge) dessinerBadge(ctx, d.badge, LARGEUR / 2, yBadge, s, debutBadge, p);
 		const debutAction = Math.min(duree * 0.42, (d.badge ? debutBadge + 0.55 : debutBadge));
-		dessinerLettres(ctx, a, s, { debut: debutAction, couleur: p.accentClair, particules: p.accentClair, graine: i.graine });
+		// mot d'action : lettres qui tombent par defaut ; sans ce geste, frappe, impact ou mot par mot
+		const procede = choisirApparition(i.contexte.gestes, ["lettres", "impact", "frappe", "mot"]);
+		dessinerApparition(ctx, procede, a, s, { debut: debutAction, couleur: p.accentClair, couleurAccent: p.accentClair, curseur: p.accentClair, particules: p.accentClair, graine: i.graine });
 
 		const b = { ...bouton0, y: yBouton, centreY: yBouton + bouton0.hauteur / 2 };
-		const debutBouton = Math.min(duree * 0.6, debutAction + 0.55);
+		const debutBouton = Math.min(duree * 0.6, procede === "lettres" ? debutAction + 0.55 : Math.max(debutAction + 0.3, finApparition(procede, a, debutAction) + 0.1));
 		const eb = entree(s, debutBouton, 0.5, 24);
 		dessinerBouton(ctx, b, d.bouton, {
 			fond: p.accentClair,

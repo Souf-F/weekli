@@ -9,7 +9,8 @@ import { appliquerPolice, type Bloc, CAPITALE, reinitialiserPolice } from "./typ
 export const IMPACT = { duree: 0.16, echelle: 1.25, chroma: 6, imagesChroma: 4, secousse: 6, imagesSecousse: 6 };
 
 // Decalage du cadre a appliquer (ctx.translate) avant de dessiner TOUTE la scene, fond compris
-export function secousseImpact(secondes: number, debut: number, graine: number): { x: number; y: number } {
+export function secousseImpact(secondes: number, debut: number, graine: number, actif = true): { x: number; y: number } {
+	if (!actif) return { x: 0, y: 0 };
 	const image = Math.floor((secondes - debut) * IPS);
 	if (image < 0 || image >= IMPACT.imagesSecousse) return { x: 0, y: 0 };
 	const hasard = alea(graine + image * 7919);
@@ -17,7 +18,8 @@ export function secousseImpact(secondes: number, debut: number, graine: number):
 	return { x: (hasard() * 2 - 1) * force, y: (hasard() * 2 - 1) * force };
 }
 
-export type OptionsImpact = { debut: number; couleur: string };
+// `neutre` : version sans le geste `impact` (8.16), simple changement d'echelle, sans decalage chromatique
+export type OptionsImpact = { debut: number; couleur: string; neutre?: boolean };
 
 export function dessinerImpact(ctx: Ctx2D, bloc: Bloc, secondes: number, o: OptionsImpact) {
 	if (secondes < o.debut) return;
@@ -42,7 +44,7 @@ export function dessinerImpact(ctx: Ctx2D, bloc: Bloc, secondes: number, o: Opti
 	ctx.translate(cx, cy);
 	ctx.scale(echelle, echelle);
 	ctx.translate(-cx, -cy);
-	if (image < IMPACT.imagesChroma) {
+	if (!o.neutre && image < IMPACT.imagesChroma) {
 		const d = IMPACT.chroma * (1 - image / IMPACT.imagesChroma) + 1.5;
 		// trainee horizontale des deux premieres images (le mot arrive vite)
 		if (image < 2) {

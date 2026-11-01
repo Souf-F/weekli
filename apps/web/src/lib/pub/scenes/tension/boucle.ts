@@ -3,6 +3,7 @@ import type { Ctx2D, InstantScene, Scene } from "../../scene";
 import { avecAlpha } from "../../visuel/couleur";
 import { avancement, easeInCubic, easeInOutCubic, easeOutCubic, easeOutExpo, interpoler } from "../../visuel/courbes";
 import { dessinerMotParMot } from "../../visuel/cinetique";
+import { optionAccent } from "../../visuel/gestes";
 import { blocQuiTient, CARTE, dessinerCarte, fondTension, type Identite } from "./commun";
 
 // Boucle (design.md 8.9), calee sur la reference de 5,6 a 9,8 s : la phrase entre mot a mot en haut,
@@ -135,7 +136,7 @@ export function creerBoucle(identite: Identite): Scene {
 			]);
 			const debutPhrase = 0.09 * duree;
 			const ecart = Math.min(0.3, (0.5 * duree) / Math.max(1, bloc.mots - 1));
-			dessinerMotParMot(ctx, bloc, s, { debut: debutPhrase, ecart, couleur: p.blanc, couleurAccent: p.alerteSombre });
+			dessinerMotParMot(ctx, bloc, s, { debut: debutPhrase, ecart, couleur: p.blanc, couleurAccent: p.alerteSombre, accent: optionAccent(i.contexte.gestes) });
 			dessinerPastille(ctx, p, reperes, s, debutReperes, pas);
 		},
 	};

@@ -3,6 +3,7 @@ import { alea } from "../../aleatoire";
 import { type Ctx2D, HAUTEUR, type InstantScene, LARGEUR, type Scene } from "../../scene";
 import { dessinerMotParMot, dessinerSoulignement, dessinerSurlignage, finMotParMot } from "../../visuel/cinetique";
 import { avecAlpha } from "../../visuel/couleur";
+import { miseEnValeur, rebondAccent } from "../../visuel/gestes";
 import { avancement, easeInOutCubic, easeOutCubic, easeOutExpo, interpoler } from "../../visuel/courbes";
 import { dessinerBloc, mettreEnPage } from "../../visuel/typo";
 import { blocCentre, fondTension, type Identite } from "./commun";
@@ -190,8 +191,21 @@ export function creerRevelation(identite: Identite): Scene {
 			const blocSlogan = blocCentre(ctx, slogan, { niveau: "slogan", echelle: 1.27, ambiance, x: 960, largeur: 1560, lignesMax: 2, alignement: "centre" }, 592);
 			const debutSlogan = T.slogan * duree;
 			const ecart = Math.min(0.2, (0.28 * duree) / Math.max(1, blocSlogan.mots - 1));
-			dessinerMotParMot(ctx, blocSlogan, s, { debut: debutSlogan, ecart, couleur: p.blanc, accent: false });
-			dessinerSurlignage(ctx, blocSlogan, s, { debut: finMotParMot(blocSlogan, debutSlogan, ecart) + 0.25, bloc: p.blanc, texte: p.sombre });
+			const mev = miseEnValeur(i.contexte.gestes);
+			const instantMiseEnValeur = finMotParMot(blocSlogan, debutSlogan, ecart) + 0.25;
+			if (mev.surlignage) {
+				dessinerMotParMot(ctx, blocSlogan, s, { debut: debutSlogan, ecart, couleur: p.blanc, accent: false });
+				dessinerSurlignage(ctx, blocSlogan, s, { debut: instantMiseEnValeur, bloc: p.blanc, texte: p.sombre });
+			} else {
+				// sans surlignage : la partie accentuee passe simplement a la couleur d'accent
+				dessinerMotParMot(ctx, blocSlogan, s, {
+					debut: debutSlogan,
+					ecart,
+					couleur: p.blanc,
+					couleurAccent: p.accentSombre,
+					accent: rebondAccent(i.contexte.gestes) ? instantMiseEnValeur : -1,
+				});
+			}
 
 			if (signature) {
 				const sig = blocCentre(ctx, signature, { niveau: "titre", echelle: 1.26, ambiance, x: 960, largeur: 1500, lignesMax: 1, alignement: "centre" }, blocSlogan.y + blocSlogan.hauteur + 118);
@@ -215,7 +229,7 @@ export function creerRevelation(identite: Identite): Scene {
 					ctx.translate(d, 0);
 					dessinerBloc(ctx, sig, p.blanc);
 					ctx.restore();
-					dessinerSoulignement(ctx, sig, s, { debut: debutSig + 0.45, couleur: p.accentSombre });
+					if (mev.soulignement) dessinerSoulignement(ctx, sig, s, { debut: debutSig + 0.45, couleur: p.accentSombre });
 				}
 			}
 			ctx.restore();
