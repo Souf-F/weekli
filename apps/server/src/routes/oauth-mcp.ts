@@ -47,7 +47,7 @@ oauthMcp.get("/authorize", async (c) => {
 		}
 		const description = await oauth.describeConsent(demande);
 		const consentement = await oauth.beginConsent(demande);
-		return pageConsentement(description, consentement.handle, consentement.headers);
+		return pageConsentement(description, consentement.handle, consentement.headers, demande.redirectUri);
 	} catch (err) {
 		return gererErreur(err);
 	}

@@ -58,12 +58,19 @@ describe("pages du Worker", () => {
 			{ clientName: "App", clientDomain: "app.dev", redirectHost: "app.dev", redirectIsLoopback: false } as never,
 			"h",
 			new Headers(),
+			"https://app.dev/retour?x=1",
 		);
 		const csp = r.headers.get("Content-Security-Policy") ?? "";
 		const nonce = /style-src 'nonce-([^']+)'/.exec(csp)?.[1];
+		expect(csp).toContain("form-action 'self' https://github.com https://app.dev;");
 		expect(csp).not.toContain("unsafe-inline");
 		expect(csp).toContain(`script-src 'nonce-${nonce}'`);
 		expect(await r.text()).toContain(`<style nonce="${nonce}">`);
+	});
+
+	it("une application native est autorisee par son schema, sans injection possible", () => {
+		const r = pageConsentement({ clientName: "App", redirectHost: "app" } as never, "h", new Headers(), "monapp://retour");
+		expect(r.headers.get("Content-Security-Policy")).toContain("https://github.com monapp:;");
 	});
 
 	it("la page d'erreur a son propre nonce de style et aucun script", async () => {
