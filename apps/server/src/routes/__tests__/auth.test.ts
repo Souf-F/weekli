@@ -153,3 +153,33 @@ describe("POST /auth/logout", () => {
 		expect(donnees.has(`session:${sid}`)).toBe(false);
 	});
 });
+
+describe("retour apres la connexion", () => {
+	it.each([
+		["/app/studio?pub=77dbf62b-ce71", "/app/studio?pub=77dbf62b-ce71"],
+		["/app", "/app"],
+		[undefined, "/app"],
+		["https://evil.test/app", "/app"],
+		["//evil.test", "/app"],
+		["/app//evil.test", "/app"],
+		["/application", "/app"],
+		["/app/%2F%2Fevil.test", "/app"],
+		["/app\\evil", "/app"],
+	])("%s mene a %s", async (retour, attendu) => {
+		const { env } = faux();
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async (entree: Request | string) => {
+				const url = entree instanceof Request ? entree.url : entree;
+				if (url.includes("/login/oauth/access_token")) return Response.json({ access_token: TOKEN, scope: "", token_type: "bearer" });
+				return Response.json({ id: 1, login: "alice", name: "Alice", avatar_url: "" });
+			}),
+		);
+		const requete = retour === undefined ? "/login" : `/login?retour=${encodeURIComponent(retour)}`;
+		const depart = await auth.request(requete, {}, env);
+		const etat = new URL(depart.headers.get("Location") as string).searchParams.get("state");
+		const res = await auth.request(`/callback?state=${etat}&code=abc`, { headers: { Cookie: `weekli_etat=${etat}` } }, env);
+		expect(res.status).toBe(302);
+		expect(res.headers.get("Location")).toBe(attendu);
+	});
+});

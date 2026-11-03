@@ -13,13 +13,17 @@ export const auth = new Hono<AppEnv>();
 const COOKIE_ETAT = "weekli_etat";
 const DUREE_ETAT = 600;
 const USAGE = "etat-connexion";
+
+// Page de l'app a rouvrir apres la connexion (lien du studio donne par Claude). Chemin interne uniquement.
+const retourValide = (retour?: string) =>
+	retour && retour.length <= 200 && /^\/app(?:[/?][A-Za-z0-9/?=&_-]*)?$/.test(retour) && !retour.includes("//") ? retour : "/app";
 const rappel = (url: string) => new URL("/auth/callback", url).href;
 
 auth.get("/login", async (c) => {
 	const etat = idAleatoire();
 	const { verifieur, defi } = await creerPkce();
 	// Le verifieur PKCE reste cote serveur, chiffre ; l'etat est aussi lie au navigateur par cookie
-	await c.env.OAUTH_KV.put(`etat:${etat}`, await chiffrer(c.env.COOKIE_ENCRYPTION_KEY, USAGE, { verifieur }, `etat:${etat}`), {
+	await c.env.OAUTH_KV.put(`etat:${etat}`, await chiffrer(c.env.COOKIE_ENCRYPTION_KEY, USAGE, { verifieur, retour: retourValide(c.req.query("retour")) }, `etat:${etat}`), {
 		expirationTtl: DUREE_ETAT,
 	});
 	setCookie(c, COOKIE_ETAT, etat, {
@@ -45,7 +49,7 @@ auth.get("/callback", async (c) => {
 	}
 	const stocke = await c.env.OAUTH_KV.get(`etat:${etat}`);
 	await c.env.OAUTH_KV.delete(`etat:${etat}`); // usage unique
-	const donnees = stocke ? await dechiffrer<{ verifieur: string }>(c.env.COOKIE_ENCRYPTION_KEY, USAGE, stocke, `etat:${etat}`) : null;
+	const donnees = stocke ? await dechiffrer<{ verifieur: string; retour?: string }>(c.env.COOKIE_ENCRYPTION_KEY, USAGE, stocke, `etat:${etat}`) : null;
 	if (!donnees) return pageErreur("Connexion expirée ou invalide. Recommence depuis le site.");
 
 	try {
@@ -63,7 +67,7 @@ auth.get("/callback", async (c) => {
 		console.error("Connexion GitHub :", err);
 		return pageErreur("GitHub a refusé la connexion. Recommence depuis le site.");
 	}
-	return c.redirect("/app");
+	return c.redirect(retourValide(donnees.retour));
 });
 
 // La session est supprimee d'abord : un echec de GitHub ne doit jamais empecher la deconnexion
