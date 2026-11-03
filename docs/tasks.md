@@ -138,7 +138,6 @@ Code figé, audits faits (0 bloquant, 0 majeur). Prochaine étape : recette de S
 | Tâche | Qui |
 |---|---|
 | Recette du parcours complet (5 types de post, studio, export) | Soufiane |
-| Test du connecteur dans Claude (tunnel en local, voir `installation.md`) | Soufiane et orchestrateur |
 | Déploiement Cloudflare sur le domaine de Soufiane (KV, secrets, `PUBLIC_URL`, app OAuth de production) | Soufiane et orchestrateur |
 | Réglages GitHub (m12) : protéger `main`, Dependabot, signalement privé | Soufiane |
 | Fusion de la PR dans `main` | Après accord de Soufiane |

@@ -112,3 +112,5 @@ Retours de Soufiane sur la première vraie pub (`apps/web/dev/pub-weekli.json`) 
 - **Carte « Ma semaine »** : gardée à part dans le tableau, pas de lien supplémentaire.
 - **Commits (m13)** : adresse `noreply` configurée dans ce dépôt pour les nouveaux commits, historique non réécrit.
 - **Connexion MCP (bug bloquant trouvé au test réel)** : la CSP `form-action` de la page de consentement bloquait la redirection finale vers l'application cliente quand GitHub avait déjà autorisé le compte. L'origine de l'URI de retour est maintenant autorisée.
+- **Connexion du site** : après GitHub, le site rouvre la page demandée (lien du studio donné par Claude) au lieu du tableau de bord. Seuls les chemins internes sous `/app` sont acceptés.
+- **Test réel dans Claude (2026-11-03)** : connexion, liste des repos, post de présentation, script de pub sauvegardé et ouvert dans le studio : validés dans claude.ai à travers le tunnel.

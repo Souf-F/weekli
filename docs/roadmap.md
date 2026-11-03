@@ -54,7 +54,6 @@ flowchart LR
 | Tâche | Détail |
 |---|---|
 | Recette de Soufiane | Parcours complet des 5 types de post, du studio et de l'export |
-| Test du connecteur dans Claude | Ajouter le connecteur dans Claude et vérifier les 14 outils. En local, cela passe par un tunnel (voir [installation.md](installation.md)) |
 | Déploiement Cloudflare | Sur le domaine de Soufiane : namespace KV, secrets, `PUBLIC_URL`, app OAuth GitHub de production avec ses 2 URI de redirection |
 | Voix Vivienne | Décision de fond avant une ouverture large : service Microsoft non officiel et sans contrat. Option : Azure Speech sous contrat |
 | Quotas Cloudflare | Vérifier les écritures KV quotidiennes de l'offre gratuite avec le cache vocal |
