@@ -115,20 +115,36 @@ flowchart LR
 
 Parallélisable dès maintenant : B1, B3, B8, F2, et F1 dès que H1 et H2 sont tranchés.
 
-## Avancement (orchestrateur, 2026-10-25)
+## Avancement (2026-11-02)
 
-| Tâche | Statut | Modèle |
-|---|---|---|
-| H1 voix | Fait : Vivienne (edge-tts) en principal, Kokoro en secours (voir changelog) | |
-| H2 licence | Fait : GPL-3.0-only | |
-| H3 RGPD | Fait : contact RGPD soufianefilalipro@gmail.com (pages Confidentialité et Mentions légales, F12) | |
-| B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11, B13 | Fait, commité | sonnet (B9 opus) |
-| B12 modèle vocal au build, masquage des jetons | En cours | sonnet |
-| B14 retrait de la migration | À faire avant déploiement | |
-| F1 voix, F2 cohérence, F4 moteur, F5 visuel, F8 cartes | Fait, commité | F1 et F5 opus, autres sonnet |
-| F6 scènes tension, F7 scènes produit | En cours | opus |
-| F9 audio, COEP | En cours | sonnet |
-| F3, F10, F11, F12, F13 | À faire | |
+Code figé, audits faits (0 bloquant, 0 majeur). Prochaine étape : recette de Soufiane.
+
+| Tâche | Statut |
+|---|---|
+| H1 voix, H2 licence, H3 RGPD | Faits : Vivienne (edge-tts) en principal, Kokoro en secours ; GPL-3.0-only ; contact RGPD renseigné |
+| H4 validation de la pub de démonstration | À faire (recette) |
+| B1 à B13 | Faits, commités |
+| B15 voix Vivienne par le Worker | Fait (`/api/voix`, cache, quota, repli Kokoro) |
+| B16 `proposer_post_projet`, B17 `preparer_post` | Faits (15 outils au total) |
+| B14 retrait de la migration par login | **Reste**, à faire avant le déploiement public |
+| F1 à F13 | Faits, commités (F3, F10, F11, F12, F13 compris) |
+| F14 panneau « Post LinkedIn » du studio | Fait |
+| F16 tableau par type de post | Fait |
+| Audit final (sécurité et RGPD) | Fait, corrections vérifiées (`docs/reviews/securite-final-2026-10-29.md`) |
+| Passe de documentation | Faite (2026-11-02) |
+
+### Reste
+
+| Tâche | Qui |
+|---|---|
+| Recette du parcours complet (5 types de post, studio, export) | Soufiane |
+| Test du connecteur dans Claude (tunnel en local, voir `installation.md`) | Soufiane et orchestrateur |
+| Déploiement Cloudflare sur le domaine de Soufiane (KV, secrets, `PUBLIC_URL`, app OAuth de production) | Soufiane et orchestrateur |
+| B14 retrait de la migration par login | backend-senior |
+| Réserves de l'audit : N4, N6, m3, m12, m13 | voir `roadmap.md` |
+| Le chiffre d'outils de l'accueil (`NB_OUTILS`) vaut 13 alors que le serveur en expose 15 | frontend-senior |
+| Ajouter `POST /api/voix` à `docs/api-contract.md` | architecte |
+| Décision : retirer `proposer_post_projet`, arbitrer le lien « résumé de ma semaine » | Soufiane |
 
 ## Reprise (après la pause du 2026-10-25)
 

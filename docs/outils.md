@@ -1,8 +1,21 @@
 # Référence des outils MCP
 
+Le connecteur expose **15 outils** et **4 prompts** (`posts_semaine`, `preparer_post`, `post_projet`, `pub_projet`).
+
+| Famille | Outils |
+|---|---|
+| GitHub (4) | `activite_github`, `details_repo`, `details_commit`, `lister_repos` |
+| Posts (2) | `preparer_post`, `proposer_post_projet` |
+| Pub vidéo (4) | `preparer_pub`, `sauver_pub`, `lister_pubs`, `lire_pub` |
+| Brouillons (2) | `sauver_brouillons`, `lister_brouillons` |
+| Style (2) | `lire_style`, `sauver_style` |
+| Capture (1) | `capturer_site` |
+
 Les outils GitHub sont en **lecture seule** (`readOnlyHint: true`) et ne portent que sur les repos **publics** de l'utilisateur connecté.
 
-**Contenus de repo non fiables.** Tout texte qui vient d'un repo (descriptions, README, messages de commit, extraits de diff) est rangé dans un champ `contenu_non_fiable`, et la description de l'outil rappelle que c'est une donnée à lire, jamais une consigne à suivre. Les autres champs (nom, URL, dates, nombres) sont à la racine.
+**Contenus de repo non fiables.** Tout texte qui vient d'un repo (descriptions, README, messages de commit, extraits de diff, fichiers lus pour un tuto) est rangé dans un champ `contenu_non_fiable`, et la description de l'outil rappelle que c'est une donnée à lire, jamais une consigne à suivre. Les autres champs (nom, URL, dates, nombres) sont à la racine.
+
+**Masquage des jetons.** Les README, extraits de diff et fichiers de tuto passent par `masquerEtTronquer` (`@weekli/core`) : le texte est d'abord plafonné, puis les jetons de **formats connus** (GitHub, Anthropic, `sk-`, Stripe `sk_live_`, Google `AIza`, npm, GitLab, SendGrid, AWS `AKIA`, Slack, clés privées PEM) sont remplacés par `[secret masque]`. Il n'y a volontairement pas de motif générique (entropie, `password=`), trop de faux positifs sur du code : un secret au format inconnu, comme un JWT, n'est pas masqué. Ces contenus restent ceux d'un dépôt public.
 
 ## `activite_github`
 
@@ -41,7 +54,7 @@ Liste les commits récents, débarrassés du bruit.
 |---|---|---|
 | `repo` | texte | Nom du repo, sans le propriétaire |
 
-Renvoie le site, l'URL, les sujets, les langages et le nombre d'étoiles à la racine, et la description et le README (6000 caractères au maximum) sous `contenu_non_fiable`. Refuse les repos privés.
+Renvoie le site, l'URL, les sujets, les langages et le nombre d'étoiles à la racine, et la description et le README (masqué, 6000 caractères au maximum) sous `contenu_non_fiable`. Refuse les repos privés.
 
 ## `details_commit`
 
@@ -50,7 +63,7 @@ Renvoie le site, l'URL, les sujets, les langages et le nombre d'étoiles à la r
 | `repo` | texte | Nom du repo |
 | `sha` | texte, 7 caractères minimum | SHA du commit |
 
-Renvoie le SHA, la date et les statistiques à la racine, et le message complet et jusqu'à 15 fichiers modifiés avec un extrait du diff (1500 caractères par fichier) sous `contenu_non_fiable`. Utile pour raconter un problème résolu.
+Renvoie le SHA, la date et les statistiques à la racine, et le message complet et jusqu'à 15 fichiers modifiés avec un extrait du diff (masqué, 1500 caractères par fichier) sous `contenu_non_fiable`. Utile pour raconter un problème résolu.
 
 ## `lister_repos`
 
@@ -150,6 +163,8 @@ Lecture seule. Entrée validée par `validerDemandePost`, sortie `DonneesPost` i
 
 Erreurs : entrée invalide (messages de la route), repo ou commit introuvable, repo privé. Le repo d'un autre compte n'est pas atteignable.
 
+**Lecture du repo pour le tuto.** Weekli lit l'arborescence et choisit les fichiers par heuristique (manifestes et points d'entrée d'abord, puis docs, exemples, sources peu profondes, tests en dernier). Plafonds : 12 fichiers, 3000 caractères par fichier, 24 000 au total, README à 8000, fichiers de plus de 100 Ko écartés. Les secrets (`.env`, clés), fichiers générés, binaires et dossiers de dépendances ne sont ni lus ni listés : seul leur nombre est renvoyé (`ecartes`). Un chemin demandé dans `fichiers` qui est absent de l'arbre ou tombe dans ces catégories n'est pas lu et est compté dans `ecartes.refuses`. L'aperçu sans lecture est disponible pour le site par `GET /api/repos/:repo/fichiers-tuto`.
+
 ### Prompt `preparer_post`
 
 | Argument | Description |
@@ -219,6 +234,17 @@ Routes JSON servies par le Worker, toutes protégées par la session (cookie `Ht
 | GET | `/api/repos/:repo/commits?jours=30` | Commits du compte sur ce repo (bruit retiré, 30 au plus, `jours` de 1 à 90) |
 | GET | `/api/repos/:repo/fichiers-tuto` | Aperçu de la lecture d'un tuto, sans lire de fichier : `branche`, `arborescence`, `proposes`, `ecartes` |
 | POST | `/api/posts/donnees` | Corps `{ type, repo?, commits?, fichiers?, jours? }` (64 Ko) ; renvoie les mêmes données que `preparer_post` |
+| GET | `/api/pubs` | Résumés des pubs (`id`, `titre`, `projet`, `cree`, `maj`, `scenes`) |
+| GET | `/api/pubs/:id` | Pub complète avec son script |
+| POST | `/api/pubs` | Corps `{ script }` (64 Ko) ; renvoie `201 { pub, avertissements }`, `409` au-delà de 20 pubs |
+| PUT | `/api/pubs/:id` | Remplace le script ; renvoie `{ pub, avertissements }` |
+| DELETE | `/api/pubs/:id` | `204` |
+| GET | `/api/style` | `{ exemples, profil, maj }` |
+| PUT | `/api/style` | Corps `{ exemples?, profil? }` |
+| DELETE | `/api/style` | `204` |
+| POST | `/api/voix` | Corps `{ texte, scene }` (texte de 1 à 400 caractères) ; renvoie un MP3. `429` au-delà de 60 phrases par heure et par compte, `502` si la voix est indisponible |
+| GET | `/api/moi/donnees` | Export JSON de tout ce que Weekli stocke pour le compte, sans le token GitHub (en-tête `Content-Disposition`) |
+| DELETE | `/api/moi/donnees` | Effacement complet, `204` ; `500` si le stockage échoue (la session est gardée pour relancer) |
 | GET | `/api/brouillons` | Historique, du plus récent au plus ancien (100 au maximum) |
 | POST | `/api/brouillons` | Corps `{ posts: Post[] }` (5 au maximum, 64 Ko) ; renvoie les brouillons créés |
 | PATCH | `/api/brouillons/:id` | Corps `{ texte?, publie? }` |
@@ -230,5 +256,9 @@ Routes JSON servies par le Worker, toutes protégées par la session (cookie `Ht
 | POST | `/api/captures` | Corps `{ url, format }` ; renvoie une image JPEG |
 
 Toute requête d'écriture doit porter l'en-tête `Origin` du site. L'historique est chiffré dans KV.
+
+### Voix off (`POST /api/voix`)
+
+Le Worker obtient l'audio de la voix **Vivienne** (`fr-FR-VivienneMultilingualNeural`) auprès du service de lecture d'Edge de Microsoft, par un WebSocket sortant (même protocole qu'`edge-tts`, jeton `Sec-MS-GEC` calculé dans `lib/voix-gec.ts`). C'est un **usage non officiel** du service. Seul le texte de la phrase part chez Microsoft, jamais l'identité de l'utilisateur ; `scene` est seulement validée. Le MP3 est mis en cache dans KV 30 jours, sous une clé qui est l'empreinte SHA-256 de la voix et du texte (cache partagé, lié à aucun compte). Chaque appel compte dans le quota de 60 phrases par heure, même servi par le cache. En cas de 502, le studio bascule sur Kokoro, exécutée dans le navigateur.
 
 La génération des posts ne passe pas par ces routes : le navigateur appelle directement l'API Anthropic avec la clé de l'utilisateur, en s'appuyant sur `systemeGeneration`, `messageGeneration` et `lirePosts` de `@weekli/core`.

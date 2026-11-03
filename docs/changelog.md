@@ -93,3 +93,12 @@ Retours de Soufiane sur la première vraie pub (`apps/web/dev/pub-weekli.json`) 
 - **Le site garde « Ma semaine » en ancien flux** (le navigateur choisit les commits et lit leurs diffs) : la route `POST /api/posts/donnees` renvoie pour ce type l'activité sans diffs.
 - **Réglage à arbitrer (Soufiane)** : lien « Plutôt un résumé de toute ma semaine » à l'étape 1 plus carte à part à l'étape 2, ou une seule des deux.
 
+## 2026-11-02 (passe finale de documentation avant la recette)
+
+- **Docs alignées sur le code commité**, sans toucher au code : README racine et des paquets, `architecture.md`, `securite.md`, `outils.md`, `installation.md`, `roadmap.md`, `tasks.md`.
+- **Produit décrit** : connecteur Claude d'abord, 5 types de post, pub vidéo du projet (3 trames, 14 types de scènes), voix Vivienne via le Worker avec Kokoro en secours, studio, post du projet, licence GPL-3.0-only. Les mentions de l'ancien studio, du storyboard et du format « histoire » sont retirées.
+- **15 outils MCP** (comptés dans `apps/server/src/mcp`) : la doc dit 15, l'accueil du site affiche encore 13 (`NB_OUTILS`), écart à corriger côté front.
+- **ADR-13 (voix Vivienne relayée par le Worker) et ADR-14 (cinq types de post)** ajoutés à `architecture.md`. ADR-07 annoté : la décision finale est Vivienne principale, Kokoro en secours.
+- **Installation** : app OAuth GitHub avec 2 URI de redirection, tunnel `cloudflared` temporaire pour tester le connecteur dans Claude (`PUBLIC_URL` sur l'adresse du tunnel, ses 2 URI ajoutées à l'app).
+- **Reste** : recette, test du connecteur, déploiement Cloudflare, B14, réserves N4, N6, m3, m12, m13.
+

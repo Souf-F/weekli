@@ -1,6 +1,6 @@
 # Architecture
 
-Mis à jour le 2026-10-24 pour la V1 (voir `docs/brief.md`). Les sections 1 à 4 décrivent l'existant, toujours vrai sauf mention ; les sections 5 à 9 décrivent ce que la V1 ajoute ; la section 10 regroupe les décisions (ADR).
+Aligné sur le code commité le 2026-11-02 (V1 prête pour la recette, voir `docs/brief.md`). Les sections 1 à 4 décrivent le socle, les sections 5 à 9 ce que la V1 ajoute, la section 10 regroupe les décisions (ADR).
 
 ## 1. Vue d'ensemble
 
@@ -8,25 +8,26 @@ Le dépôt est un **monorepo npm** :
 
 | Paquet | Rôle |
 |---|---|
-| `packages/core` | Moteur partagé : lecture GitHub, filtrage, prompts, types, **validation des scripts de pub, timeline, palette, style** (V1) |
+| `packages/core` | Moteur partagé : lecture GitHub, filtrage, masquage des jetons, prompts, types, **5 types de post, validation des scripts de pub, trames, timeline, palette, style** |
 | `apps/server` | Worker Cloudflare, déployé seul |
 | `apps/web` | Front React, compilé puis servi par le Worker |
-| `apps/video` | Outil **interne** Remotion pour la pub de lancement de Weekli lui-même. Pas déployé, pas utilisé par les utilisateurs |
+| `apps/video` | Outil **interne** Remotion pour la pub de lancement de Weekli lui-même (format unique `presentation`). Pas déployé, pas utilisé par les utilisateurs |
 
-En production, Weekli est un seul **Cloudflare Worker** qui joue quatre rôles :
+En production, Weekli est un seul **Cloudflare Worker** qui joue cinq rôles :
 
 1. **Serveur d'autorisation OAuth** pour les clients MCP (Claude), via `@cloudflare/workers-oauth-provider`.
-2. **Serveur MCP** sur `/mcp`, une instance de `WeekliMCP` (un Durable Object par session).
+2. **Serveur MCP** sur `/mcp`, une instance de `WeekliMCP` (un Durable Object par session), qui expose **15 outils** et 4 prompts (voir `docs/outils.md`).
 3. **API du site** sur `/api/*`, avec sa propre connexion GitHub sur `/auth/*`.
-4. **Hébergement du front** React compilé, en application monopage, y compris les **fichiers du modèle vocal** (V1, ADR-08).
+4. **Hébergement du front** React compilé, en application monopage, y compris les **fichiers du modèle vocal Kokoro** (ADR-08).
+5. **Relais de la voix Vivienne** sur `/api/voix` : WebSocket sortant vers le service de lecture d'Edge, cache KV partagé, quota par compte (ADR-13).
 
-Principe inchangé : **le serveur n'appelle jamais d'IA**. En mode MCP, Claude pilote avec l'abonnement de l'utilisateur ; en mode site, le navigateur appelle Anthropic avec la clé de l'utilisateur ; la voix off et le rendu vidéo tournent dans le navigateur.
+Principe inchangé : **le serveur n'appelle jamais d'IA**. En mode MCP, Claude pilote avec l'abonnement de l'utilisateur ; en mode site, le navigateur appelle Anthropic avec la clé de l'utilisateur ; le rendu vidéo, le mixage et la voix Kokoro tournent dans le navigateur. Seule exception de transit : le texte d'une phrase passe par le Worker vers Microsoft quand l'utilisateur choisit la voix Vivienne.
 
 ```mermaid
 flowchart TB
     R[Requête entrante] --> A{Route}
     A -- fichier du front, /modeles/* --> S[Assets statiques]
-    A -- /auth/* /api/* --> W[Session et API du site<br/>Hono]
+    A -- /auth/* /api/* --> W[Session et API du site<br/>Hono, dont /api/voix]
     A -- /mcp --> T{Token MCP valide ?}
     T -- non --> E[401 + métadonnées OAuth]
     T -- oui --> D[Durable Object WeekliMCP<br/>props : id, login, nom, token chiffré]
@@ -97,7 +98,7 @@ flowchart LR
     subgraph Navigateur
         ST[Studio de pub<br/>React]
         MO[Moteur de rendu<br/>canvas 2D + WebCodecs]
-        VX[Worker voix<br/>Kokoro ONNX]
+        VX[Worker voix de secours<br/>Kokoro ONNX]
         AU[Audio<br/>musique, mixage]
         IDB[(IndexedDB<br/>voix, logo, images)]
         ST --> MO
@@ -111,105 +112,80 @@ flowchart LR
         CORE[[@weekli/core<br/>+ pub/, style.ts]]
         KV[(KV chiffré<br/>par id GitHub)]
         BR[Browser Run<br/>captures]
+        VI[Relais voix<br/>/api/voix]
         AS[Assets<br/>/modeles/kokoro/*]
         MCP --> CORE
         API --> CORE
         MCP --> KV
         API --> KV
         API --> BR
+        API --> VI
     end
     CL -- MCP --> MCP
     ST -- session --> API
     VX -- fichiers du modèle --> AS
     CORE -- lecture seule --> GH[(GitHub)]
+    VI -- texte d'une phrase --> MS[(Microsoft<br/>lecture d'Edge)]
+    ST -- /api/voix --> VI
 ```
 
-### 5.1 Arborescence cible
-
-Les fichiers marqués `(V1)` sont à créer, `(modifié)` à faire évoluer, `(retiré)` à supprimer.
+### 5.1 Arborescence
 
 ```
 weekli/
 ├── apps/
 │   ├── server/src/
-│   │   ├── index.ts                    OAuthProvider, refreshTokenTTL explicite (modifié)
-│   │   ├── types.ts                    Props { id, login, nom, jeton } ; Session { id, login, nom, avatar, token } (modifié)
+│   │   ├── index.ts                    OAuthProvider, protections globales, refreshTokenTTL de 30 jours
+│   │   ├── types.ts                    Props { id, login, nom, jeton } ; Session { id, login, nom, avatar, token }
 │   │   ├── mcp/
-│   │   │   ├── agent.ts                Enregistrement des outils, identité relue par appel, alarme d'inactivité (modifié)
-│   │   │   ├── outils-github.ts        activite_github, details_repo, details_commit, lister_repos (V1, extrait d'agent.ts)
-│   │   │   ├── outils-brouillons.ts    sauver_brouillons, lister_brouillons (V1, extrait)
-│   │   │   ├── outils-pub.ts           preparer_pub, sauver_pub, lister_pubs, lire_pub, prompt pub_projet (V1)
-│   │   │   └── outils-style.ts         lire_style, sauver_style (V1)
+│   │   │   ├── agent.ts                WeekliMCP : identité relue par appel, alarme d'inactivité de 24 h
+│   │   │   ├── contexte.ts             Contexte partagé par les fichiers d'outils
+│   │   │   ├── outils-github.ts        activite_github, details_repo, details_commit, lister_repos
+│   │   │   ├── outils-brouillons.ts    sauver_brouillons, lister_brouillons, prompt posts_semaine
+│   │   │   ├── outils-style.ts         lire_style, sauver_style
+│   │   │   ├── outils-captures.ts      capturer_site
+│   │   │   └── outils-pub.ts           preparer_pub, sauver_pub, lister_pubs, lire_pub, preparer_post, proposer_post_projet, prompts pub_projet, preparer_post, post_projet
 │   │   ├── routes/
-│   │   │   ├── api.ts                  Routeur et middleware (modifié)
-│   │   │   ├── api-pubs.ts             /api/pubs (V1)
-│   │   │   ├── api-style.ts            /api/style (V1)
-│   │   │   ├── api-moi.ts              /api/moi, GET et DELETE /api/moi/donnees (V1, extrait)
-│   │   │   ├── auth.ts                 Session avec id, index des sessions, révocation du token à la déconnexion (modifié)
-│   │   │   ├── oauth-mcp.ts            userId = id GitHub, props minimales (modifié)
-│   │   │   └── app.ts
+│   │   │   ├── app.ts                  Assemble les routes
+│   │   │   ├── api.ts                  API du site : GitHub, posts, brouillons, pubs, style, voix, domaines, captures, export et effacement
+│   │   │   ├── auth.ts                 Connexion du site, déconnexion avec révocation du token
+│   │   │   └── oauth-mcp.ts            OAuth des clients MCP : consentement puis GitHub
 │   │   └── lib/
-│   │       ├── chiffrement.ts          Base64 par blocs, sans limite de taille (modifié, audit m9)
-│   │       ├── conservation.ts         CONSERVATION_SECONDES, filtrerPerimes() (modifié)
-│   │       ├── identite.ts             cleUtilisateur(prefixe, id), migration depuis le login (V1)
-│   │       ├── sessions.ts             Index sessions:<id>, suppression de toutes les sessions (V1)
-│   │       ├── revocation.ts           Révocation GitHub (token, grant), grants MCP, Durable Objects (V1)
-│   │       ├── donnees.ts              effacerDonnees(), exporterDonnees() (modifié)
-│   │       ├── brouillons.ts           Clé par id (modifié)
-│   │       ├── domaines.ts             Clé et HMAC par id (modifié)
-│   │       ├── pubs.ts                 Scripts de pub chiffrés (V1)
-│   │       ├── style.ts                Style chiffré (V1)
-│   │       └── capture.ts, flou.ts, url-capture.ts, validation.ts, pages.ts, securite.ts, session.ts, github-oauth.ts
+│   │       ├── chiffrement.ts, props.ts, session.ts, github-oauth.ts, securite.ts, pages.ts, validation.ts
+│   │       ├── identite.ts             Clés par id GitHub, migration des clés par login (à retirer, B14)
+│   │       ├── conservation.ts         90 jours pour les données, 30 jours pour une autorisation MCP
+│   │       ├── brouillons.ts, pubs.ts, style.ts, domaines.ts   Données de l'utilisateur chiffrées dans KV
+│   │       ├── donnees.ts              Effacement complet
+│   │       ├── mcp-index.ts, acces-mcp.ts, listes.ts   Index des Durable Objects et des sessions
+│   │       ├── posts.ts                Données préparées d'un post par type (route et outil MCP)
+│   │       ├── voix.ts, voix-gec.ts    Relais de la voix Vivienne, cache et quota
+│   │       └── capture.ts, flou.ts, url-capture.ts     Captures et floutage
 │   ├── web/
 │   │   ├── public/
-│   │   │   ├── fonts/                  Geist, Instrument Serif, JetBrains Mono en woff2 (V1, audit M4)
-│   │   │   └── modeles/                Modèle vocal découpé, généré par script, non versionné (V1)
+│   │   │   ├── _headers                CSP, COOP, COEP, HSTS
+│   │   │   ├── fonts/                  Polices en woff2, hébergées localement (ADR-11)
+│   │   │   ├── modeles/                Modèle vocal Kokoro découpé, généré au build, non versionné (ADR-08)
+│   │   │   └── demo/                   Pub de Weekli de la page d'accueil
 │   │   └── src/
 │   │       ├── lib/
-│   │       │   ├── api.ts              + pubs, style, repos, export (modifié)
-│   │       │   ├── generation.ts       + genererScriptPub (modifié), - genererStoryboard
-│   │       │   ├── reglages.ts         Style retiré du navigateur, migration (modifié)
-│   │       │   ├── video/              (retiré : moteur.ts, scenes.ts)
-│   │       │   └── pub/                (V1)
-│   │       │       ├── moteur.ts       Timeline, lecture (horloge audio), export WebCodecs
-│   │       │       ├── contexte.ts     Palette, polices, images, logo prêts pour le dessin
-│   │       │       ├── rendu/
-│   │       │       │   ├── fonds.ts        Fond sombre de marque, fond clair, motif de carrés, grain
-│   │       │       │   ├── texte.ts        Typographie cinétique : mots, surlignage, frappe, filigrane
-│   │       │       │   ├── cartes.ts       Carte navigateur, carte mobile, carte liste, tampon
-│   │       │       │   ├── marque.ts       Logo, monogramme pixel
-│   │       │       │   ├── transitions.ts  coupe, glitch, flou, pixels
-│   │       │       │   ├── effets.ts       Rayons, particules, onde
-│   │       │       │   └── scenes/         Un fichier par type de scène (11 fichiers)
-│   │       │       ├── audio/
-│   │       │       │   ├── voix/           Voix off (F1) : client.ts, worker.ts, kokoro.ts, phonemes.ts (espeak-ng), prononciation.ts, cache.ts (IndexedDB)
-│   │       │       │   ├── musique.ts      Synthèse (port de apps/video/scripts/audio.mjs)
-│   │       │       │   └── mixage.ts       OfflineAudioContext, ducking, effets
-│   │       │       ├── captures.ts     Chargement, recadrage, ImageBitmap
-│   │       │       ├── couleurs.ts     Extraction des couleurs dominantes d'une capture
-│   │       │       ├── stockage.ts     IndexedDB : voix, logo, images importées
-│   │       │       └── sous-titres.ts  Export SRT
-│   │       └── pages/
-│   │           ├── Studio/             Refonte complète (V1), voir docs/design.md section 9
-│   │           ├── Reglages/           + PanneauStyle (V1), PanneauDonnees : export (modifié)
-│   │           └── Legal/              Confidentialité alignée sur docs/specs.md section 5 (modifié)
-│   └── video/                          Outil interne, format « histoire » retiré (modifié)
+│   │       │   ├── api.ts, generation.ts, generation-type.ts, post-projet.ts, parcours.ts, reglages.ts, style.ts
+│   │       │   ├── pub/                Moteur de pub
+│   │       │   │   ├── moteur.ts, apercu.ts, export.ts, synchro.ts, sous-titres.ts, contexte.ts, transitions.ts
+│   │       │   │   ├── scenes/         tension/ (ouverture, répétition, boucle, chorus, rupture, révélation), produit/ (étape, résultat, preuve, appel, fin), explication/ (transformation, flux, avant et après)
+│   │       │   │   ├── visuel/         Fonds, typographie cinétique, gestes, icônes, motifs
+│   │       │   │   ├── cartes/         Captures en cartes : cadrage, mouvement, IndexedDB (images, logo)
+│   │       │   │   └── audio/          Musique générée, effets, mixage, niveau sonore, voix
+│   │       │   ├── studio/             Script de départ, édition, miniature, contrôles d'export
+│   │       │   └── voix/               Voix Kokoro : Worker, onnxruntime-web, phonèmes espeak-ng, prononciation, cache IndexedDB
+│   │       └── pages/                  Accueil, Tableau, Historique, Studio, Captures, Reglages, Legal
+│   └── video/                          Outil interne, format unique « presentation » en 16:9
 ├── packages/core/src/
-│   ├── pub/                            (V1)
-│   │   ├── types.ts                    ScriptPub, ScenePub, Marque, Capture
-│   │   ├── limites.ts                  LIMITES_PUB, durées par type
-│   │   ├── nettoyer.ts                 nettoyerScriptPub() : { script, avertissements }
-│   │   ├── schema.ts                   SCHEMA_SCRIPT_PUB (JSON Schema)
-│   │   ├── timeline.ts                 calculerTimeline(script, dureesVoix)
-│   │   ├── palette.ts                  paletteDepuisMarque(), contraste()
-│   │   ├── guide.ts                    Règles de rédaction et catalogue, partagés MCP et site
-│   │   └── modele.ts                   scriptPubDepuisReponses() (sans IA)
-│   ├── style.ts                        StyleEcriture, nettoyerStyle() (V1)
-│   ├── github.ts                       + listerRepos() (modifié)
-│   ├── prompts.ts                      promptPostsSemaine(jours, style) inchangé, style injecté par le serveur
-│   └── storyboard.ts                   (retiré)
+│   ├── github.ts, filtre.ts, masquage.ts, brouillons.ts, prompts.ts, style.ts, types.ts
+│   ├── posts/                          types.ts (catalogue), demande.ts (validation), regles.ts, donnees.ts, tuto.ts (lecture du repo)
+│   └── pub/                            types, limites, nettoyer, repetition, schema, timeline, palette, guide, modele (script de départ et trames), post-projet
 ├── scripts/
-│   └── modeles-voix.mjs                Télécharge, vérifie (SHA-256) et découpe le modèle vocal (V1)
+│   ├── modeles-voix.mjs                Télécharge (révision épinglée), vérifie (SHA-256) et découpe le modèle vocal
+│   ├── verifier-secrets.mjs, installer-hooks.mjs
 └── docs/
 ```
 
@@ -270,6 +246,8 @@ erDiagram
     }
 ```
 
+Hors compte : le cache vocal `voix:<sha256 de la voix et du texte>` (MP3, 30 jours, partagé) et les compteurs `voix-quota:<id>:<heure>` (2 heures).
+
 Côté navigateur (jamais envoyé au serveur) : IndexedDB `weekli` avec les magasins `voix` (audio généré, clé = empreinte SHA-256 du texte et des réglages), `fichiers` (logo et images importées, clé = id de pub et rôle), et le cache HTTP du modèle vocal.
 
 ## 6. Flux principaux V1
@@ -302,7 +280,8 @@ sequenceDiagram
     U->>S: ouvre le lien (session du même compte GitHub)
     S->>A: GET /api/pubs/:id
     S->>A: POST /api/captures (une par capture référencée)
-    S->>S: voix (Worker Kokoro), musique, aperçu
+    S->>A: POST /api/voix (Vivienne), repli Kokoro dans le navigateur
+    S->>S: musique, mixage, aperçu
     U->>S: ajuste, puis Exporter
     S->>S: rendu image par image, encodage MP4
     S-->>U: fichier MP4 + SRT
@@ -314,13 +293,13 @@ sequenceDiagram
 sequenceDiagram
     participant E as Éditeur
     participant T as calculerTimeline (core)
-    participant V as Worker voix
+    participant V as Voix (Vivienne ou Kokoro)
     participant X as mixage.ts
     participant R as moteur.ts
     participant W as mediabunny
 
     E->>V: synthétiser(phrases de chaque scène)
-    V-->>E: AudioBuffer par scène (cache IndexedDB)
+    V-->>E: AudioBuffer par scène (Vivienne via /api/voix, ou Kokoro ; cache IndexedDB)
     E->>T: script + durées de voix
     T-->>E: début, durée et transition de chaque scène
     E->>X: voix placées, musique, effets
@@ -345,6 +324,7 @@ sequenceDiagram
     participant D as Durable Objects
     participant G as GitHub
 
+    N->>A: GET /api/moi/donnees (export, facultatif)
     N->>A: DELETE /api/moi/donnees (session, Origin)
     A->>K: supprime brouillons, pubs, style, domaines (clés id et anciennes clés login)
     A->>O: listUserGrants(id) puis revokeGrant(chaque)
@@ -385,9 +365,11 @@ Le détail visuel est dans `docs/design.md` (sections 8 et 9). Les règles techn
 | Taille | Corps des requêtes limité à 64 Ko ; script sérialisé limité à 24 Ko ; 20 pubs par compte |
 | Images importées et logo | Lus localement en `ImageBitmap` (pas de rendu SVG dans le DOM), 512 Ko pour le logo, 5 Mo par image, jamais envoyés |
 | Modèle vocal | Servi depuis le même domaine, empreinte SHA-256 vérifiée par le Worker vocal avant usage ; aucune nouvelle origine dans la CSP |
-| Worker vocal | `worker-src 'self'`, onnxruntime-web en WASM local ; `script-src 'self' 'wasm-unsafe-eval'` : autorise la seule compilation de WebAssembly, ni `eval` ni `new Function` ni script inline (en place dans `_headers` ; à revérifier à la main dans un Chrome non piloté pendant l'audit) |
+| Worker vocal | `worker-src 'self'`, onnxruntime-web en WASM local ; `script-src 'self' 'wasm-unsafe-eval'` : autorise la seule compilation de WebAssembly, ni `eval` ni `new Function` ni script inline (en place dans `_headers`) |
 | Isolation cross-origin | `Cross-Origin-Opener-Policy: same-origin` et `Cross-Origin-Embedder-Policy: require-corp` dans `_headers` : la page est `crossOriginIsolated`, condition du calcul de la voix sur 4 fils (ADR-07). Toute ressource tierce doit alors être chargée avec `crossorigin="anonymous"` (avatars GitHub, qui répondent `Access-Control-Allow-Origin: *`) |
-| Contenus de repo (`details_commit`) | Extraits de diff masqués par `masquerSecrets` pour les formats de jetons connus seulement, sans motif générique (voir `api-contract.md` 4.1) |
+| Contenus de repo (README, `details_commit`, fichiers de tuto) | Plafonnés puis masqués par `masquerEtTronquer` (`masquage.ts`) pour les formats de jetons connus seulement, sans motif générique (faux positifs sur du code) ; un JWT n'est pas masqué (résidu N6) |
+| Lecture d'un repo pour un tuto | Secrets, fichiers générés, binaires, dossiers de dépendances ni lus ni listés (seul leur nombre est renvoyé) ; 12 fichiers, 3000 caractères chacun, 24 000 au total ; un chemin hors de la liste autorisée est refusé |
+| Voix Vivienne | Texte limité à 400 caractères, corps strict, 60 phrases par heure et par compte (cache compris), MP3 limité à 2 Mo, délai de 15 s, aucune identité transmise à Microsoft |
 
 ## 10. Décisions (ADR)
 
@@ -470,7 +452,8 @@ Le détail visuel est dans `docs/design.md` (sections 8 et 9). Les règles techn
 | Risques | Coupure ou blocage à tout moment (déjà arrivé en 2024), atteinte à l'image d'un projet portfolio, texte de l'utilisateur envoyé à un tiers sans contrat (RGPD), dépendance serveur contraire au principe « pas d'appel tiers côté serveur » | Mots anglais mal prononcés (espeak-ng lit « GitHub » « ji eub ») : dictionnaire de prononciation obligatoire ; téléchargement lourd ; lent sur machine modeste ; portage navigateur du français à construire (kokoro-js ne gère que l'anglais) ; GPL d'espeak-ng | Qualité perçue « robot » sur une pub ; chaîne de licences floue ; GPL | Non utilisable dans le produit |
 
 - **Options écartées d'emblée** : API Web Speech (`speechSynthesis`), voix différentes selon le système et impossibles à enregistrer proprement ; services payants (ElevenLabs, Azure avec clé), contraires au budget.
-- **Décision recommandée** : **Kokoro `ff_siwis`, exécuté dans le navigateur** (Web Worker), modèle int8 servi par Weekli (ADR-08), avec dictionnaire de prononciation dans le script et possibilité d'**importer sa propre voix off**. Raisons : seule option à la fois gratuite, légale sans ambiguïté sur le modèle, sans serveur et sans envoi du texte à un tiers, avec une qualité acceptable pour une pub. edge-tts n'est pas retenu pour le produit malgré sa qualité ; il reste envisageable pour la pub de lancement de Weekli faite en local avec `apps/video`, sous la responsabilité de Soufiane.
+- **Décision finale (Soufiane, 2026-10-25, voir ADR-13)** : **Vivienne (edge-tts) en voix principale, Kokoro en secours**. La recommandation ci-dessous (Kokoro seul) reste à l'origine de la voix de secours et de la licence GPL.
+- **Recommandation initiale** : **Kokoro `ff_siwis`, exécuté dans le navigateur** (Web Worker), modèle int8 servi par Weekli (ADR-08), avec dictionnaire de prononciation dans le script et possibilité d'**importer sa propre voix off**. Raisons : seule option à la fois gratuite, légale sans ambiguïté sur le modèle, sans serveur et sans envoi du texte à un tiers, avec une qualité acceptable pour une pub. edge-tts n'est pas retenu pour le produit malgré sa qualité ; il reste envisageable pour la pub de lancement de Weekli faite en local avec `apps/video`, sous la responsabilité de Soufiane.
 - **Conséquences** :
   - Le phonémiseur espeak-ng (GPL-3.0) est distribué avec le front : **le dépôt entier est passé en GPL-3.0-only** (`LICENSE`, `README.md`, `package.json`, commit `053901d`), ce qui résout la décision H2. `GPL-3.0-or-later` reste possible (espeak-ng est en `-or-later`), au choix de Soufiane. Piper aurait eu la même contrainte.
   - **Mise en œuvre retenue (F1, 2026-10-25)** : Kokoro `ff_siwis` en **int8** (`model_quantized.onnx`, 92 Mo) et la seule voix `voices/ff_siwis.bin` (0,5 Mo, au lieu des 28 Mo de toutes les voix), dans un Web Worker, onnxruntime-web en WASM, pipeline de phonèmes de kokoro-onnx 0.6.1, espeak-ng réduit au français et à l'anglais (967 Ko). Corrélation spectrale 0,999 avec l'écoute de référence 09. Le WebGPU est écarté pour la V1 (plus lent en int8, et un binaire WASM de 26,8 Mo dépasse la limite de 25 Mio des assets).
@@ -493,7 +476,7 @@ Le détail visuel est dans `docs/design.md` (sections 8 et 9). Les règles techn
 
 ### ADR-10 : retrait des anciennes vidéos
 
-- **Décision** : `packages/core/src/storyboard.ts`, `apps/web/src/lib/video/` et l'ancien Studio (vidéo verticale tirée d'un post, avec scènes terminal) sont retirés une fois le nouveau studio livré. Le format `histoire` est retiré de `apps/video` et du skill `video-projet` ; le format `presentation` du skill passe en 16:9 et suit la grammaire de `design.md`.
+- **Décision** : l'ancien module de vidéo verticale tirée d'un post, ses scènes terminal et son studio sont retirés du code et du produit (fait avec le nouveau studio). Il ne reste dans `apps/video` et le skill `video-projet` que le format `presentation`, en 16:9, qui suit la grammaire de `design.md`.
 - **Raison** : le brief demande une refonte complète et interdit code, terminal et chiffres de développement dans la pub.
 
 ### ADR-11 : polices hébergées localement
@@ -503,3 +486,16 @@ Le détail visuel est dans `docs/design.md` (sections 8 et 9). Les règles techn
 ### ADR-12 : export des données
 
 - **Décision** : `GET /api/moi/donnees` assemble profil, brouillons, pubs, style et domaines en un JSON téléchargeable (audit M5, droit d'accès et de portabilité). Pas de données binaires (les voix, logos et images ne sont pas sur le serveur).
+
+### ADR-13 : voix Vivienne relayée par le Worker, Kokoro en secours
+
+- **Contexte** : après écoute du banc d'essai, Soufiane retient la voix Vivienne d'edge-tts pour sa qualité. Le navigateur ne peut pas forger les en-têtes exigés par le service de lecture d'Edge (ADR-07).
+- **Options** : (a) Kokoro seule ; (b) Vivienne par le Worker avec repli Kokoro ; (c) service payant sous contrat (Azure Speech).
+- **Décision** : (b). `POST /api/voix` ouvre un WebSocket sortant vers le service de lecture d'Edge (`lib/voix.ts`, jeton `Sec-MS-GEC` dans `lib/voix-gec.ts`) et renvoie un MP3. Garde-fous : corps strict `{ texte, scene }`, 400 caractères, quota de 60 phrases par heure et par compte compté avant la lecture du cache, cache KV partagé de 30 jours (clé = SHA-256 de la voix et du texte), délai de 15 s. En cas de `502`, le studio bascule sur Kokoro dans le navigateur. L'utilisateur peut aussi choisir Kokoro d'emblée, importer sa voix ou n'en mettre aucune : rien n'est alors envoyé.
+- **Conséquences** : usage **non officiel** du service Microsoft, qui peut être coupé ; Microsoft reçoit le texte des phrases (indiqué dans la page Confidentialité comme service tiers sans contrat). Option sûre avant une ouverture publique large : Azure Speech sous contrat. Le modèle Kokoro et espeak-ng restent livrés (GPL-3.0).
+
+### ADR-14 : cinq types de post, données préparées par le serveur
+
+- **Contexte** : le tableau partait des commits, ce qui ne correspond pas à l'usage (retour de Soufiane du 2026-10-29).
+- **Décision** : cinq types (`presentation`, `tuto`, `coulisses`, `lecon`, `semaine`) décrits par `CATALOGUE_POSTS` dans `@weekli/core`. Le serveur ne rédige pas : `preparer_post` (MCP) et `POST /api/posts/donnees` (site) renvoient les mêmes données (`donneesPost`) : contenu du repo en `contenu_non_fiable`, style, règles, consigne. La liste des commits n'est demandée que pour les types qui en ont besoin. `proposer_post_projet` est conservé (équivalent de `presentation`) jusqu'à la recette. Le type `semaine` garde l'ancien flux : le navigateur choisit les commits et lit leurs diffs.
+- **Conséquences** : une seule implémentation pour Claude et pour le site ; la lecture approfondie d'un repo pour le tuto est bornée et filtrée (section 9).

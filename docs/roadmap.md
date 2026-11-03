@@ -1,51 +1,80 @@
 # Feuille de route
 
+Mise à jour le 2026-11-02. Le code de la V1 est figé, la recette de Soufiane est la prochaine étape.
+
 ```mermaid
 flowchart LR
-    V1[V0.1<br/>Outils GitHub<br/>+ prompt] --> V15[V0.2<br/>Site outil<br/>clé API]
-    V15 --> V2[V0.3<br/>Captures de sites<br/>domaines vérifiés]
-    V2 --> V3[V0.4<br/>Storyboards<br/>vidéo]
-    V3 --> V4[V0.5<br/>Rendu motion design<br/>MP4]
-    V4 --> V5[V1.0<br/>Tableau de bord<br/>historique]
+    S[Socle<br/>connecteur MCP<br/>site, captures] --> V1[V1<br/>faite]
+    V1 --> R[Recette<br/>Soufiane]
+    R --> D[Déploiement<br/>Cloudflare<br/>domaine de Soufiane]
+    D --> A[Après la V1<br/>retraits et réserves]
 
-    style V15 fill:#6f4e37,color:#e5e4e2
+    style V1 fill:#6f4e37,color:#e5e4e2
 ```
 
-## V0.1 : outils GitHub
+## Fait en V1
 
-- [x] Serveur MCP sur Cloudflare avec OAuth GitHub
-- [x] `activite_github`, `details_repo`, `details_commit`
-- [x] Prompt `posts_semaine`
-- [x] Site vitrine
-- [x] Tests unitaires du filtrage
+### Connecteur et site
 
-## V0.2 : le site devient un outil
+- [x] Connecteur MCP sur Cloudflare avec OAuth 2.1 (PKCE, consentement, token GitHub chiffré), 15 outils et 4 prompts
+- [x] Site : connexion GitHub, API JSON, génération en streaming avec la clé API de l'utilisateur
+- [x] Identité par id GitHub numérique, données chiffrées dans KV, conservation de 90 jours
+- [x] Historique des brouillons, partagé entre Claude et le site
+- [x] Style d'écriture mémorisé côté serveur (`lire_style`, `sauver_style`, Réglages)
+- [x] Captures de sites sur domaines vérifiés, données sensibles floutées
 
-- [x] Monorepo `core` / `server` / `web`
-- [x] Front React : accueil et tableau de bord
-- [x] Connexion GitHub du site, API JSON
-- [x] Génération en streaming avec la clé API de l'utilisateur
-- [x] Docker Compose, CI, CSP
-- [ ] Test du flux OAuth réel et déploiement public
+### Posts
 
-## V0.3 : captures de sites
+- [x] 5 types de post : présentation, tuto, coulisses, leçon, semaine (`preparer_post`, tableau en 4 étapes)
+- [x] Lecture du repo pour le tuto : arborescence, README et fichiers clés choisis (modifiables), secrets et fichiers générés écartés
+- [x] Post du projet (`proposer_post_projet`, panneau du studio), au format « Aujourd'hui je vous présente »
+- [x] Masquage des jetons de formats connus dans les contenus de repo
 
-- [x] Vérification de propriété de domaine (DNS TXT ou fichier `.well-known`)
-- [x] `capturer_site` via Cloudflare Browser Run
-- [x] Floutage automatique des données sensibles
+### Pub vidéo du projet
 
-## V0.4 : storyboards vidéo
+- [x] 3 trames, 14 types de scènes, gestes et but par scène, anti-répétition
+- [x] Outils MCP `preparer_pub`, `sauver_pub`, `lister_pubs`, `lire_pub` et prompt `pub_projet`
+- [x] Studio : Mes pubs, assistant (3 questions, captures), éditeur, aperçu, export MP4 avec miniature PNG, SRT et rapport de contrôles
+- [x] Voix : Vivienne par le Worker (edge-tts), Kokoro dans le navigateur en secours, voix importée, sans voix
+- [x] Musique et effets générés par le code, mixage sous la voix
+- [x] Pub de Weekli sur la page d'accueil
 
-- [x] Storyboard automatique ou rédigé par Claude, éditable scène par scène
-- [x] Bibliothèque de scènes : titre, terminal, liste, avant/après, citation, fin
+### Sécurité, RGPD et qualité
 
-## V0.5 : rendu motion design
+- [x] Export des données (`GET /api/moi/donnees`) et effacement complet (grants, Durable Objects, autorisation GitHub, sessions)
+- [x] Pages Confidentialité et Mentions légales alignées sur le code
+- [x] Isolation cross-origin (COOP et COEP), polices et modèle vocal hébergés par Weekli
+- [x] Licence GPL-3.0-only
+- [x] Audits sécurité du 2026-10-24 et du 2026-10-29 : 0 bloquant, 0 majeur après corrections
 
-- [x] Scènes animées sur canvas, aux couleurs Weekli
-- [x] Export MP4 (ou WebM selon le navigateur) 1080×1350, format LinkedIn 4:5
-- [ ] Scène « capture » qui intègre une capture de site
+## Reste à faire
 
-## V1.0 : tableau de bord
+### Avant l'ouverture publique
 
-- [x] Historique des brouillons et des posts publiés
-- [ ] Style d'écriture mémorisé par utilisateur
+| Tâche | Détail |
+|---|---|
+| Recette de Soufiane | Parcours complet des 5 types de post, du studio et de l'export |
+| Test du connecteur dans Claude | Ajouter le connecteur dans Claude et vérifier les 15 outils. En local, cela passe par un tunnel (voir [installation.md](installation.md)) |
+| Déploiement Cloudflare | Sur le domaine de Soufiane : namespace KV, secrets, `PUBLIC_URL`, app OAuth GitHub de production avec ses 2 URI de redirection |
+| B14 | Retirer la migration des clés par login (`lib/identite.ts`) : en production, un login ne doit jamais ouvrir de données |
+| Voix Vivienne | Décision de fond avant une ouverture large : service Microsoft non officiel et sans contrat. Option : Azure Speech sous contrat |
+| Quotas Cloudflare | Vérifier les écritures KV quotidiennes de l'offre gratuite avec le cache vocal |
+
+### Réserves mineures de l'audit
+
+Détail dans `docs/reviews/securite-final-2026-10-29.md`.
+
+| Réf. | Réserve |
+|---|---|
+| N4 | Cache vocal partagé : une phrase déjà synthétisée se devine par la latence ; écriture KV jusqu'à 60 phrases par heure et par compte |
+| N6 | JWT (`eyJ...`) non masqués dans les contenus de repo ; masquage limité aux formats connus par choix |
+| m3 | Captures : images et fonds CSS d'autres origines encore affichables (pas de `Fetch.enable`) |
+| m12 | GitHub : `main` non protégée, alertes et mises à jour de sécurité Dependabot désactivées, signalement privé désactivé |
+| m13 | L'adresse personnelle figure encore dans les derniers commits ; configurer une adresse `noreply` |
+
+### Après la V1
+
+- [ ] Retirer `proposer_post_projet` si `preparer_post` avec `presentation` le remplace (décision après la recette)
+- [ ] Mesurer la voix Kokoro sur Edge, Firefox et Safari (seul Chrome a été mesuré)
+- [ ] Export de la pub en 4:5
+- [ ] Choix entre lien « Plutôt un résumé de toute ma semaine » et carte à part dans le tableau
