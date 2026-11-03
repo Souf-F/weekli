@@ -68,7 +68,7 @@ cloudflared tunnel --url http://localhost:8788
 
 La commande affiche une adresse `https://<mot>-<mot>.trycloudflare.com`. Ensuite :
 
-1. Dans `apps/server/.dev.vars`, ajoute `PUBLIC_URL=https://<ton-tunnel>.trycloudflare.com` (cette valeur remplace celle de `wrangler.jsonc`), puis relance `npm run dev`. `PUBLIC_URL` doit pointer sur l'adresse du tunnel : c'est l'identifiant de ressource OAuth du connecteur et la base des liens du studio.
+1. Dans `apps/server/.dev.vars`, ajoute `PUBLIC_URL=https://<ton-tunnel>.trycloudflare.com` (cette valeur remplace celle de `wrangler.jsonc`), puis relance le serveur en lui indiquant l'adresse du tunnel : `cd apps/server && npx wrangler dev --ip 127.0.0.1 --port 8788 --local-upstream <ton-tunnel>.trycloudflare.com --upstream-protocol https`. Sans ces deux options, le serveur annonce des adresses en `http` dans sa découverte OAuth. `PUBLIC_URL` doit pointer sur l'adresse du tunnel : c'est l'identifiant de ressource OAuth du connecteur et la base des liens du studio.
 2. Dans l'app OAuth GitHub, **ajoute les 2 URI du tunnel** : `https://<ton-tunnel>.trycloudflare.com/auth/callback` et `https://<ton-tunnel>.trycloudflare.com/callback`.
 3. Dans Claude : *Paramètres → Connecteurs → Ajouter un connecteur personnalisé*, URL `https://<ton-tunnel>.trycloudflare.com/mcp`.
 

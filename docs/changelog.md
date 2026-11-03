@@ -111,3 +111,4 @@ Retours de Soufiane sur la première vraie pub (`apps/web/dev/pub-weekli.json`) 
 - **Captures (m3)** : réserve acceptée, bloquer les images d'autres origines casserait les sites servis par un CDN.
 - **Carte « Ma semaine »** : gardée à part dans le tableau, pas de lien supplémentaire.
 - **Commits (m13)** : adresse `noreply` configurée dans ce dépôt pour les nouveaux commits, historique non réécrit.
+- **Connexion MCP (bug bloquant trouvé au test réel)** : la CSP `form-action` de la page de consentement bloquait la redirection finale vers l'application cliente quand GitHub avait déjà autorisé le compte. L'origine de l'URI de retour est maintenant autorisée.
