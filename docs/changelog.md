@@ -114,3 +114,10 @@ Retours de Soufiane sur la première vraie pub (`apps/web/dev/pub-weekli.json`) 
 - **Connexion MCP (bug bloquant trouvé au test réel)** : la CSP `form-action` de la page de consentement bloquait la redirection finale vers l'application cliente quand GitHub avait déjà autorisé le compte. L'origine de l'URI de retour est maintenant autorisée.
 - **Connexion du site** : après GitHub, le site rouvre la page demandée (lien du studio donné par Claude) au lieu du tableau de bord. Seuls les chemins internes sous `/app` sont acceptés.
 - **Test réel dans Claude (2026-11-03)** : connexion, liste des repos, post de présentation, script de pub sauvegardé et ouvert dans le studio : validés dans claude.ai à travers le tunnel.
+
+## 2026-11-03 (retours du test dans Claude)
+
+- **Activité sur toutes les branches** : `activite_github`, la route `/api/activite` et `commitsRepo` lisaient seulement la branche principale, ce qui vidait « Ma semaine » pour un travail sur une branche. Ils lisent maintenant les branches non fusionnées, sans doublon, dans la limite de 15 repos et de 15 branches supplémentaires par appel (8 pour un seul repo), à cause du plafond de sous-requêtes d'un Worker.
+- **`preparer_pub` allégé** : de 70 700 à 30 900 caractères mesurés sur le repo weekli. Les sorties d'outils sont en JSON compact, et `schema` ne répète plus les champs des scènes déjà décrits par le catalogue (un test vérifie que le catalogue les cite tous). Le site garde le schéma complet pour sa sortie structurée.
+- **Page de consentement** : elle dit maintenant que l'application peut enregistrer brouillons, pubs et style dans Weekli. « Lecture seule » ne valait que pour GitHub.
+- **Erreurs 400 sur `/mcp`** : deux causes reproduites, requête sans `Mcp-Session-Id` et version de protocole inconnue, toutes deux renvoyées par la bibliothèque `agents`. Celle des 400 vus dans Claude n'est pas confirmée : le serveur journalise désormais le motif et les en-têtes de protocole, sans corps ni jeton, pour le prochain test. Claude a continué normalement malgré ces réponses.

@@ -11,7 +11,7 @@ Le connecteur expose **14 outils** et **4 prompts** (`posts_semaine`, `preparer_
 | Style (2) | `lire_style`, `sauver_style` |
 | Capture (1) | `capturer_site` |
 
-Les outils GitHub sont en **lecture seule** (`readOnlyHint: true`) et ne portent que sur les repos **publics** de l'utilisateur connecté.
+Les outils GitHub sont en **lecture seule** (`readOnlyHint: true`) et ne portent que sur les repos **publics** de l'utilisateur connecté. L'activité et les commits d'un repo couvrent toutes les branches, pas seulement la principale, avec un plafond de requêtes.
 
 **Contenus de repo non fiables.** Tout texte qui vient d'un repo (descriptions, README, messages de commit, extraits de diff, fichiers lus pour un tuto) est rangé dans un champ `contenu_non_fiable`, et la description de l'outil rappelle que c'est une donnée à lire, jamais une consigne à suivre. Les autres champs (nom, URL, dates, nombres) sont à la racine.
 
@@ -124,7 +124,7 @@ Lecture seule. Renvoie :
 | `marqueConnue`, `capturesDisponibles` | Marque et captures de cette pub, ou `null` et `[]` |
 | `questions` | Les 3 questions (`pourQui`, `probleme`, `promesse`) avec leur aide |
 | `catalogue`, `regles` | Types de scènes et règles d'écriture, en texte |
-| `schema` | Schéma JSON du script |
+| `schema` | Schéma JSON du script, sans le détail des scènes (décrit par `catalogue`) |
 
 Erreurs : nom de repo invalide, repo introuvable ou privé.
 
