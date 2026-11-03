@@ -125,8 +125,8 @@ Code figé, audits faits (0 bloquant, 0 majeur). Prochaine étape : recette de S
 | H4 validation de la pub de démonstration | À faire (recette) |
 | B1 à B13 | Faits, commités |
 | B15 voix Vivienne par le Worker | Fait (`/api/voix`, cache, quota, repli Kokoro) |
-| B16 `proposer_post_projet`, B17 `preparer_post` | Faits (15 outils au total) |
-| B14 retrait de la migration par login | **Reste**, à faire avant le déploiement public |
+| B16 `proposer_post_projet`, B17 `preparer_post` | Faits, puis `proposer_post_projet` retiré au profit de `preparer_post` (14 outils au total) |
+| B14 retrait de la migration par login | Fait (2026-11-03) |
 | F1 à F13 | Faits, commités (F3, F10, F11, F12, F13 compris) |
 | F14 panneau « Post LinkedIn » du studio | Fait |
 | F16 tableau par type de post | Fait |
@@ -140,11 +140,8 @@ Code figé, audits faits (0 bloquant, 0 majeur). Prochaine étape : recette de S
 | Recette du parcours complet (5 types de post, studio, export) | Soufiane |
 | Test du connecteur dans Claude (tunnel en local, voir `installation.md`) | Soufiane et orchestrateur |
 | Déploiement Cloudflare sur le domaine de Soufiane (KV, secrets, `PUBLIC_URL`, app OAuth de production) | Soufiane et orchestrateur |
-| B14 retrait de la migration par login | backend-senior |
-| Réserves de l'audit : N4, N6, m3, m12, m13 | voir `roadmap.md` |
-| Le chiffre d'outils de l'accueil (`NB_OUTILS`) vaut 13 alors que le serveur en expose 15 | frontend-senior |
-| Ajouter `POST /api/voix` à `docs/api-contract.md` | architecte |
-| Décision : retirer `proposer_post_projet`, arbitrer le lien « résumé de ma semaine » | Soufiane |
+| Réglages GitHub (m12) : protéger `main`, Dependabot, signalement privé | Soufiane |
+| Fusion de la PR dans `main` | Après accord de Soufiane |
 
 ## Reprise (après la pause du 2026-10-25)
 

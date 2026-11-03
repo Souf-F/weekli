@@ -13,7 +13,7 @@ Le point d'entrée principal est le **connecteur Claude** : tu ajoutes Weekli co
 | Qui rédige | Ton abonnement Claude | L'API Anthropic, avec ta clé (elle ne quitte jamais ton navigateur) |
 | 5 types de post | Oui, outil `preparer_post` | Oui, tableau de bord en 4 étapes |
 | Pub vidéo du projet | Claude écrit le script (`preparer_pub`, `sauver_pub`) | Studio : assistant, éditeur, aperçu, export MP4 |
-| Post du projet | Oui, `proposer_post_projet` | Panneau « Post LinkedIn » du studio |
+| Post du projet | Oui, `preparer_post` (type `presentation`) | Panneau « Post LinkedIn » du studio |
 | Style d'écriture mémorisé | Oui | Oui (Réglages) |
 | Captures de sites vérifiés, données sensibles floutées | Oui | Oui |
 | Historique des brouillons | Oui | Oui |
@@ -54,7 +54,7 @@ flowchart LR
         N -- ta clé API --> A[(API Anthropic)]
     end
     subgraph W[Worker Cloudflare]
-        MCP[Serveur MCP<br/>15 outils]
+        MCP[Serveur MCP<br/>14 outils]
         API[API JSON]
         CORE[[@weekli/core]]
         MCP --> CORE

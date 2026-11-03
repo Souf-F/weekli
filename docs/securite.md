@@ -37,7 +37,7 @@ flowchart LR
 | Lecture des données d'un autre utilisateur | Les outils utilisent toujours le `login` du token, jamais un propriétaire passé en paramètre |
 | Accès à un repo privé | Scope `read:user` et refus explicite dans `details_repo` |
 | Injection de prompt via un README, un commit ou un fichier de tuto | Données renvoyées en JSON sous `contenu_non_fiable`, rappel dans chaque outil et chaque prompt, jetons connus masqués, Claude reste l'agent de l'utilisateur, aucun outil n'a d'effet de bord hors des données Weekli |
-| Cache vocal partagé sondé | Quota de 60 phrases par heure et par compte, compté aussi sur les réponses du cache ; entrées gardées 30 jours. Reste possible : deviner par la latence si une phrase exacte a déjà été synthétisée (résidu N4) |
+| Cache vocal partagé sondé | Quota de 200 phrases par jour et par compte, compté aussi sur les réponses du cache ; entrées gardées 30 jours. Reste possible : deviner par la latence si une phrase exacte a déjà été synthétisée (résidu N4) |
 | Fuite d'informations | Erreurs génériques côté client, détail uniquement dans les logs |
 | Dépendance vulnérable | `npm audit` bloquant en CI, Dependabot hebdomadaire |
 | Secret commité par erreur | `scripts/verifier-secrets.mjs` en hook local (commit et push) et en CI |
@@ -50,7 +50,7 @@ flowchart LR
 | Contenu | Uniquement un identifiant aléatoire. Les données (token GitHub compris) sont chiffrées dans KV. |
 | Connexion | `state` aléatoire stocké chiffré dans KV avec le vérifieur PKCE, lié au navigateur par cookie, usage unique |
 | Déconnexion | `POST /auth/logout` supprime la session de KV, révoque le token GitHub de cette session, mais garde l'autorisation du connecteur Claude |
-| Identité | Toutes les données sont rangées sous l'**id GitHub numérique**, jamais sous le login (renommable). Une migration des anciennes clés par login existe encore et sera retirée avant le déploiement public (B14) |
+| Identité | Toutes les données sont rangées sous l'**id GitHub numérique**, jamais sous le login (renommable). |
 
 ## Clé API Anthropic
 

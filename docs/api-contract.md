@@ -408,12 +408,20 @@ Dans tous les cas : style lu depuis KV, assemblage par `donneesPost` de `@weekli
 ```
 
 - `specifique` selon le type :
-  - `presentation` : `{ domainesVerifies, pubExistante }` (même forme que `proposer_post_projet`).
+  - `presentation` : `{ domainesVerifies, pubExistante }` (mêmes champs que `donneesPostProjet`).
   - `tuto` : voir l'exemple.
   - `coulisses`, `lecon` : `{ commits: [{ sha, date, stats?, contenu_non_fiable: { message, fichiers: FichierModifie[] } }] }`.
   - `semaine` : `{ depuis, repos: [{ repo, langage, url, site, contenu_non_fiable: { description, commits } }], commitsDetailles: [] }`, et `repo` vaut `null`.
 - Erreurs : `400 {"erreur": "<message de validerDemandePost>"}` (`Type de post invalide`, `Nom de repo invalide`, `Choisis au moins un commit`, `Commits invalides : 10 identifiants au plus`, `Fichiers invalides : 12 chemins au plus`, `Periode invalide : 1 a 30 jours`), `401`, `403`, `404 {"erreur": "Repo introuvable ou prive : Weekli ne lit que les repos publics."}` (aussi pour un commit inconnu : `Commit introuvable`), `429`, `502`.
 - Limite de taille de la réponse : environ 60 Ko pour un tuto (fichiers 24 000 + README 8000 + arborescence 300 chemins).
+
+### 3.9 Voix off : V1
+
+#### `POST /api/voix`
+
+- Session et `Origin` requis, corps limité à 64 Ko. Corps strict : `{ "texte": string de 1 à 400 caractères, "scene": string [a-z0-9_-]{1,64} }`.
+- `200` : audio MP3 (`Content-Type: audio/mpeg`), 2 Mo au plus. Le cache est partagé (clé SHA-256 de la voix et du texte), gardé 30 jours.
+- Erreurs : `400` corps invalide, `401` sans session, `429 {"erreur":"200 phrases par jour au maximum"}` (réponses du cache comprises), `502 {"erreur":"Voix indisponible"}`.
 
 ## 4. Outils MCP
 
@@ -483,26 +491,6 @@ Masquage des secrets dans `details_commit` : les extraits de diff passent par `m
 - Les domaines sont revérifiés après 7 jours (`domainesRevalides`, appels DNS et HTTP, 5 s au plus), comme pour `capturer_site`.
 - Erreurs : repo invalide, `Repo introuvable ou prive : Weekli ne lit que les repos publics.`
 
-#### `proposer_post_projet`
-
-- Description : « Prépare le post LinkedIn d'un projet. Renvoie le README et la description du repo, les domaines vérifiés, le script de la dernière pub du repo s'il existe, le style d'écriture mémorisé, les règles d'écriture et la consigne : propose 2 ou 3 versions, et pose une question à l'utilisateur si le pourquoi ou la démarche manquent. Weekli ne rédige pas : c'est Claude qui écrit. »
-- Annotations : `readOnlyHint: true`. Entrée : `{ repo: string (NOM_REPO) }`. Le repo est lu sous le login du compte connecté : le repo d'un autre compte n'est pas atteignable (`a/b` est refusé par le schéma).
-- Sortie (construite par `donneesPostProjet` de `@weekli/core`, partagée avec le mode clé API du navigateur, F14) :
-
-```json
-{
-  "repo": { "repo": "scanner-ssl", "site": "https://scanner-ssl.dev", "url": "https://github.com/Souf-F/scanner-ssl", "sujets": ["securite"], "contenu_non_fiable": { "description": "...", "readme": "..." } },
-  "domainesVerifies": ["scanner-ssl.dev"],
-  "pubExistante": { "id": "0b6f8d5e-6a51-4c0e-9d0e-3f3b2c1a9e77", "titre": "Pub Scanner", "reponses": { "pourQui": "...", "probleme": "...", "promesse": "..." }, "voix": "<voix des scenes visibles, jointe>" },
-  "style": { "exemples": "...", "profil": "..." },
-  "regles": "<REGLES_POST_PROJET>",
-  "consigne": "<2 ou 3 versions au format de l'utilisateur, question si le pourquoi ou la demarche manquent>"
-}
-```
-
-- `pubExistante` : la pub la plus récente du même repo, ou `null`. Les langages et les étoiles ne sont pas renvoyés (valeur technique, hors du post).
-- Erreurs : repo invalide, `Repo introuvable ou prive : Weekli ne lit que les repos publics.`
-
 #### `sauver_pub`
 
 - Description : « Enregistre le script d'une pub vidéo (nouveau, ou remplacement si id est fourni) et renvoie le lien du studio où l'utilisateur la rend en MP4. Jamais de code, de commit, de terminal ni de chiffre de développement dans la pub. »
@@ -533,7 +521,7 @@ Masquage des secrets dans `details_commit` : les extraits de diff passent par `m
 
 #### Prompt `post_projet`
 
-- Arguments : `{ repo: string }`. Message : appeler `proposer_post_projet`, poser la question si le pourquoi ou la démarche manquent (jamais les inventer), rédiger 2 ou 3 versions selon les règles et le style, les présenter.
+- Arguments : `{ repo: string }`. Message : appeler `preparer_post` avec le type `presentation`, poser la question si le pourquoi ou la démarche manquent (jamais les inventer), rédiger 2 ou 3 versions selon les règles et le style, les présenter.
 
 #### `preparer_post` : V1
 
@@ -542,8 +530,6 @@ Masquage des secrets dans `details_commit` : les extraits de diff passent par `m
 - Entrée : `{ type, repo?, commits?, fichiers?, jours? }`, mêmes champs et mêmes règles que le corps de `POST /api/posts/donnees` (3.8), validés par `validerDemandePost`.
 - Sortie : `DonneesPost` (`donneesPost` de `@weekli/core`), identique à la réponse de la route. Les messages d'erreur reprennent ceux de la route, préfixés par `Erreur : ` selon 1.2.
 - Cas particulier MCP, `coulisses` sans `commits` : au lieu de l'erreur `Choisis au moins un commit`, l'outil renvoie `{ type, nom, repo, commitsDisponibles: Commit[] (commitsRepo, 30 jours), regles, consigne }` et la consigne dit à Claude de demander à l'utilisateur lesquels raconter, puis de rappeler l'outil avec `commits`. Même comportement pour `lecon` : sans `commits`, la sortie contient `commitsDisponibles` en plus des données, à proposer seulement si l'utilisateur n'a pas décrit le problème.
-- `proposer_post_projet` est conservé tel quel (alias de `type: "presentation"`, forme de sortie inchangée) pour ne pas casser les usages existants. Sa description indique « préférer preparer_post ». Le retrait éventuel sera décidé après la recette.
-- Le nombre d'outils du connecteur passe de 13 à 14 (chiffre de l'accueil à mettre à jour, F16).
 
 #### Prompt `preparer_post` : V1
 

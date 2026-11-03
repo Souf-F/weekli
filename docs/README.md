@@ -4,7 +4,7 @@
 |---|---|
 | [architecture.md](architecture.md) | Vue d'ensemble, double OAuth, données, flux, décisions (ADR) |
 | [securite.md](securite.md) | Principes, modèle de menace, voix, masquage, effacement, secrets |
-| [outils.md](outils.md) | Les 15 outils MCP, les prompts et les routes de l'API |
+| [outils.md](outils.md) | Les 14 outils MCP, les prompts et les routes de l'API |
 | [installation.md](installation.md) | App OAuth GitHub, lancement local, tunnel pour Claude, Docker, déploiement |
 | [roadmap.md](roadmap.md) | Ce qui est fait en V1 et ce qui reste |
 | [tasks.md](tasks.md) | Suivi des tâches et avancement |

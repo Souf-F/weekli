@@ -6,13 +6,13 @@ Worker Cloudflare qui porte tout le back-end de Weekli.
 
 | Route | Rôle |
 |---|---|
-| `/mcp` | Serveur MCP (Streamable HTTP, 15 outils), protégé par OAuth |
+| `/mcp` | Serveur MCP (Streamable HTTP, 14 outils), protégé par OAuth |
 | `/authorize`, `/token`, `/register`, `/callback`, `/.well-known/*` | OAuth 2.1 pour les clients MCP comme Claude |
 | `/auth/login`, `/auth/callback`, `/auth/logout` | Connexion GitHub du site, session par cookie |
 | `/api/moi`, `/api/activite`, `/api/repos*` | GitHub : profil, activité, repos, commits, lecture d'un repo pour le tuto |
 | `/api/posts/donnees` | Données préparées pour un des 5 types de post |
 | `/api/brouillons*`, `/api/pubs*`, `/api/style` | Historique, pubs vidéo et style d'écriture, chiffrés dans KV |
-| `/api/voix` | Voix off Vivienne (service de lecture d'Edge), 60 phrases par heure et par compte |
+| `/api/voix` | Voix off Vivienne (service de lecture d'Edge), 200 phrases par jour et par compte |
 | `/api/domaines*`, `/api/captures` | Domaines vérifiés et captures de sites |
 | `/api/moi/donnees` | Export (GET) et effacement complet (DELETE) |
 | tout le reste | Front React compilé (`../web/dist`), en application monopage |

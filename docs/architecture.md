@@ -16,7 +16,7 @@ Le dépôt est un **monorepo npm** :
 En production, Weekli est un seul **Cloudflare Worker** qui joue cinq rôles :
 
 1. **Serveur d'autorisation OAuth** pour les clients MCP (Claude), via `@cloudflare/workers-oauth-provider`.
-2. **Serveur MCP** sur `/mcp`, une instance de `WeekliMCP` (un Durable Object par session), qui expose **15 outils** et 4 prompts (voir `docs/outils.md`).
+2. **Serveur MCP** sur `/mcp`, une instance de `WeekliMCP` (un Durable Object par session), qui expose **14 outils** et 4 prompts (voir `docs/outils.md`).
 3. **API du site** sur `/api/*`, avec sa propre connexion GitHub sur `/auth/*`.
 4. **Hébergement du front** React compilé, en application monopage, y compris les **fichiers du modèle vocal Kokoro** (ADR-08).
 5. **Relais de la voix Vivienne** sur `/api/voix` : WebSocket sortant vers le service de lecture d'Edge, cache KV partagé, quota par compte (ADR-13).
@@ -144,7 +144,7 @@ weekli/
 │   │   │   ├── outils-brouillons.ts    sauver_brouillons, lister_brouillons, prompt posts_semaine
 │   │   │   ├── outils-style.ts         lire_style, sauver_style
 │   │   │   ├── outils-captures.ts      capturer_site
-│   │   │   └── outils-pub.ts           preparer_pub, sauver_pub, lister_pubs, lire_pub, preparer_post, proposer_post_projet, prompts pub_projet, preparer_post, post_projet
+│   │   │   └── outils-pub.ts           preparer_pub, sauver_pub, lister_pubs, lire_pub, preparer_post, prompts pub_projet, preparer_post, post_projet
 │   │   ├── routes/
 │   │   │   ├── app.ts                  Assemble les routes
 │   │   │   ├── api.ts                  API du site : GitHub, posts, brouillons, pubs, style, voix, domaines, captures, export et effacement
@@ -152,7 +152,6 @@ weekli/
 │   │   │   └── oauth-mcp.ts            OAuth des clients MCP : consentement puis GitHub
 │   │   └── lib/
 │   │       ├── chiffrement.ts, props.ts, session.ts, github-oauth.ts, securite.ts, pages.ts, validation.ts
-│   │       ├── identite.ts             Clés par id GitHub, migration des clés par login (à retirer, B14)
 │   │       ├── conservation.ts         90 jours pour les données, 30 jours pour une autorisation MCP
 │   │       ├── brouillons.ts, pubs.ts, style.ts, domaines.ts   Données de l'utilisateur chiffrées dans KV
 │   │       ├── donnees.ts              Effacement complet
@@ -369,11 +368,11 @@ Le détail visuel est dans `docs/design.md` (sections 8 et 9). Les règles techn
 | Isolation cross-origin | `Cross-Origin-Opener-Policy: same-origin` et `Cross-Origin-Embedder-Policy: require-corp` dans `_headers` : la page est `crossOriginIsolated`, condition du calcul de la voix sur 4 fils (ADR-07). Toute ressource tierce doit alors être chargée avec `crossorigin="anonymous"` (avatars GitHub, qui répondent `Access-Control-Allow-Origin: *`) |
 | Contenus de repo (README, `details_commit`, fichiers de tuto) | Plafonnés puis masqués par `masquerEtTronquer` (`masquage.ts`) pour les formats de jetons connus seulement, sans motif générique (faux positifs sur du code) ; un JWT n'est pas masqué (résidu N6) |
 | Lecture d'un repo pour un tuto | Secrets, fichiers générés, binaires, dossiers de dépendances ni lus ni listés (seul leur nombre est renvoyé) ; 12 fichiers, 3000 caractères chacun, 24 000 au total ; un chemin hors de la liste autorisée est refusé |
-| Voix Vivienne | Texte limité à 400 caractères, corps strict, 60 phrases par heure et par compte (cache compris), MP3 limité à 2 Mo, délai de 15 s, aucune identité transmise à Microsoft |
+| Voix Vivienne | Texte limité à 400 caractères, corps strict, 200 phrases par jour et par compte (cache compris), MP3 limité à 2 Mo, délai de 15 s, aucune identité transmise à Microsoft |
 
 ## 10. Décisions (ADR)
 
-### ADR-01 : identité par id GitHub numérique, migration des clés
+### ADR-01 : identité par id GitHub numérique, migration des clés (migration retirée, B14)
 
 - **Contexte** : clés KV, jeton HMAC des domaines, limitation de débit et outils MCP reposent sur le login GitHub, renommable et réattribuable (audit M3). Un nouveau titulaire du login hériterait des brouillons et des domaines.
 - **Options** : (a) garder le login ; (b) id numérique sans migration ; (c) id numérique avec migration au premier login.
@@ -384,7 +383,7 @@ Le détail visuel est dans `docs/design.md` (sections 8 et 9). Les règles techn
 
 - **Contexte** : l'effacement actuel laisse les grants MCP, les Durable Objects, les autres sessions et l'autorisation GitHub (audit M1, M2, m2).
 - **Décision** : `DELETE /api/moi/donnees` exécute, dans cet ordre, en continuant même si une étape échoue (chaque échec est journalisé sans donnée personnelle, et la réponse reste `204` si les données KV sont supprimées) :
-  1. Suppression KV : `brouillons:`, `pubs:`, `style:`, `domaines:` pour l'id (et le login tant que la migration ADR-01 existe).
+  1. Suppression KV : `brouillons:`, `pubs:`, `style:`, `domaines:` pour l'id.
   2. Grants MCP : `OAUTH_PROVIDER.listUserGrants(id)` puis `revokeGrant(grantId, id)` pour chacun (tokens d'accès et de rafraîchissement compris).
   3. Durable Objects : lecture de l'index `mcp:<id>` (noms des DO de l'utilisateur, alimenté par `WeekliMCP` à l'initialisation), appel de la méthode RPC `detruire()` qui fait `this.destroy()`, puis suppression de l'index.
   4. GitHub : `DELETE https://api.github.com/applications/{client_id}/grant` (authentification basique client_id et secret, corps `{ access_token }`) avec le token de la session : révoque l'autorisation de l'app pour ce compte, donc tous ses tokens. Si GitHub refuse, étape journalisée et ignorée.
@@ -491,11 +490,11 @@ Le détail visuel est dans `docs/design.md` (sections 8 et 9). Les règles techn
 
 - **Contexte** : après écoute du banc d'essai, Soufiane retient la voix Vivienne d'edge-tts pour sa qualité. Le navigateur ne peut pas forger les en-têtes exigés par le service de lecture d'Edge (ADR-07).
 - **Options** : (a) Kokoro seule ; (b) Vivienne par le Worker avec repli Kokoro ; (c) service payant sous contrat (Azure Speech).
-- **Décision** : (b). `POST /api/voix` ouvre un WebSocket sortant vers le service de lecture d'Edge (`lib/voix.ts`, jeton `Sec-MS-GEC` dans `lib/voix-gec.ts`) et renvoie un MP3. Garde-fous : corps strict `{ texte, scene }`, 400 caractères, quota de 60 phrases par heure et par compte compté avant la lecture du cache, cache KV partagé de 30 jours (clé = SHA-256 de la voix et du texte), délai de 15 s. En cas de `502`, le studio bascule sur Kokoro dans le navigateur. L'utilisateur peut aussi choisir Kokoro d'emblée, importer sa voix ou n'en mettre aucune : rien n'est alors envoyé.
+- **Décision** : (b). `POST /api/voix` ouvre un WebSocket sortant vers le service de lecture d'Edge (`lib/voix.ts`, jeton `Sec-MS-GEC` dans `lib/voix-gec.ts`) et renvoie un MP3. Garde-fous : corps strict `{ texte, scene }`, 400 caractères, quota de 200 phrases par jour et par compte compté avant la lecture du cache, cache KV partagé de 30 jours (clé = SHA-256 de la voix et du texte), délai de 15 s. En cas de `502`, le studio bascule sur Kokoro dans le navigateur. L'utilisateur peut aussi choisir Kokoro d'emblée, importer sa voix ou n'en mettre aucune : rien n'est alors envoyé.
 - **Conséquences** : usage **non officiel** du service Microsoft, qui peut être coupé ; Microsoft reçoit le texte des phrases (indiqué dans la page Confidentialité comme service tiers sans contrat). Option sûre avant une ouverture publique large : Azure Speech sous contrat. Le modèle Kokoro et espeak-ng restent livrés (GPL-3.0).
 
 ### ADR-14 : cinq types de post, données préparées par le serveur
 
 - **Contexte** : le tableau partait des commits, ce qui ne correspond pas à l'usage (retour de Soufiane du 2026-10-29).
-- **Décision** : cinq types (`presentation`, `tuto`, `coulisses`, `lecon`, `semaine`) décrits par `CATALOGUE_POSTS` dans `@weekli/core`. Le serveur ne rédige pas : `preparer_post` (MCP) et `POST /api/posts/donnees` (site) renvoient les mêmes données (`donneesPost`) : contenu du repo en `contenu_non_fiable`, style, règles, consigne. La liste des commits n'est demandée que pour les types qui en ont besoin. `proposer_post_projet` est conservé (équivalent de `presentation`) jusqu'à la recette. Le type `semaine` garde l'ancien flux : le navigateur choisit les commits et lit leurs diffs.
+- **Décision** : cinq types (`presentation`, `tuto`, `coulisses`, `lecon`, `semaine`) décrits par `CATALOGUE_POSTS` dans `@weekli/core`. Le serveur ne rédige pas : `preparer_post` (MCP) et `POST /api/posts/donnees` (site) renvoient les mêmes données (`donneesPost`) : contenu du repo en `contenu_non_fiable`, style, règles, consigne. La liste des commits n'est demandée que pour les types qui en ont besoin. `proposer_post_projet`, équivalent de `presentation`, a été retiré. Le type `semaine` garde l'ancien flux : le navigateur choisit les commits et lit leurs diffs.
 - **Conséquences** : une seule implémentation pour Claude et pour le site ; la lecture approfondie d'un repo pour le tuto est bornée et filtrée (section 9).

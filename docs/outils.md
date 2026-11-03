@@ -1,11 +1,11 @@
 # Référence des outils MCP
 
-Le connecteur expose **15 outils** et **4 prompts** (`posts_semaine`, `preparer_post`, `post_projet`, `pub_projet`).
+Le connecteur expose **14 outils** et **4 prompts** (`posts_semaine`, `preparer_post`, `post_projet`, `pub_projet`).
 
 | Famille | Outils |
 |---|---|
 | GitHub (4) | `activite_github`, `details_repo`, `details_commit`, `lister_repos` |
-| Posts (2) | `preparer_post`, `proposer_post_projet` |
+| Posts (1) | `preparer_post` |
 | Pub vidéo (4) | `preparer_pub`, `sauver_pub`, `lister_pubs`, `lire_pub` |
 | Brouillons (2) | `sauver_brouillons`, `lister_brouillons` |
 | Style (2) | `lire_style`, `sauver_style` |
@@ -174,34 +174,13 @@ Erreurs : entrée invalide (messages de la route), repo ou commit introuvable, r
 
 Guide Claude (`promptPreparerPost`) : appeler `preparer_post`, lire consigne et règles, poser la question si elles le demandent, rédiger 2 ou 3 versions.
 
-### `proposer_post_projet`
-
-Conservé pour l'instant (équivalent de `type: "presentation"`, retrait décidé après la recette) : préférer `preparer_post`.
-
-| Paramètre | Type | Description |
-|---|---|---|
-| `repo` | texte | Nom du repo public, sans le propriétaire |
-
-Lecture seule. Weekli ne rédige pas, il fournit les données et les règles. Renvoie :
-
-| Champ | Contenu |
-|---|---|
-| `repo` | `repo`, `site`, `url`, `sujets`, et `contenu_non_fiable` (`description`, `readme`) |
-| `domainesVerifies` | Domaines dont l'utilisateur a prouvé la propriété |
-| `pubExistante` | Id, titre, réponses et voix de la dernière pub de ce repo, ou `null` |
-| `style` | `exemples` et `profil` du style mémorisé |
-| `regles` | Règles d'écriture du post (`REGLES_POST_PROJET`) |
-| `consigne` | 2 ou 3 versions au format « Aujourd'hui je vous présente », sans commit, code ni chiffre de développement ; question à l'utilisateur si le pourquoi ou la démarche manquent |
-
-Erreurs : nom de repo invalide, repo introuvable ou privé. Le repo d'un autre compte n'est pas atteignable.
-
 ### Prompt `post_projet`
 
 | Argument | Description |
 |---|---|
 | `repo` | Nom du repo GitHub public du projet |
 
-Guide Claude : `proposer_post_projet`, poser la question si le pourquoi ou la démarche manquent, rédiger 2 ou 3 versions, les présenter.
+Guide Claude : `preparer_post` avec le type `presentation`, poser la question si le pourquoi ou la démarche manquent, rédiger 2 ou 3 versions, les présenter.
 
 ## Prompt `pub_projet`
 
@@ -242,7 +221,7 @@ Routes JSON servies par le Worker, toutes protégées par la session (cookie `Ht
 | GET | `/api/style` | `{ exemples, profil, maj }` |
 | PUT | `/api/style` | Corps `{ exemples?, profil? }` |
 | DELETE | `/api/style` | `204` |
-| POST | `/api/voix` | Corps `{ texte, scene }` (texte de 1 à 400 caractères) ; renvoie un MP3. `429` au-delà de 60 phrases par heure et par compte, `502` si la voix est indisponible |
+| POST | `/api/voix` | Corps `{ texte, scene }` (texte de 1 à 400 caractères) ; renvoie un MP3. `429` au-delà de 200 phrases par jour et par compte, `502` si la voix est indisponible |
 | GET | `/api/moi/donnees` | Export JSON de tout ce que Weekli stocke pour le compte, sans le token GitHub (en-tête `Content-Disposition`) |
 | DELETE | `/api/moi/donnees` | Effacement complet, `204` ; `500` si le stockage échoue (la session est gardée pour relancer) |
 | GET | `/api/brouillons` | Historique, du plus récent au plus ancien (100 au maximum) |
@@ -259,6 +238,6 @@ Toute requête d'écriture doit porter l'en-tête `Origin` du site. L'historique
 
 ### Voix off (`POST /api/voix`)
 
-Le Worker obtient l'audio de la voix **Vivienne** (`fr-FR-VivienneMultilingualNeural`) auprès du service de lecture d'Edge de Microsoft, par un WebSocket sortant (même protocole qu'`edge-tts`, jeton `Sec-MS-GEC` calculé dans `lib/voix-gec.ts`). C'est un **usage non officiel** du service. Seul le texte de la phrase part chez Microsoft, jamais l'identité de l'utilisateur ; `scene` est seulement validée. Le MP3 est mis en cache dans KV 30 jours, sous une clé qui est l'empreinte SHA-256 de la voix et du texte (cache partagé, lié à aucun compte). Chaque appel compte dans le quota de 60 phrases par heure, même servi par le cache. En cas de 502, le studio bascule sur Kokoro, exécutée dans le navigateur.
+Le Worker obtient l'audio de la voix **Vivienne** (`fr-FR-VivienneMultilingualNeural`) auprès du service de lecture d'Edge de Microsoft, par un WebSocket sortant (même protocole qu'`edge-tts`, jeton `Sec-MS-GEC` calculé dans `lib/voix-gec.ts`). C'est un **usage non officiel** du service. Seul le texte de la phrase part chez Microsoft, jamais l'identité de l'utilisateur ; `scene` est seulement validée. Le MP3 est mis en cache dans KV 30 jours, sous une clé qui est l'empreinte SHA-256 de la voix et du texte (cache partagé, lié à aucun compte). Chaque appel compte dans le quota de 200 phrases par jour, même servi par le cache. En cas de 502, le studio bascule sur Kokoro, exécutée dans le navigateur.
 
 La génération des posts ne passe pas par ces routes : le navigateur appelle directement l'API Anthropic avec la clé de l'utilisateur, en s'appuyant sur `systemeGeneration`, `messageGeneration` et `lirePosts` de `@weekli/core`.

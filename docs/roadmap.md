@@ -16,7 +16,7 @@ flowchart LR
 
 ### Connecteur et site
 
-- [x] Connecteur MCP sur Cloudflare avec OAuth 2.1 (PKCE, consentement, token GitHub chiffré), 15 outils et 4 prompts
+- [x] Connecteur MCP sur Cloudflare avec OAuth 2.1 (PKCE, consentement, token GitHub chiffré), 14 outils et 4 prompts
 - [x] Site : connexion GitHub, API JSON, génération en streaming avec la clé API de l'utilisateur
 - [x] Identité par id GitHub numérique, données chiffrées dans KV, conservation de 90 jours
 - [x] Historique des brouillons, partagé entre Claude et le site
@@ -27,7 +27,7 @@ flowchart LR
 
 - [x] 5 types de post : présentation, tuto, coulisses, leçon, semaine (`preparer_post`, tableau en 4 étapes)
 - [x] Lecture du repo pour le tuto : arborescence, README et fichiers clés choisis (modifiables), secrets et fichiers générés écartés
-- [x] Post du projet (`proposer_post_projet`, panneau du studio), au format « Aujourd'hui je vous présente »
+- [x] Post du projet (`preparer_post` type `presentation`, panneau du studio), au format « Aujourd'hui je vous présente »
 - [x] Masquage des jetons de formats connus dans les contenus de repo
 
 ### Pub vidéo du projet
@@ -54,9 +54,8 @@ flowchart LR
 | Tâche | Détail |
 |---|---|
 | Recette de Soufiane | Parcours complet des 5 types de post, du studio et de l'export |
-| Test du connecteur dans Claude | Ajouter le connecteur dans Claude et vérifier les 15 outils. En local, cela passe par un tunnel (voir [installation.md](installation.md)) |
+| Test du connecteur dans Claude | Ajouter le connecteur dans Claude et vérifier les 14 outils. En local, cela passe par un tunnel (voir [installation.md](installation.md)) |
 | Déploiement Cloudflare | Sur le domaine de Soufiane : namespace KV, secrets, `PUBLIC_URL`, app OAuth GitHub de production avec ses 2 URI de redirection |
-| B14 | Retirer la migration des clés par login (`lib/identite.ts`) : en production, un login ne doit jamais ouvrir de données |
 | Voix Vivienne | Décision de fond avant une ouverture large : service Microsoft non officiel et sans contrat. Option : Azure Speech sous contrat |
 | Quotas Cloudflare | Vérifier les écritures KV quotidiennes de l'offre gratuite avec le cache vocal |
 
@@ -66,15 +65,12 @@ Détail dans `docs/reviews/securite-final-2026-10-29.md`.
 
 | Réf. | Réserve |
 |---|---|
-| N4 | Cache vocal partagé : une phrase déjà synthétisée se devine par la latence ; écriture KV jusqu'à 60 phrases par heure et par compte |
-| N6 | JWT (`eyJ...`) non masqués dans les contenus de repo ; masquage limité aux formats connus par choix |
-| m3 | Captures : images et fonds CSS d'autres origines encore affichables (pas de `Fetch.enable`) |
+| N4 | Cache vocal partagé : une phrase déjà synthétisée se devine encore par la latence, oracle de faible portée accepté. Écritures KV bornées à 200 phrases par jour et par compte |
+| m3 | Accepté : les images et fonds CSS d'autres origines restent affichés dans les captures. Le domaine capturé est prouvé par l'utilisateur, et les bloquer casserait les sites servis par un CDN |
 | m12 | GitHub : `main` non protégée, alertes et mises à jour de sécurité Dependabot désactivées, signalement privé désactivé |
-| m13 | L'adresse personnelle figure encore dans les derniers commits ; configurer une adresse `noreply` |
+| m13 | Adresse `noreply` configurée dans ce dépôt pour les nouveaux commits. Les anciens commits gardent l'adresse personnelle : réécrire l'historique est à décider par Soufiane |
 
 ### Après la V1
 
-- [ ] Retirer `proposer_post_projet` si `preparer_post` avec `presentation` le remplace (décision après la recette)
 - [ ] Mesurer la voix Kokoro sur Edge, Firefox et Safari (seul Chrome a été mesuré)
 - [ ] Export de la pub en 4:5
-- [ ] Choix entre lien « Plutôt un résumé de toute ma semaine » et carte à part dans le tableau

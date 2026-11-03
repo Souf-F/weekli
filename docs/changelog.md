@@ -102,3 +102,12 @@ Retours de Soufiane sur la première vraie pub (`apps/web/dev/pub-weekli.json`) 
 - **Installation** : app OAuth GitHub avec 2 URI de redirection, tunnel `cloudflared` temporaire pour tester le connecteur dans Claude (`PUBLIC_URL` sur l'adresse du tunnel, ses 2 URI ajoutées à l'app).
 - **Reste** : recette, test du connecteur, déploiement Cloudflare, B14, réserves N4, N6, m3, m12, m13.
 
+## 2026-11-03 (finitions avant recette)
+
+- **`proposer_post_projet` retiré** : `preparer_post` avec le type `presentation` fait le même travail. Un seul outil de post rend le choix de Claude plus simple. Le connecteur passe à 14 outils.
+- **B14 fait** : migration des clés par login retirée, aucune donnée de production n'existait.
+- **Voix (N4)** : quota de 200 phrases par jour et par compte au lieu de 60 par heure, pour borner les écritures KV.
+- **Masquage (N6)** : les JWT sont masqués, avec des segments de longueur bornée pour rester rapide.
+- **Captures (m3)** : réserve acceptée, bloquer les images d'autres origines casserait les sites servis par un CDN.
+- **Carte « Ma semaine »** : gardée à part dans le tableau, pas de lien supplémentaire.
+- **Commits (m13)** : adresse `noreply` configurée dans ce dépôt pour les nouveaux commits, historique non réécrit.
