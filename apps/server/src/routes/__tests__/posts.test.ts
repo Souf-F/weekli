@@ -27,6 +27,7 @@ function github(opts: { prive?: boolean; absent?: string } = {}) {
 					tree: [".env", "package.json", ...FICHIERS].map((path) => ({ type: "blob", path, size: 50 })),
 				});
 			if (pathname.includes("/contents/")) return new Response(GROS);
+			if (pathname.endsWith("/branches")) return Response.json([{ name: "main", commit: { sha: "abcdef123456" } }]);
 			if (pathname.endsWith("/commits"))
 				return Response.json([{ sha: "abcdef123456", commit: { message: "Ajout du panier\nsuite", author: { date: "2026-10-20T10:00:00Z" } } }]);
 			if (/\/commits\/[0-9a-f]+$/.test(pathname))
@@ -138,8 +139,8 @@ describe("GET /api/repos/:repo/commits et fichiers-tuto", () => {
 		const appels = github();
 		const res = await get("/repos/projet/commits?jours=500");
 		expect(await res.json()).toEqual([{ sha: "abcdef1", message: "Ajout du panier", date: "2026-10-20" }]);
-		// Un appel pour verifier que le repo est public, un pour lister les commits
-		expect(appels.length).toBe(2);
+		// Un appel pour verifier que le repo est public, un pour les commits, un pour les branches
+		expect(appels.length).toBe(3);
 		expect((await get("/repos/a%20b/commits")).status).toBe(400);
 		expect((await get("/repos/projet/commits", "z".repeat(64))).status).toBe(401);
 	});

@@ -52,11 +52,47 @@ describe("commitsRepo", () => {
 				{ sha: "dddddddd4", commit: { message: "fix: corrige le fuseau", author: null } },
 			],
 		}));
-		const octokit = { rest: { repos: { listCommits, get: vi.fn(async () => ({ data: { private: false } })) } } } as unknown as Octokit;
+		const listBranches = vi.fn(async () => ({ data: [{ name: "main", commit: { sha: "aaaaaaaa1" } }] }));
+		const octokit = {
+			rest: { repos: { listCommits, listBranches, get: vi.fn(async () => ({ data: { private: false } })) } },
+		} as unknown as Octokit;
 		expect(await commitsRepo(octokit, "u", "r", 14)).toEqual([
 			{ sha: "aaaaaaa", message: "feat: ajoute le tri", date: "2026-10-20" },
 			{ sha: "ddddddd", message: "fix: corrige le fuseau", date: "" },
 		]);
 		expect(listCommits).toHaveBeenCalledWith(expect.objectContaining({ owner: "u", repo: "r", author: "u" }));
+		// La branche principale est deja lue : aucune requete de plus
+		expect(listCommits).toHaveBeenCalledTimes(1);
+	});
+
+	it("lit aussi les branches non fusionnees, sans doublon, du plus recent au plus ancien", async () => {
+		const commit = (sha: string, message: string, date: string) => ({ sha, commit: { message, author: { date } } });
+		const commun = commit("aaaaaaaa1", "feat: base commune du projet", "2026-10-10T10:00:00Z");
+		const listCommits = vi.fn(async ({ sha }: { sha?: string }) => ({
+			data: sha ? [commit("bbbbbbbb2", "feat: travail sur la branche", "2026-10-20T10:00:00Z"), commun] : [commun],
+		}));
+		const listBranches = vi.fn(async () => ({
+			data: [
+				{ name: "main", commit: { sha: "aaaaaaaa1" } },
+				{ name: "feat/v1", commit: { sha: "bbbbbbbb2" } },
+			],
+		}));
+		const octokit = {
+			rest: { repos: { listCommits, listBranches, get: vi.fn(async () => ({ data: { private: false } })) } },
+		} as unknown as Octokit;
+		expect((await commitsRepo(octokit, "u", "r", 14)).map((c) => c.sha)).toEqual(["bbbbbbb", "aaaaaaa"]);
+		expect(listCommits).toHaveBeenCalledTimes(2);
+	});
+
+	it("plafonne les branches lues et survit a un echec de la liste des branches", async () => {
+		const listCommits = vi.fn(async (_: { sha?: string }) => ({ data: [] }));
+		const beaucoup = Array.from({ length: 30 }, (_, i) => ({ name: `b${i}`, commit: { sha: `s${i}` } }));
+		const octokit = (listBranches: unknown) =>
+			({ rest: { repos: { listCommits, listBranches, get: vi.fn(async () => ({ data: { private: false } })) } } }) as unknown as Octokit;
+		await commitsRepo(octokit(vi.fn(async () => ({ data: beaucoup }))), "u", "r", 14);
+		expect(listCommits).toHaveBeenCalledTimes(9);
+		listCommits.mockClear();
+		expect(await commitsRepo(octokit(vi.fn(async () => Promise.reject(new Error("x")))), "u", "r", 14)).toEqual([]);
+		expect(listCommits).toHaveBeenCalledTimes(1);
 	});
 });
