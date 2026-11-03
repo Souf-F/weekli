@@ -156,3 +156,12 @@ export const SCHEMA_SCRIPT_PUB = objet(
 	},
 	["version", "titre", "projet", "reponses", "marque", "voix", "musique", "captures", "scenes"],
 );
+
+// Pour le connecteur : les champs des scenes sont deja decrits par CATALOGUE_PUB, les repeter couterait 11 000 caracteres
+export const SCHEMA_SCRIPT_PUB_RESUME = {
+	...SCHEMA_SCRIPT_PUB,
+	properties: {
+		...SCHEMA_SCRIPT_PUB.properties,
+		scenes: { type: "array", description: "Tableau de scenes : champs et limites par type dans le catalogue", items: { type: "object" } },
+	},
+};

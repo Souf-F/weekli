@@ -10,7 +10,7 @@ import {
 	validerDemandePost,
 	QUESTIONS_PUB,
 	REGLES_PUB,
-	SCHEMA_SCRIPT_PUB,
+	SCHEMA_SCRIPT_PUB_RESUME,
 } from "@weekli/core";
 import { z } from "zod";
 import { commitsDisponibles, preparerPost } from "../lib/posts";
@@ -63,7 +63,7 @@ export function outilsPub({ server, env, appel, identite, octokit }: Contexte) {
 					questions: QUESTIONS_PUB,
 					catalogue: CATALOGUE_PUB,
 					regles: REGLES_PUB,
-					schema: SCHEMA_SCRIPT_PUB,
+					schema: SCHEMA_SCRIPT_PUB_RESUME,
 				};
 			}),
 	);

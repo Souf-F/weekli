@@ -4,7 +4,7 @@ export { choisirTrame, type EntreeScriptPub, graineDepuisRepo, scriptPubDepuisRe
 export { CONSIGNE_POST_PROJET, donneesPostProjet, type EntreePostProjet } from "./post-projet";
 export { nettoyerScriptPub } from "./nettoyer";
 export { contraste, type Palette, paletteDepuisMarque } from "./palette";
-export { SCHEMA_SCRIPT_PUB } from "./schema";
+export { SCHEMA_SCRIPT_PUB, SCHEMA_SCRIPT_PUB_RESUME } from "./schema";
 export {
 	butScene,
 	calculerTimeline,

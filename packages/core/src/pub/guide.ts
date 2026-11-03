@@ -70,6 +70,7 @@ Champs communs à toutes les scènes :
 - voix : la phrase dite par la voix off pendant la scène (${LIMITES_PUB.voix}). C'est elle qui fixe la durée de la scène.
 - transition (facultatif) : "coupe", "glitch", "flou" ou "pixels". Laisse le défaut sauf raison précise.
 - but (facultatif) : "lire", "comprendre" ou "montrer". Il règle la pause de lecture de la scène (section GESTES ET BUT plus bas). Sans but, le moteur prend celui du type.
+- duree (facultatif) : secondes, utilisée seulement si la scène n'a pas de voix.
 - masquee (facultatif) : true pour garder une scène dans le script sans la rendre.
 
 1. ouverture (tension, fond sombre, ${duree("ouverture")})

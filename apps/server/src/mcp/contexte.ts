@@ -3,7 +3,7 @@ import type { Octokit } from "octokit";
 import type { Props } from "../types";
 
 export function json(donnees: unknown) {
-	return { content: [{ type: "text" as const, text: JSON.stringify(donnees, null, 2) }] };
+	return { content: [{ type: "text" as const, text: JSON.stringify(donnees) }] };
 }
 
 export function erreur(err: unknown) {

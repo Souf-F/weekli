@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { SCHEMA_SCRIPT_PUB } from "./schema";
 import { CATALOGUE_PUB, QUESTIONS_PUB, REGLES_POST_PROJET, REGLES_PUB, TRAMES_PUB } from "./guide";
 import { DUREES_SCENE } from "./limites";
 import { ICONES, TRAMES, type TypeScene } from "./types";
@@ -66,5 +67,21 @@ describe("guide de redaction", () => {
 		expect(REGLES_PUB).toMatch(/n'est dit qu'une seule fois dans toute la pub, voix et visuels confondus/);
 		expect(REGLES_PUB).toMatch(/graine dérivée du nom du repo/);
 		expect(REGLES_PUB).toMatch(/Deux pubs de projets différents ne se ressemblent pas/);
+	});
+});
+
+// Le connecteur envoie un schema sans le detail des scenes : le catalogue doit tout dire a sa place
+describe("le catalogue remplace le schema des scenes", () => {
+	it("cite chaque champ et chaque valeur permise", () => {
+		const absents = new Set<string>();
+		const parcourir = (noeud: unknown) => {
+			if (!noeud || typeof noeud !== "object") return;
+			const { properties, enum: valeurs, const: fixe } = noeud as { properties?: object; enum?: unknown[]; const?: unknown };
+			const noms = [...Object.keys(properties ?? {}), ...(valeurs ?? []), ...(fixe === undefined ? [] : [fixe])];
+			for (const nom of noms) if (typeof nom === "string" && !CATALOGUE_PUB.includes(nom)) absents.add(nom);
+			for (const enfant of Object.values(noeud)) parcourir(enfant);
+		};
+		parcourir(SCHEMA_SCRIPT_PUB.properties.scenes);
+		expect([...absents]).toEqual([]);
 	});
 });
