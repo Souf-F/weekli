@@ -278,7 +278,7 @@ api.post("/voix", corpsLimite, async (c) => {
 	// Le quota compte aussi les reponses du cache : sans cela, la vitesse de reponse dirait si une phrase exacte a deja
 	// ete synthetisee par quelqu'un d'autre
 	if (!(await reserverPhrase(c.env, c.get("session").id))) {
-		return c.json({ erreur: "60 phrases par heure au maximum" }, 429);
+		return c.json({ erreur: "200 phrases par jour au maximum" }, 429);
 	}
 	const repondre = (mp3: Uint8Array<ArrayBuffer>) => c.body(mp3, 200, { "Content-Type": "audio/mpeg" });
 	const cle = await cleCache(texte);

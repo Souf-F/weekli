@@ -14,6 +14,7 @@ const SECRETS = new RegExp(
 		String.raw`\bSG\.[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43}`,
 		String.raw`\bAKIA[0-9A-Z]{16}\b`,
 		String.raw`\bxox[baprs]-[A-Za-z0-9-]{10,}`,
+		String.raw`\beyJ[A-Za-z0-9_-]{10,1000}\.eyJ[A-Za-z0-9_-]{10,4000}\.[A-Za-z0-9_-]{10,1000}`,
 		String.raw`-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?(?:-----END [A-Z ]*PRIVATE KEY-----|$)`,
 	].join("|"),
 	"g",

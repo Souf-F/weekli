@@ -17,6 +17,7 @@ describe("masquerSecrets", () => {
 		["cle Anthropic", `sk-ant-api03-${a(40)}`],
 		["cle sk-", `sk-proj-${a(40)}`],
 		["cle AWS", `AKIA${"ABCDEFGH12345678".slice(0, 16)}`],
+		["JWT", `eyJ${a(20)}.eyJ${a(40)}.${a(30)}`],
 		["jeton Slack", `xoxb-${"1234567890-abcdef"}`],
 		["cle privee PEM", PEM],
 	])("masque %s", (_nom, secret) => {

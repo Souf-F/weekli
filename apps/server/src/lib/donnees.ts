@@ -1,7 +1,6 @@
 import { supprimerBrouillons } from "./brouillons";
 import { supprimerDomaines } from "./domaines";
 import { revoquerAutorisation } from "./github-oauth";
-import { clesParLogin } from "./identite";
 import { lireNomsMcp, supprimerIndexMcp } from "./mcp-index";
 import { supprimerPubs } from "./pubs";
 import { sessionsIndexees, supprimerIndexSessions } from "./session";
@@ -56,7 +55,6 @@ export async function effacerDonnees(env: AppEnv["Bindings"], session: Session) 
 			supprimerPubs(env, id),
 			supprimerDomaines(env, id),
 			supprimerStyle(env, id),
-			...clesParLogin(session).map((cle) => env.OAUTH_KV.delete(cle)),
 		]),
 	);
 	const optionnelles = [

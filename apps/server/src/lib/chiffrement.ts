@@ -67,10 +67,3 @@ export function dechiffrer<T>(secret: string, usage: string, donnee: string, aad
 	return ouvrir<T>(secret, usage, iv, corps, aad);
 }
 
-// Format d'avant m14 (`<iv>.<corps>`, sans version ni AAD), lu uniquement par la migration d'identite.
-// A supprimer avec elle (B14).
-export function dechiffrerAncien<T>(secret: string, usage: string, donnee: string): Promise<T | null> {
-	const [iv, corps, reste] = donnee.split(".");
-	if (!iv || !corps || reste !== undefined) return Promise.resolve(null);
-	return ouvrir<T>(secret, usage, iv, corps);
-}

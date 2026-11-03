@@ -140,10 +140,10 @@ describe("POST /api/voix", () => {
 		expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain("Phrase numero");
 	});
 
-	it("limite chaque compte a 60 phrases par heure, cache compris, sans bloquer les autres comptes", async () => {
-		for (let i = 0; i < 59; i++) expect((await appeler(monte.env, phrase(i))).status).toBe(200);
+	it("limite chaque compte a 200 phrases par jour, cache compris, sans bloquer les autres comptes", async () => {
+		for (let i = 0; i < 199; i++) expect((await appeler(monte.env, phrase(i))).status).toBe(200);
 		expect((await appeler(monte.env, phrase(3))).status).toBe(200);
-		expect(connexions).toBe(59);
+		expect(connexions).toBe(199);
 
 		expect((await appeler(monte.env, phrase("de-trop"))).status).toBe(429);
 		expect((await appeler(monte.env, phrase(3))).status).toBe(429);

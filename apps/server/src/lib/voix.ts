@@ -4,7 +4,7 @@ import { jetonGec, TOKEN_CLIENT } from "./voix-gec";
 // Usage non officiel : si Microsoft refuse ou coupe le service, la route renvoie 502 et le front bascule sur Kokoro.
 export const VOIX = "fr-FR-VivienneMultilingualNeural";
 export const TEXTE_MAX = 400;
-export const PHRASES_PAR_HEURE = 60;
+export const PHRASES_PAR_JOUR = 200;
 
 // A mettre a jour avec edge-tts (constants.py) si le service refuse la version
 const VERSION_CHROMIUM = "143.0.3650.75";
@@ -115,12 +115,12 @@ export const lireCache = (env: Env, cle: string) => env.OAUTH_KV.get(cle, "array
 export const ecrireCache = (env: Env, cle: string, audio: Uint8Array) =>
 	env.OAUTH_KV.put(cle, audio, { expirationTtl: CACHE_SECONDES });
 
-// Compteur par utilisateur et par heure. Lecture puis ecriture non atomiques : une rafale simultanee peut depasser la
+// Compteur par utilisateur et par jour : borne les ecritures KV d'un compte (2 par phrase nouvelle, 400 par jour). Lecture puis ecriture non atomiques : une rafale simultanee peut depasser la
 // limite de quelques phrases, ce qui est sans consequence ici (le plafond protege Microsoft, pas un quota payant).
 export async function reserverPhrase(env: Env, id: string): Promise<boolean> {
-	const cle = `voix-quota:${id}:${Math.floor(Date.now() / 3_600_000)}`;
+	const cle = `voix-quota:${id}:${Math.floor(Date.now() / 86_400_000)}`;
 	const utilise = Number.parseInt((await env.OAUTH_KV.get(cle)) ?? "0", 10) || 0;
-	if (utilise >= PHRASES_PAR_HEURE) return false;
-	await env.OAUTH_KV.put(cle, String(utilise + 1), { expirationTtl: 2 * 3600 });
+	if (utilise >= PHRASES_PAR_JOUR) return false;
+	await env.OAUTH_KV.put(cle, String(utilise + 1), { expirationTtl: 2 * 86_400 });
 	return true;
 }

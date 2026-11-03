@@ -2,7 +2,6 @@ import { AuthorizationError, CimdFetchError, authorizationErrorRedirect } from "
 import { Hono } from "hono";
 import { Octokit } from "octokit";
 import { creerPkce, echangerCode, urlAutorisation } from "../lib/github-oauth";
-import { migrerIdentite } from "../lib/identite";
 import { pageConsentement, pageErreur } from "../lib/pages";
 import { creerProps } from "../lib/props";
 import type { AppEnv } from "../types";
@@ -91,7 +90,6 @@ oauthMcp.get("/callback", async (c) => {
 		});
 		const { data: user } = await new Octokit({ auth: token }).rest.users.getAuthenticated();
 
-		await migrerIdentite(c.env, { id: String(user.id), login: user.login });
 
 		const { redirectTo } = await c.env.OAUTH_PROVIDER.completeAuthorization({
 			request: reprise.request,

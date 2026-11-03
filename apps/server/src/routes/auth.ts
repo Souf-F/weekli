@@ -2,7 +2,6 @@ import { Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { Octokit } from "octokit";
 import { chiffrer, dechiffrer } from "../lib/chiffrement";
-import { migrerIdentite } from "../lib/identite";
 import { creerPkce, echangerCode, revoquerToken, urlAutorisation } from "../lib/github-oauth";
 import { pageErreur } from "../lib/pages";
 import { creerSession, idAleatoire, lireSession, supprimerSession } from "../lib/session";
@@ -59,7 +58,6 @@ auth.get("/callback", async (c) => {
 		});
 		const { data: user } = await new Octokit({ auth: token }).rest.users.getAuthenticated();
 		const id = String(user.id);
-		await migrerIdentite(c.env, { id, login: user.login });
 		await creerSession(c, { id, login: user.login, nom: user.name ?? user.login, avatar: user.avatar_url, token });
 	} catch (err) {
 		console.error("Connexion GitHub :", err);

@@ -32,7 +32,7 @@ Format de la réponse :
 - Si le pourquoi ou la démarche manquent (ils ne figurent ni dans les réponses de l'utilisateur, ni dans le script de la pub, ni dans le README) : remplis "questions" avec une ou deux questions courtes et laisse "versions" vide. N'écris aucun post.
 - Sinon : "questions" vide et "versions" avec 2 ou 3 posts complets, chacun avec un "angle" (quelques mots) et son "texte" (paragraphes séparés par une ligne vide).`;
 
-// Message utilisateur : les donnees partagees avec l'outil MCP proposer_post_projet, plus les reponses du navigateur
+// Message utilisateur : les donnees du type presentation, plus les reponses du navigateur
 export function messagePostProjet(entree: EntreePostProjet, reponses: ReponsePost[]): string {
 	const { regles: _regles, consigne, ...donnees } = donneesPostProjet(entree);
 	const dites = reponses.length

@@ -82,7 +82,7 @@ export function Confidentialite() {
 						<tr>
 							<th scope="row">Lutte contre les abus</th>
 							<td>Adresse IP à la connexion, identifiant de compte ensuite</td>
-							<td>60 secondes dans le limiteur de débit ; le quota de voix off (compteur par compte et par heure) reste 2 heures</td>
+							<td>60 secondes dans le limiteur de débit ; le quota de voix off (compteur par compte et par jour) reste 2 jours</td>
 						</tr>
 					</tbody>
 				</table>
