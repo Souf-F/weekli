@@ -1,182 +1,288 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { Activite, ActiviteRepo, DetailsCommit, OptionsGeneration, Post } from "@weekli/core";
-import { Link, useOutletContext } from "react-router-dom";
+import { CATALOGUE_POSTS, estTypePost, MAX_COMMITS_POST, type RepoResume, type TypePost } from "@weekli/core";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useOutletContext, useSearchParams } from "react-router-dom";
+import { Bouton } from "@/components/Bouton/Bouton";
 import type { ContexteApp } from "@/layouts/AppLayout";
 import { api } from "@/lib/api";
-import { genererPosts, messageErreur } from "@/lib/generation";
-import { lireReglages } from "@/lib/reglages";
-import { CartePost } from "./CartePost";
-import { cleCommit, PanneauActivite } from "./PanneauActivite";
-import { PanneauOptions } from "./PanneauOptions";
+import { aSaisie, composerNotes, demandeDonnees, messageValidation, nomCourtRepo, type ReglagesType as Reglages, reglagesVides } from "@/lib/parcours";
+import { CLE_DERNIER_REPO, lireReglages } from "@/lib/reglages";
+import { EtapeRepo } from "./EtapeRepo";
+import { EtapeType } from "./EtapeType";
+import { ETAPES, type NumeroEtape } from "./etapes";
+import e from "./Etapes.module.css";
+import { FilEtapes } from "./FilEtapes";
+import { Redaction } from "./Redaction";
+import { ReglagesType } from "./ReglagesType";
 import p from "./Panneau.module.css";
 import styles from "./Tableau.module.css";
+import type { DemandeRedaction } from "./types";
+import { useSemaine } from "./useSemaine";
 
-const MAX_DIFFS = 5;
+// Mode demonstration, developpement uniquement : le bloc disparait du build de production
+const demo =
+	import.meta.env.DEV && new URLSearchParams(location.search).has("demo") ? await import("./demo/installer") : null;
+demo?.installerDemo();
+
+// Confort par navigateur : jamais le texte saisi, seulement le nom du dernier repo
+const lireDernierRepo = (): string => {
+	try {
+		return localStorage.getItem(CLE_DERNIER_REPO) ?? "";
+	} catch {
+		return "";
+	}
+};
+const memoriserRepo = (repo: string) => {
+	try {
+		localStorage.setItem(CLE_DERNIER_REPO, repo);
+	} catch {
+		/* stockage indisponible : le parcours fonctionne sans */
+	}
+};
+
+const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? "s" : ""}`;
 
 export function Tableau() {
 	const { moi } = useOutletContext<ContexteApp>();
-	const reglages = useMemo(lireReglages, []);
+	const reglagesApp = useMemo(lireReglages, []);
+	const [params, setParams] = useSearchParams();
 
-	const [jours, setJours] = useState(7);
-	const [activite, setActivite] = useState<Activite | null>(null);
+	const [repos, setRepos] = useState<RepoResume[] | null>(null);
 	const [chargement, setChargement] = useState(true);
-	const [erreurActivite, setErreurActivite] = useState("");
-	const [selection, setSelection] = useState<Set<string>>(new Set());
+	const [erreurRepos, setErreurRepos] = useState("");
+	const [essai, setEssai] = useState(0);
 
-	const [options, setOptions] = useState<OptionsGeneration>({
-		ton: "retour",
-		langue: "fr",
-		nombre: 2,
-		style: reglages.style,
-	});
-	const [inclureDiffs, setInclureDiffs] = useState(true);
-	const [posts, setPosts] = useState<Post[]>([]);
-	const [enCours, setEnCours] = useState(false);
-	const [erreur, setErreur] = useState("");
-	const [sauvegarde, setSauvegarde] = useState("");
-	const arret = useRef<AbortController | null>(null);
+	const [etape, setEtape] = useState<NumeroEtape>(1);
+	const [choisis, setChoisis] = useState<string[]>([]);
+	const [type, setType] = useState<TypePost | null>(null);
+	const [reglages, setReglages] = useState<Reglages>(reglagesVides);
+	const [demande, setDemande] = useState<DemandeRedaction | null>(null);
+	const [annonce, setAnnonce] = useState("");
+	const initialise = useRef(false);
+	const aFocaliser = useRef(false);
 
-	// Chargement de l'activite ; tout est coche par defaut
+	const multi = type === "semaine";
+	const semaine = useSemaine(type === "semaine" && etape === 3, choisis);
+
+	// Etape 1 : liste des repos publics
 	useEffect(() => {
 		let annule = false;
 		setChargement(true);
-		setErreurActivite("");
+		setErreurRepos("");
 		api
-			.activite(jours)
-			.then((a) => {
-				if (annule) return;
-				setActivite(a);
-				setSelection(new Set(a.repos.flatMap((r) => r.commits.map((c) => cleCommit(r.repo, c.sha)))));
-			})
-			.catch((e) => !annule && setErreurActivite(e.message))
+			.repos()
+			.then((r) => !annule && setRepos(r))
+			.catch((err: Error) => !annule && setErreurRepos(err.message))
 			.finally(() => !annule && setChargement(false));
 		return () => {
 			annule = true;
 		};
-	}, [jours]);
+	}, [essai]);
 
-	const basculer = (cle: string) =>
-		setSelection((s) => {
-			const n = new Set(s);
-			if (n.has(cle)) n.delete(cle);
-			else n.add(cle);
-			return n;
+	// Lien profond ?repo=&type= : une seule lecture, quand les repos sont connus
+	useEffect(() => {
+		if (initialise.current || chargement) return;
+		initialise.current = true;
+		const typeUrl = params.get("type");
+		const repoUrl = params.get("repo") ?? "";
+		const typeValide = estTypePost(typeUrl) ? typeUrl : null;
+		const repoValide = repos?.some((r) => r.repo === repoUrl) ? repoUrl : "";
+		const dernier = lireDernierRepo();
+		if (typeValide) setType(typeValide);
+		if (repoValide) setChoisis([repoValide]);
+		else if (dernier && repos?.some((r) => r.repo === dernier) && !typeValide) setChoisis([dernier]);
+		if (typeValide === "semaine" || (typeValide && repoValide)) setEtape(3);
+		else if (repoValide) setEtape(2);
+	}, [chargement]);
+
+	// Seuls repo et type vont dans l'URL ; le drapeau ?demo du developpement est conserve
+	useEffect(() => {
+		if (!initialise.current) return;
+		setParams(
+			(prec) => {
+				const n = new URLSearchParams(prec);
+				if (type !== "semaine" && choisis[0]) n.set("repo", choisis[0]);
+				else n.delete("repo");
+				if (type) n.set("type", type);
+				else n.delete("type");
+				return n;
+			},
+			{ replace: true },
+		);
+	}, [choisis, type, setParams]);
+
+	// Le focus va sur le titre de l'etape qui s'ouvre, et le changement est annonce
+	useEffect(() => {
+		if (!aFocaliser.current) return;
+		document.getElementById(etape === 4 ? "zone-posts" : "titre-etape")?.focus();
+	}, [etape]);
+
+	const aller = useCallback((n: NumeroEtape) => {
+		aFocaliser.current = true;
+		setEtape(n);
+		setAnnonce(`Étape ${n} sur 4 : ${ETAPES[n - 1].nom}`);
+	}, []);
+
+	const confirmerPerte = () => !aSaisie(reglages) || window.confirm("Changer de choix efface les réglages saisis. Continuer ?");
+
+	const changerRepos = (repo: string) => {
+		if (multi) {
+			setChoisis((c) => (c.includes(repo) ? c.filter((x) => x !== repo) : [...c, repo]));
+			return;
+		}
+		if (choisis[0] === repo) return;
+		if (!confirmerPerte()) return;
+		setChoisis([repo]);
+		setReglages(reglagesVides());
+		setDemande(null);
+		memoriserRepo(repo);
+	};
+
+	const changerType = (t: TypePost) => {
+		if (t === type) return;
+		if (!confirmerPerte()) return;
+		setType(t);
+		setReglages(reglagesVides());
+		setDemande(null);
+		// Un type de repo unique garde le premier repo ; sans repo, retour a l'etape 1
+		if (t !== "semaine" && choisis.length > 1) setChoisis(choisis.slice(0, 1));
+		if (t !== "semaine" && choisis.length === 0) aller(1);
+	};
+
+	const modifier = useCallback((m: Partial<Reglages>) => setReglages((r) => ({ ...r, ...m })), []);
+
+	// Validation de l'etape 3
+	const message = !type
+		? ""
+		: type === "semaine"
+			? semaine.selection.size === 0
+				? "Coche au moins un commit."
+				: ""
+			: messageValidation(type, reglages);
+
+	const peutContinuer =
+		etape === 1 ? (multi ? true : choisis.length === 1) : etape === 2 ? type !== null : etape === 3 ? message === "" : false;
+
+	const continuer = () => {
+		if (!peutContinuer) return;
+		if (etape < 3) {
+			aller((etape + 1) as NumeroEtape);
+			return;
+		}
+		if (!type) return;
+		setDemande({
+			id: (demande?.id ?? 0) + 1,
+			type,
+			donnees: type === "semaine" ? { type } : demandeDonnees(type, choisis[0], reglages),
+			notes: composerNotes(type, reglages),
+			semaine:
+				type === "semaine"
+					? { repos: semaine.reposChoisis(), inclureDiffs: semaine.inclureDiffs, options: semaine.options }
+					: undefined,
 		});
+		aller(4);
+	};
 
-	const basculerRepo = (repo: string, coche: boolean) =>
-		setSelection((s) => {
-			const n = new Set(s);
-			for (const c of activite?.repos.find((r) => r.repo === repo)?.commits ?? []) {
-				if (coche) n.add(cleCommit(repo, c.sha));
-				else n.delete(cleCommit(repo, c.sha));
-			}
-			return n;
-		});
-
-	const generer = async () => {
-		if (!activite) return;
-		const repos: ActiviteRepo[] = activite.repos
-			.map((r) => ({ ...r, commits: r.commits.filter((c) => selection.has(cleCommit(r.repo, c.sha))) }))
-			.filter((r) => r.commits.length > 0);
-
-		arret.current = new AbortController();
-		setEnCours(true);
-		setErreur("");
-		setSauvegarde("");
-		setPosts([]);
-		try {
-			let details: DetailsCommit[] = [];
-			if (inclureDiffs) {
-				const choisis = repos.flatMap((r) => r.commits.map((c) => [r.repo, c.sha] as const)).slice(0, MAX_DIFFS);
-				details = await Promise.all(choisis.map(([repo, sha]) => api.commit(repo, sha)));
-			}
-			const final = await genererPosts({
-				cleApi: reglages.cleApi,
-				modele: reglages.modele,
-				repos,
-				details,
-				options,
-				surProgression: setPosts,
-				signal: arret.current.signal,
-			});
-			setPosts(final);
-			// Chaque generation est gardee dans l'historique ; un echec ici ne doit pas masquer les posts
-			if (final.length > 0) {
-				api
-					.sauverBrouillons(final)
-					.then(() => setSauvegarde("Enregistrés dans l'historique."))
-					.catch(() => setSauvegarde("Posts non enregistrés dans l'historique : pense à les copier."));
-			}
-		} catch (e) {
-			if (!arret.current?.signal.aborted) setErreur(messageErreur(e));
-		} finally {
-			setEnCours(false);
+	const resumeReglages = (): string => {
+		if (!type) return "";
+		switch (type) {
+			case "presentation":
+				return reglages.pourquoi || reglages.demarche ? "Réponses données" : "Aucun réglage";
+			case "tuto":
+				return pluriel(reglages.fichiers?.length ?? 0, "fichier");
+			case "coulisses":
+				return `${reglages.commits.length} sur ${MAX_COMMITS_POST} commits`;
+			case "lecon":
+				return reglages.probleme.trim() ? "Problème décrit" : pluriel(reglages.commits.length, "commit");
+			default:
+				return pluriel(semaine.selection.size, "commit");
 		}
 	};
 
+	const resumes: Record<NumeroEtape, string> = {
+		1: multi ? (choisis.length > 0 ? pluriel(choisis.length, "repo") : "Tous les repos") : choisis[0] ?? "",
+		2: type ? CATALOGUE_POSTS[type].nom : "",
+		3: resumeReglages(),
+		4: "",
+	};
+
+	const nomsRepos = choisis.map(nomCourtRepo);
+
 	return (
-		<div className={styles.grille}>
-			<div className={styles.colonne}>
-				<PanneauActivite
-					jours={jours}
-					surJours={setJours}
-					activite={activite}
-					chargement={chargement}
-					erreur={erreurActivite}
-					selection={selection}
-					surBasculer={basculer}
-					surBasculerRepo={basculerRepo}
-				/>
-			</div>
+		<div className={styles.page}>
+			<header className={styles.entete}>
+				<p className={styles.surtitre}>Tableau de bord</p>
+				<h1>
+					Quel post, <em>aujourd'hui ?</em>
+				</h1>
+				<p className={styles.chapo}>Choisis le projet et ce que tu veux raconter, Claude rédige. Tu relis, tu ajustes, tu copies.</p>
+			</header>
 
-			<div className={styles.colonne}>
-				<PanneauOptions
-					options={options}
-					surOptions={setOptions}
-					inclureDiffs={inclureDiffs}
-					surInclureDiffs={setInclureDiffs}
-					nbSelection={selection.size}
-					enCours={enCours}
-					sansCle={!reglages.cleApi}
-					surGenerer={generer}
-					surArreter={() => arret.current?.abort()}
-				/>
-				{!reglages.cleApi && (
-					<p className={p.aide}>
-						Pas encore de clé ? <Link to="/app/reglages">Ajoute-la ici</Link>, ou utilise Weekli directement dans
-						Claude.
-					</p>
-				)}
-			</div>
+			<FilEtapes etape={etape} resumes={resumes} surAller={aller} />
+			<p className={e.lecteur} role="status" aria-live="polite">
+				{annonce}
+			</p>
 
-			<section className={styles.posts}>
-				{erreur && <p className={p.erreur}>{erreur}</p>}
-				{sauvegarde && (
-					<p className={p.aide}>
-						{sauvegarde} <Link to="/app/historique">Voir l'historique</Link>
-					</p>
-				)}
-				{posts.length === 0 && !enCours && !erreur && (
-					<div className={styles.vide}>
-						<h2>
-							Tes posts
-							<br />
-							<em>apparaîtront ici.</em>
-						</h2>
-						<p className={p.aide}>Choisis tes commits, règle l'angle, puis lance la génération.</p>
-					</div>
-				)}
-				{enCours && posts.length === 0 && <p className={p.aide}>Claude lit ta semaine…</p>}
-				{posts.map((post, i) => (
-					<CartePost
-						key={i}
-						post={post}
-						moi={moi}
-						enCours={enCours}
-						surModifier={(texte) => setPosts((ps) => ps.map((x, j) => (j === i ? { ...x, texte } : x)))}
-					/>
-				))}
-			</section>
+			<div className={styles.grille} data-etape={etape}>
+				<div className={styles.atelier}>
+					{/* Etapes faites : repliees en une ligne resume cliquable (poste de travail uniquement) */}
+					{ETAPES.slice(0, 3).map(({ numero, nom }) =>
+						numero < etape ? (
+							<button key={numero} type="button" className={e.replie} onClick={() => aller(numero)}>
+								<span>{numero}</span>
+								<strong>{nom}</strong>
+								<em>{resumes[numero as NumeroEtape]}</em>
+								<span className={e.modifier}>Modifier</span>
+							</button>
+						) : null,
+					)}
+
+					{etape <= 3 && (
+						<section className={`${p.panneau} ${e.etape}`} key={etape} aria-label={`Étape ${etape} sur 4`}>
+							{etape === 1 && (
+								<EtapeRepo
+									repos={repos}
+									chargement={chargement}
+									erreur={erreurRepos}
+									surReessayer={() => setEssai((n) => n + 1)}
+									multi={multi}
+									selection={choisis}
+									surChoisir={changerRepos}
+									surContinuer={continuer}
+								/>
+							)}
+							{etape === 2 && <EtapeType type={type} repos={choisis} surChoisir={changerType} />}
+							{etape === 3 && type && (
+								<ReglagesType type={type} repos={nomsRepos} reglages={reglages} surModifier={modifier} semaine={semaine} />
+							)}
+						</section>
+					)}
+
+					{etape <= 3 && (
+						<div className={e.nav}>
+							{message && etape === 3 && (
+								<p className={e.navMessage} id="message-validation">
+									{message}
+								</p>
+							)}
+							<div className={e.navBoutons}>
+								{etape > 1 && (
+									<Bouton variante="contour" onClick={() => aller((etape - 1) as NumeroEtape)}>
+										Retour
+									</Bouton>
+								)}
+								<Bouton onClick={continuer} disabled={!peutContinuer} aria-describedby={message && etape === 3 ? "message-validation" : undefined}>
+									{etape === 3 ? "Rédiger les posts" : "Continuer"}
+								</Bouton>
+							</div>
+						</div>
+					)}
+
+				</div>
+
+				<div className={styles.posts} data-visible={etape === 4 ? "oui" : "non"}>
+					<Redaction type={type} repos={nomsRepos} demande={demande} moi={moi} reglagesApp={reglagesApp} demo={demo} />
+				</div>
+			</div>
 		</div>
 	);
 }

@@ -1,0 +1,75 @@
+.grille {
+	display: grid;
+	grid-template-columns: 1.5fr 1fr;
+	gap: var(--espace-7);
+	align-items: start;
+}
+.figure {
+	margin: 0;
+}
+
+.legende {
+	margin-top: var(--espace-3);
+	font-size: var(--t-petit);
+	line-height: var(--lh-petit);
+	color: var(--texte-doux);
+}
+
+.colonne {
+	display: grid;
+	gap: var(--espace-6);
+}
+.etapes {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	display: grid;
+	gap: var(--espace-5);
+}
+.etapes li {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	column-gap: var(--espace-4);
+}
+.num {
+	grid-row: span 2;
+	font-family: var(--serif);
+	font-size: var(--t-sous-titre);
+	line-height: var(--lh-sous-titre);
+	color: var(--moka-texte);
+	font-variant-numeric: tabular-nums;
+}
+.etapes p {
+	margin: var(--espace-1) 0 0;
+	font-size: var(--t-petit);
+	line-height: var(--lh-petit);
+	color: var(--texte-doux);
+}
+.post {
+	margin: 0;
+	padding: var(--espace-4) var(--espace-5);
+	border: 1px solid var(--filet);
+	border-left: 3px solid var(--moka);
+	border-radius: var(--rayon-m);
+	background: var(--surface);
+}
+.postEtiquette {
+	font-size: var(--t-etiquette);
+	font-weight: 500;
+	letter-spacing: var(--suivi-etiquette);
+	text-transform: uppercase;
+	color: var(--moka-texte);
+}
+.post p {
+	margin: var(--espace-2) 0 0;
+	font-family: var(--serif);
+	font-size: var(--t-corps-grand);
+	line-height: var(--lh-corps-grand);
+}
+
+@media (max-width: 980px) {
+	.grille {
+		grid-template-columns: 1fr;
+		gap: var(--espace-6);
+	}
+}

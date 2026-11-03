@@ -1,0 +1,41 @@
+.lecteur {
+	position: relative;
+	overflow: hidden;
+	border-radius: var(--rayon-l);
+	background: var(--espresso);
+	box-shadow: var(--ombre);
+}
+.video {
+	display: block;
+	width: 100%;
+	height: auto;
+	aspect-ratio: 16 / 9;
+	background: var(--espresso);
+}
+.commandes {
+	position: absolute;
+	inset: auto var(--espace-3) var(--espace-3) var(--espace-3);
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--espace-2);
+	justify-content: flex-end;
+}
+.bouton {
+	min-height: 44px;
+	padding: var(--espace-2) var(--espace-4);
+	border: 1px solid var(--filet-sombre);
+	border-radius: var(--rayon-pilule);
+	background: var(--espresso);
+	font: 500 var(--t-petit) / 1 var(--sans);
+	color: var(--platine);
+	cursor: pointer;
+	transition: background var(--duree-ui), color var(--duree-ui);
+}
+.bouton:hover {
+	background: var(--platine);
+	color: var(--espresso);
+}
+.bouton:focus-visible {
+	outline: 2px solid var(--platine);
+	outline-offset: 2px;
+}

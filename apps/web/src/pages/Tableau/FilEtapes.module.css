@@ -1,0 +1,132 @@
+.fil {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 0;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.etape {
+	position: relative;
+	min-width: 0;
+}
+/* Trait qui relie les pastilles */
+.etape::before {
+	content: "";
+	position: absolute;
+	top: 15px;
+	left: 0;
+	right: 0;
+	height: 1px;
+	background: var(--filet);
+}
+.etape:first-child::before {
+	left: 15px;
+}
+.etape:last-child::before {
+	right: calc(100% - 15px);
+}
+.etape[data-etat="faite"]::before,
+.etape[data-etat="courante"]::before {
+	background: var(--moka);
+}
+.bouton {
+	position: relative;
+	display: grid;
+	justify-items: start;
+	gap: var(--espace-2);
+	min-height: 44px;
+	max-width: 100%;
+	padding: 0 var(--espace-3) var(--espace-1) 0;
+	border: 0;
+	background: none;
+	font: inherit;
+	color: inherit;
+	text-align: left;
+}
+button.bouton {
+	cursor: pointer;
+}
+button.bouton:focus-visible {
+	outline: none;
+}
+button.bouton:focus-visible .pastille {
+	box-shadow: var(--focus);
+}
+.pastille {
+	display: grid;
+	place-items: center;
+	width: 31px;
+	height: 31px;
+	border: 1px solid var(--filet);
+	border-radius: var(--rayon-pilule);
+	background: var(--surface);
+	font: 600 var(--t-petit) / 1 var(--sans);
+	color: var(--texte-doux);
+	transition:
+		background var(--duree-rapide),
+		color var(--duree-rapide),
+		border-color var(--duree-rapide);
+}
+[data-etat="faite"] .pastille {
+	border-color: var(--moka);
+	background: var(--voile-moka);
+	color: var(--moka-texte);
+}
+[data-etat="courante"] .pastille {
+	border-color: var(--espresso);
+	background: var(--espresso);
+	color: var(--platine);
+}
+button.bouton:hover .pastille {
+	border-color: var(--moka);
+	background: var(--moka);
+	color: var(--blanc);
+}
+.texte {
+	display: grid;
+	gap: 2px;
+	min-width: 0;
+	max-width: 100%;
+}
+.nom {
+	font: 600 var(--t-etiquette) / var(--lh-etiquette) var(--sans);
+	letter-spacing: var(--suivi-etiquette);
+	text-transform: uppercase;
+	color: var(--texte-doux);
+}
+[data-etat="courante"] .nom {
+	color: var(--espresso);
+}
+.resume {
+	overflow: hidden;
+	max-width: 100%;
+	font-size: var(--t-petit);
+	line-height: var(--lh-petit);
+	color: var(--moka-texte);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.lecteur {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+/* L'atelier replie deja les etapes faites en lignes resume : le fil garde alors les noms seuls */
+@media (min-width: 1100px) {
+	.resume {
+		display: none;
+	}
+}
+@media (max-width: 600px) {
+	.resume {
+		display: none;
+	}
+	.nom {
+		letter-spacing: 0.06em;
+	}
+}

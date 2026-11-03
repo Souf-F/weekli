@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="fr">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="robots" content="noindex" />
+	<title>Planche visuelle de la pub</title>
+	<link rel="stylesheet" href="/src/styles/fonts.css" />
+	<link rel="stylesheet" href="/dev/visuel.css" />
+</head>
+<body>
+	<main>
+		<h1>Fondations visuelles de la pub (F5, développement)</h1>
+		<p id="infos">Chargement des polices</p>
+		<canvas id="apercu" aria-label="Aperçu de la planche de démonstration"></canvas>
+		<div class="barre">
+			<button id="lecture" type="button" disabled>Lecture</button>
+			<input id="curseur" type="range" min="0" max="1" step="0.0333" value="0" aria-label="Position" />
+			<span id="temps">0.00 s</span>
+		</div>
+		<div class="barre">
+			<label>Procédé <select id="procede"></select></label>
+			<button id="mesurer" type="button" disabled>Mesurer le dessin (1920x1080)</button>
+			<button id="export" type="button" disabled>Exporter la planche</button>
+			<a id="telecharger" class="bouton" hidden>Télécharger</a>
+		</div>
+		<p id="etat" role="status"></p>
+		<table id="mesures" hidden>
+			<caption>Temps de dessin par image, 1920x1080</caption>
+			<thead><tr><th scope="col">Procédé</th><th scope="col">Moyenne (ms)</th><th scope="col">p95 (ms)</th><th scope="col">Max (ms)</th></tr></thead>
+			<tbody></tbody>
+		</table>
+	</main>
+	<script type="module" src="/dev/visuel.ts"></script>
+</body>
+</html>

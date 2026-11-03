@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="fr">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="robots" content="noindex" />
+	<title>Banc du moteur de pub</title>
+	<link rel="stylesheet" href="/src/lib/pub/banc/banc.css" />
+	<link rel="stylesheet" href="/src/lib/pub/cartes/banc/banc-cartes.css" />
+</head>
+<body>
+	<main>
+		<h1>Banc du moteur de pub (développement)</h1>
+		<p id="infos"></p>
+		<canvas id="apercu" aria-label="Aperçu de la pub de test"></canvas>
+		<div class="barre">
+			<button id="lecture" type="button">Lecture</button>
+			<input id="curseur" type="range" min="0" max="60" step="0.01" value="0" aria-label="Position" />
+			<span id="temps">0.00 s</span>
+		</div>
+		<div class="barre">
+			<button id="export" type="button">Exporter 1920x1080</button>
+			<button id="annuler" type="button" hidden>Annuler</button>
+			<a id="telecharger" class="bouton" hidden>Télécharger</a>
+			<a id="srt" class="bouton" download="pub-test.srt">Sous-titres SRT</a>
+		</div>
+		<p id="etat" role="status"></p>
+	<section id="cartes" aria-labelledby="cartes-titre">
+		<h2 id="cartes-titre">Cartes de capture (F8)</h2>
+		<div class="barre">
+			<label>Images <input id="cartes-import" type="file" accept="image/png,image/jpeg,image/webp" multiple /></label>
+			<label>Logo <input id="cartes-logo" type="file" accept="image/svg+xml,image/png,image/webp" /></label>
+			<button id="cartes-simuler" type="button">Capture simulée (bureau + mobile)</button>
+			<button id="cartes-vider" type="button">Vider IndexedDB</button>
+		</div>
+		<div class="vignettes" id="cartes-liste" role="group" aria-label="Images disponibles"></div>
+		<div class="barre">
+			<label>Visuel
+				<select id="cartes-mode"><option value="capture">Capture</option><option value="liste">Liste</option></select>
+			</label>
+			<label>Cadrage
+				<select id="cartes-cadrage"><option>complet</option><option>haut</option><option>milieu</option><option>bas</option></select>
+			</label>
+			<label><input id="cartes-focus" type="checkbox" checked /> Focus</label>
+			<label><input id="cartes-vignette" type="checkbox" checked /> Vignette</label>
+			<button id="cartes-lecture" type="button">Lecture</button>
+			<input id="cartes-curseur" type="range" min="0" max="1" step="0.001" value="0.5" aria-label="Avancement de la scène" />
+			<span id="cartes-t"></span>
+		</div>
+		<canvas id="cartes-canvas" width="960" height="540" aria-label="Rendu des cartes de capture"></canvas>
+		<div class="pastilles" id="cartes-couleurs" aria-label="Couleurs dominantes"></div>
+		<p id="cartes-etat" role="status"></p>
+		<p id="cartes-reseau"></p>
+	</section>
+	</main>
+	<script type="module" src="/src/lib/pub/banc/banc.ts"></script>
+	<script type="module" src="/src/lib/pub/cartes/banc/banc-cartes.ts"></script>
+</body>
+</html>

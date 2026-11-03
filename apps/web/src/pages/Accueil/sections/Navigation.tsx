@@ -17,6 +17,7 @@ export function Navigation() {
 		<header className={`${styles.nav} ${solide ? styles.solide : ""}`}>
 			<Logo />
 			<nav className={styles.liens}>
+				<a href="#pub">La pub</a>
 				<a href="#fonctionnalites">Fonctionnalités</a>
 				<a href="#modes">Deux modes</a>
 				<a href="#comment">Comment ça marche</a>

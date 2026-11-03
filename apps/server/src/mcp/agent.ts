@@ -1,168 +1,83 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import {
-	activiteGithub,
-	detailsCommit,
-	detailsRepo,
-	LIMITES,
-	nettoyerPost,
-	type Post,
-	promptPostsSemaine,
-} from "@weekli/core";
 import { McpAgent } from "agents/mcp";
 import { Octokit } from "octokit";
-import { z } from "zod";
-import { lireBrouillons, sauverPosts } from "../lib/brouillons";
-import { capturer, ErreurCapture, verifierUrl } from "../lib/capture";
-import { lireDomaines } from "../lib/domaines";
-import { NOM_REPO, SHA } from "../lib/validation";
+import { ajouterNomMcp, retirerNomMcp } from "../lib/mcp-index";
+import { ouvrirJeton } from "../lib/props";
 import type { Props } from "../types";
+import { type Contexte, erreur, json } from "./contexte";
+import { outilsBrouillons } from "./outils-brouillons";
+import { outilsCaptures } from "./outils-captures";
+import { outilsGithub } from "./outils-github";
+import { outilsPub } from "./outils-pub";
+import { outilsStyle } from "./outils-style";
 
-function json(donnees: unknown) {
-	return { content: [{ type: "text" as const, text: JSON.stringify(donnees, null, 2) }] };
-}
-
-function erreur(err: unknown) {
-	const message = err instanceof Error ? err.message : String(err);
-	return { content: [{ type: "text" as const, text: `Erreur : ${message}` }], isError: true };
-}
+// Un Durable Object sans appel pendant 24 h est detruit (ADR-03). Son nom est dans `mcp:<id>` pour l'effacement.
+export const INACTIVITE_SECONDES = 60 * 60 * 24;
+const CLE_PROPRIETAIRE = "proprietaire";
+const CLE_EXPIRATION = "expiration";
 
 // Serveur MCP (mode 1) : Claude appelle ces outils avec l'abonnement de l'utilisateur
 export class WeekliMCP extends McpAgent<Env, Record<string, never>, Props> {
 	server = new McpServer({ name: "Weekli", version: "0.2.0" });
 
-	get octokit() {
-		return new Octokit({ auth: this.props!.accessToken });
+	// Le Durable Object est nomme d'apres l'en-tete `mcp-session-id` du client : il n'est lie a un compte que par
+	// le proprietaire enregistre ici. Chaque appel relit les props et refuse tout autre id (audit m6).
+	// Limite de la bibliotheque agents : sur un objet deja demarre, les props d'une requete ne sont pas relues.
+	private async identite(): Promise<Props> {
+		const props = this.props;
+		if (!props?.id || props.id !== (await this.ctx.storage.get<string>(CLE_PROPRIETAIRE))) {
+			throw new Error("Session MCP invalide, reconnecte le connecteur");
+		}
+		await this.prolonger();
+		return props;
+	}
+
+	// Alarme unique, repoussee a chaque appel
+	private async prolonger() {
+		const precedente = await this.ctx.storage.get<string>(CLE_EXPIRATION);
+		if (precedente) await this.cancelSchedule(precedente);
+		const { id } = await this.schedule(INACTIVITE_SECONDES, "expirer");
+		await this.ctx.storage.put(CLE_EXPIRATION, id);
+	}
+
+	// Alarme d'inactivite : l'index d'abord, mais le stockage est efface meme si KV echoue
+	async expirer() {
+		const id = await this.ctx.storage.get<string>(CLE_PROPRIETAIRE);
+		if (id) await retirerNomMcp(this.env, id, this.name).catch((err) => console.error("Index MCP :", err));
+		await this.destroy();
+	}
+
+	// Appelee par l'effacement des donnees (RPC) : vide tout le stockage du Durable Object
+	async detruire() {
+		await this.destroy();
+	}
+
+	private octokit(props: Props) {
+		return ouvrirJeton(this.env, props).then((auth) => new Octokit({ auth }));
+	}
+
+	// Execute un outil pour le compte courant et met sa sortie en JSON
+	private appel<T>(fn: (props: Props) => Promise<T>) {
+		return this.identite().then(fn).then(json, erreur);
 	}
 
 	async init() {
-		const login = this.props!.login;
+		const { id } = this.props!;
+		if (!(await this.ctx.storage.get(CLE_PROPRIETAIRE))) {
+			await ajouterNomMcp(this.env, id, this.name);
+			await this.ctx.storage.put(CLE_PROPRIETAIRE, id);
+			await this.prolonger();
+		}
 
-		this.server.registerTool(
-			"activite_github",
-			{
-				description:
-					"Liste les commits recents de l'utilisateur sur ses repos GitHub publics, sans le bruit (merge, typo, chore). Point de depart pour trouver des sujets de posts.",
-				inputSchema: { jours: z.number().int().min(1).max(30).default(7).describe("Periode analysee, en jours") },
-				annotations: { readOnlyHint: true },
-			},
-			async ({ jours }) => activiteGithub(this.octokit, login, jours).then(json, erreur),
-		);
-
-		this.server.registerTool(
-			"details_repo",
-			{
-				description:
-					"Donne le contexte d'un repo public de l'utilisateur : description, site, sujets, langages et README.",
-				inputSchema: { repo: z.string().regex(NOM_REPO).describe("Nom du repo, sans le proprietaire") },
-				annotations: { readOnlyHint: true },
-			},
-			async ({ repo }) => detailsRepo(this.octokit, login, repo).then(json, erreur),
-		);
-
-		this.server.registerTool(
-			"details_commit",
-			{
-				description:
-					"Donne le detail d'un commit (message complet, fichiers modifies, extraits du diff) pour expliquer un probleme resolu ou une fonctionnalite.",
-				inputSchema: {
-					repo: z.string().regex(NOM_REPO).describe("Nom du repo, sans le proprietaire"),
-					sha: z.string().regex(SHA).describe("SHA du commit (7 caracteres suffisent)"),
-				},
-				annotations: { readOnlyHint: true },
-			},
-			async ({ repo, sha }) => detailsCommit(this.octokit, login, repo, sha).then(json, erreur),
-		);
-
-		this.server.registerTool(
-			"sauver_brouillons",
-			{
-				description:
-					"Enregistre des posts LinkedIn dans l'historique Weekli de l'utilisateur, pour les retrouver sur le site. A utiliser apres avoir redige les posts, si l'utilisateur veut les garder.",
-				inputSchema: {
-					posts: z
-						.array(
-							z.object({
-								titre: z.string().max(LIMITES.titre),
-								format: z.string().max(LIMITES.format),
-								source: z.string().max(LIMITES.source),
-								texte: z.string().min(1).max(LIMITES.texte),
-							}),
-						)
-						.min(1)
-						.max(5),
-				},
-				annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
-			},
-			async ({ posts }) =>
-				sauverPosts(this.env, login, posts.map(nettoyerPost).filter(Boolean) as Post[])
-					.then((b) => json({ enregistres: b.length, ids: b.map((x) => x.id) }))
-					.catch(erreur),
-		);
-
-		this.server.registerTool(
-			"lister_brouillons",
-			{
-				description: "Liste les brouillons enregistres dans l'historique Weekli, du plus recent au plus ancien.",
-				inputSchema: { nonPublies: z.boolean().default(true).describe("Seulement ceux pas encore publies") },
-				annotations: { readOnlyHint: true },
-			},
-			async ({ nonPublies }) =>
-				lireBrouillons(this.env, login)
-					.then((b) => json(nonPublies ? b.filter((x) => !x.publie) : b))
-					.catch(erreur),
-		);
-
-		this.server.registerTool(
-			"capturer_site",
-			{
-				description:
-					"Prend une capture d'ecran d'une page d'un site dont l'utilisateur a verifie la propriete dans Weekli (reglages du site). Les emails, IP et tokens visibles sont floutes. Utile pour illustrer un post.",
-				inputSchema: {
-					url: z.string().url().max(2000).describe("Adresse https d'une page d'un domaine verifie"),
-					format: z.enum(["bureau", "mobile"]).default("bureau"),
-				},
-				annotations: { readOnlyHint: true, openWorldHint: true },
-			},
-			async ({ url, format }) => {
-				const { success } = await this.env.LIMITE_CAPTURE.limit({ key: `capture:${login}` });
-				if (!success) return erreur(new Error("5 captures par minute au maximum"));
-				try {
-					const domaines = await lireDomaines(this.env, login);
-					const image = await capturer(this.env, verifierUrl(url, domaines), format, domaines);
-					return { content: [{ type: "image" as const, data: image, mimeType: "image/jpeg" }] };
-				} catch (err) {
-					if (err instanceof ErreurCapture) return erreur(err);
-					console.error("capturer_site :", err);
-					return erreur(new Error("La capture a echoue."));
-				}
-			},
-		);
-
-		this.server.registerPrompt(
-			"posts_semaine",
-			{
-				title: "Posts LinkedIn de la semaine",
-				description: "Analyse ton activite GitHub et redige 2 ou 3 posts LinkedIn.",
-				argsSchema: {
-					jours: z
-						.string()
-						.regex(/^\d{1,2}$/)
-						.optional()
-						.describe("Periode en jours (7 par defaut)"),
-					style: z.string().max(8000).optional().describe("Quelques-uns de tes posts, pour imiter ton style"),
-				},
-			},
-			({ jours, style }) => ({
-				messages: [
-					{
-						role: "user",
-						content: {
-							type: "text",
-							text: promptPostsSemaine(Math.min(Math.max(Number(jours) || 7, 1), 30), style ?? ""),
-						},
-					},
-				],
-			}),
-		);
+		const contexte: Contexte = {
+			server: this.server,
+			env: this.env,
+			identite: () => this.identite(),
+			octokit: (props) => this.octokit(props),
+			appel: (fn) => this.appel(fn),
+		};
+		for (const enregistrer of [outilsGithub, outilsBrouillons, outilsStyle, outilsCaptures, outilsPub]) {
+			enregistrer(contexte);
+		}
 	}
 }

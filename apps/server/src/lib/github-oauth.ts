@@ -3,6 +3,7 @@
 const AUTORISATION = "https://github.com/login/oauth/authorize";
 const TOKEN = "https://github.com/login/oauth/access_token";
 const SCOPE = "read:user";
+const API = "https://api.github.com";
 
 export class ErreurGithub extends Error {}
 
@@ -55,4 +56,27 @@ export async function echangerCode(p: {
 	const corps = (await res.json().catch(() => ({}))) as { access_token?: string; error?: string };
 	if (!res.ok || !corps.access_token) throw new ErreurGithub(corps.error ?? `GitHub a repondu ${res.status}`);
 	return corps.access_token;
+}
+
+type Revocation = { clientId: string; clientSecret: string; token: string };
+
+// Revoque un token d'utilisateur chez GitHub sans toucher a l'autorisation de l'application (le grant reste).
+// `grant` revoque au contraire l'autorisation entiere : tous les tokens de l'app pour ce compte (effacement des donnees).
+// 404 : token ou autorisation deja revoques, ce qui revient au meme.
+export const revoquerToken = (p: Revocation) => revoquer(p, "token");
+export const revoquerAutorisation = (p: Revocation) => revoquer(p, "grant");
+
+async function revoquer(p: Revocation, cible: "token" | "grant") {
+	const res = await fetch(`${API}/applications/${encodeURIComponent(p.clientId)}/${cible}`, {
+		method: "DELETE",
+		headers: {
+			Accept: "application/vnd.github+json",
+			Authorization: `Basic ${btoa(`${p.clientId}:${p.clientSecret}`)}`,
+			"Content-Type": "application/json",
+			"User-Agent": "weekli",
+		},
+		body: JSON.stringify({ access_token: p.token }),
+		signal: AbortSignal.timeout(5000),
+	});
+	if (res.status !== 204 && res.status !== 404) throw new ErreurGithub(`GitHub a repondu ${res.status}`);
 }

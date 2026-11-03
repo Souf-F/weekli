@@ -49,7 +49,7 @@ export function CarteBrouillon({ brouillon: b, surModifie, surSupprime }: Props)
 				<span className={styles.badge}>{b.publie ? "Publié" : "À publier"}</span>
 				<time dateTime={b.cree}>{date(b.cree)}</time>
 			</header>
-			<h3 className={styles.titre}>{b.titre || "Sans titre"}</h3>
+			<h2 className={styles.titre}>{b.titre || "Sans titre"}</h2>
 			<p className={styles.meta}>
 				{b.format} {b.source && `· ${b.source}`}
 			</p>
@@ -68,9 +68,6 @@ export function CarteBrouillon({ brouillon: b, surModifie, surSupprime }: Props)
 				</Bouton>
 				<Bouton taille="petit" variante="contour" onClick={basculerPublie} disabled={occupe}>
 					{b.publie ? "Remettre à publier" : "Marquer publié"}
-				</Bouton>
-				<Bouton taille="petit" variante="contour" vers={`/app/studio?brouillon=${b.id}`}>
-					En vidéo
 				</Bouton>
 				<Bouton taille="petit" onClick={copier} disabled={occupe}>
 					Copier

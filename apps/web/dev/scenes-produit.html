@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="fr">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="robots" content="noindex" />
+	<title>Banc des scènes produit</title>
+	<link rel="stylesheet" href="/src/styles/fonts.css" />
+	<link rel="stylesheet" href="/dev/scenes-produit.css" />
+</head>
+<body>
+	<main>
+		<h1>Scènes produit et action (F7, développement)</h1>
+		<canvas id="apercu" aria-label="Aperçu des scènes étape, résultat, preuve, appel et fin"></canvas>
+		<div class="barre">
+			<button id="lecture" type="button" disabled>Lecture</button>
+			<input id="curseur" type="range" min="0" max="1" step="0.0333" value="0" aria-label="Position" />
+			<span id="temps">0.00 s</span>
+		</div>
+		<div class="barre">
+			<button id="mesurer" type="button" disabled>Mesurer le dessin (1920x1080)</button>
+			<label>Récepteur <input id="recepteur" type="url" value="http://127.0.0.1:5195" /></label>
+			<button id="planche" type="button" disabled>Envoyer les images de la planche</button>
+		</div>
+		<p id="etat" role="status">Chargement des polices</p>
+		<p id="coupes">Textes coupés : aucun</p>
+		<table id="mesures" hidden>
+			<caption>Temps de dessin par image, 1920x1080 (ms)</caption>
+			<thead><tr><th scope="col">Scène</th><th scope="col">Images</th><th scope="col">Moyenne</th><th scope="col">p95</th><th scope="col">Max</th></tr></thead>
+			<tbody id="mesures-corps"></tbody>
+		</table>
+	</main>
+	<script type="module" src="/dev/scenes-produit.ts"></script>
+</body>
+</html>

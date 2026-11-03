@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="fr">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="robots" content="noindex" />
+	<title>Gestes de texte</title>
+	<link rel="stylesheet" href="/src/styles/fonts.css" />
+	<style>
+		:root { color-scheme: dark; font-family: ui-sans-serif, system-ui, sans-serif; }
+		body { margin: 0; padding: 16px; background: #111; color: #eee; }
+		canvas { display: block; max-width: 100%; height: auto; }
+		pre { font-size: 12px; }
+	</style>
+</head>
+<body>
+	<p id="etat">Chargement</p>
+	<canvas id="planche" aria-label="Planche des gestes : la meme scene avec trois jeux de gestes"></canvas>
+	<pre id="mesures"></pre>
+	<script type="module" src="/dev/gestes.ts"></script>
+</body>
+</html>

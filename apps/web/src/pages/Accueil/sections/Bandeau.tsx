@@ -1,6 +1,6 @@
 import styles from "./Bandeau.module.css";
 
-const MOTS = ["Claude", "MCP", "GitHub", "LinkedIn", "Motion design", "Cloudflare Workers", "OAuth 2.1", "Open source"];
+const MOTS = ["Connecteur Claude", "Pub vidéo", "Voix off", "Post du projet", "GitHub", "LinkedIn", "Style mémorisé", "Open source"];
 
 export function Bandeau() {
 	return (

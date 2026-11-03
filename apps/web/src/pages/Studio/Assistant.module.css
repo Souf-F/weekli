@@ -1,0 +1,203 @@
+.etapes {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--espace-2) var(--espace-5);
+	margin: 0 0 var(--espace-6);
+	padding: 0;
+	list-style: none;
+	counter-reset: etape;
+}
+.etapes li {
+	display: flex;
+	align-items: center;
+	gap: var(--espace-2);
+	font: 500 var(--t-petit) / 1.2 var(--sans);
+	color: var(--texte-doux);
+	counter-increment: etape;
+}
+.etapes li::before {
+	content: counter(etape);
+	display: grid;
+	width: var(--espace-5);
+	height: var(--espace-5);
+	place-items: center;
+	border: 1px solid var(--filet);
+	border-radius: var(--rayon-pilule);
+	font: 500 var(--t-etiquette) / 1 var(--mono);
+}
+.etapes li[aria-current="step"] {
+	color: var(--espresso);
+}
+.etapes li[aria-current="step"]::before {
+	border-color: var(--espresso);
+	background: var(--espresso);
+	color: var(--platine);
+}
+.etapes li[data-fait="true"]::before {
+	content: "";
+	border-color: var(--succes);
+	background: var(--voile-succes);
+}
+.corps {
+	max-width: 760px;
+}
+.corps h2 {
+	margin-bottom: var(--espace-2);
+	font-size: var(--t-titre);
+	line-height: var(--lh-titre);
+	outline: none;
+}
+.intro {
+	margin: 0 0 var(--espace-5);
+	max-width: var(--mesure);
+	color: var(--texte-doux);
+}
+.pied {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--espace-2);
+	margin-top: var(--espace-5);
+}
+.recherche {
+	margin-bottom: var(--espace-4);
+}
+.repos {
+	display: grid;
+	gap: var(--espace-2);
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+.repo {
+	position: relative;
+	display: grid;
+	gap: var(--espace-1);
+	padding: var(--espace-3) var(--espace-4);
+	border: 1px solid var(--filet);
+	border-radius: var(--rayon-s);
+	background: var(--champ);
+	cursor: pointer;
+	transition:
+		border-color var(--duree-rapide) var(--ease),
+		background var(--duree-rapide) var(--ease);
+}
+.repo:hover {
+	border-color: var(--moka-clair);
+}
+.repo:has(input:checked) {
+	border-color: var(--espresso);
+	background: var(--blanc);
+}
+.repo:has(input:focus-visible) {
+	box-shadow: var(--focus);
+}
+.repo input {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+.repo strong {
+	font-weight: 600;
+}
+.repo span {
+	font-size: var(--t-petit);
+	color: var(--texte-doux);
+}
+.compteur {
+	font: 400 var(--t-etiquette) / 1 var(--mono);
+	color: var(--texte-doux);
+	text-align: right;
+}
+.exemple {
+	margin: 0;
+	font-size: var(--t-petit);
+	font-weight: 400;
+	color: var(--texte-doux);
+}
+.captures {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+	gap: var(--espace-4);
+	margin: var(--espace-5) 0 0;
+	padding: 0;
+	list-style: none;
+}
+.capture {
+	display: grid;
+	gap: var(--espace-2);
+	margin: 0;
+	padding: var(--espace-3);
+	border: 1px solid var(--filet);
+	border-radius: var(--rayon-s);
+	background: var(--champ);
+}
+.capture img {
+	width: 100%;
+	max-height: 140px;
+	object-fit: cover;
+	object-position: top;
+	border-radius: calc(var(--rayon-s) - 4px);
+	background: var(--surface);
+}
+.sources {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+	gap: var(--espace-5);
+}
+.source {
+	display: grid;
+	align-content: start;
+	gap: var(--espace-2);
+}
+.source h3 {
+	margin-bottom: var(--espace-2);
+}
+.choix {
+	display: grid;
+	gap: var(--espace-3);
+	margin: 0 0 var(--espace-5);
+}
+.resume {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: var(--espace-2) var(--espace-5);
+	margin: 0 0 var(--espace-5);
+	font-size: var(--t-petit);
+}
+.resume dt {
+	font-weight: 500;
+	color: var(--texte-doux);
+}
+.resume dd {
+	margin: 0;
+}
+.paire {
+	display: contents;
+}
+.voies {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+	gap: var(--espace-4);
+}
+.voie {
+	display: grid;
+	align-content: start;
+	gap: var(--espace-3);
+	padding: var(--espace-5);
+	border: 1px solid var(--filet);
+	border-radius: var(--rayon-m);
+	background: var(--champ);
+}
+.voie h3 {
+	font-size: var(--t-corps-grand);
+}
+.voie p {
+	margin: 0;
+	font-size: var(--t-petit);
+	color: var(--texte-doux);
+}
+@media (prefers-reduced-motion: reduce) {
+	.repo {
+		transition: none;
+	}
+}

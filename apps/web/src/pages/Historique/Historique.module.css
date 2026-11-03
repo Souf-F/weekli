@@ -2,27 +2,24 @@
 	display: flex;
 	align-items: flex-end;
 	justify-content: space-between;
-	gap: 16px;
+	gap: var(--espace-4);
 	flex-wrap: wrap;
-	margin-bottom: 28px;
-}
-.entete h1 {
-	font-size: clamp(2.4rem, 5vw, 3.6rem);
+	margin-bottom: var(--espace-5);
 }
 .filtres {
 	display: flex;
-	gap: 4px;
-	padding: 4px;
+	gap: var(--espace-1);
+	padding: var(--espace-1);
 	border: 1px solid var(--bord-verre);
-	border-radius: 12px;
+	border-radius: var(--rayon-s);
 	background: var(--verre-fort);
 }
 .filtres button {
-	padding: 8px 14px;
+	padding: var(--espace-2) var(--espace-3);
 	border: 0;
-	border-radius: 9px;
+	border-radius: var(--espace-2);
 	background: transparent;
-	font: 500 0.88rem var(--sans);
+	font: 500 var(--t-petit) / 1.2 var(--sans);
 	color: var(--texte-doux);
 	cursor: pointer;
 }
@@ -33,14 +30,14 @@
 .grille {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
-	gap: 16px;
+	gap: var(--espace-4);
 }
 .vide {
-	padding: 40px 28px;
+	padding: var(--espace-7) var(--espace-5);
 	border: 1px dashed var(--moka-clair);
-	border-radius: 20px;
-	background: rgba(255, 255, 255, 0.25);
+	border-radius: var(--rayon-l);
+	background: var(--vide-fond);
 }
 .vide p {
-	margin: 0 0 6px;
+	margin: 0 0 var(--espace-2);
 }

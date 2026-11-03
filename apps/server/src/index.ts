@@ -1,6 +1,8 @@
 import OAuthProvider from "@cloudflare/workers-oauth-provider";
 import { env } from "cloudflare:workers";
-import { ajouterEnTetes, limiterAuth, verifierOrigine } from "./lib/securite";
+import { refuserSessionMcp } from "./lib/acces-mcp";
+import { GRANT_MCP_SECONDES } from "./lib/conservation";
+import { ajouterEnTetes, limiterAuth, verifierConfiguration, verifierOrigine } from "./lib/securite";
 import { WeekliMCP } from "./mcp/agent";
 import { app } from "./routes/app";
 import type { Props } from "./types";
@@ -10,18 +12,38 @@ export { WeekliMCP };
 
 const serveurMcp = WeekliMCP.serve("/mcp");
 
+// Un 400 du transport MCP : motif de la bibliotheque et en-tetes de protocole, jamais le corps ni le jeton
+async function journaliserRefusMcp(request: Request, reponse: Response) {
+	const motif = await reponse
+		.clone()
+		.json<{ error?: { message?: string } }>()
+		.then((d) => d.error?.message ?? "inconnu")
+		.catch(() => "inconnu");
+	console.warn("MCP 400 :", motif, {
+		session: request.headers.has("mcp-session-id"),
+		version: request.headers.get("mcp-protocol-version")?.slice(0, 20) ?? null,
+	});
+}
+
 const fournisseur = new OAuthProvider({
 	apiRoute: "/mcp",
 	// Chaque utilisateur MCP a son propre quota d'appels d'outils
 	apiHandler: {
 		async fetch(request: Request, env: Env, ctx: ExecutionContext) {
-			const login = (ctx.props as Props | undefined)?.login ?? "inconnu";
-			const { success } = await env.LIMITE_API.limit({ key: `mcp:${login}` });
+			// Un token emis avant l'identite par id ou avant les props minimales (id, jeton) est inutilisable : reconnexion
+			const { id, jeton } = (ctx.props ?? {}) as Partial<Props>;
+			if (!id || !jeton) return new Response("Reconnecte le connecteur Weekli", { status: 401 });
+			const { success } = await env.LIMITE_API.limit({ key: `mcp:${id}` });
 			if (!success) return new Response("Trop de requetes", { status: 429, headers: { "Retry-After": "60" } });
-			return serveurMcp.fetch(request, env, ctx);
+			const refus = await refuserSessionMcp(env, id, request);
+			if (refus) return refus;
+			const reponse = await serveurMcp.fetch(request, env, ctx);
+			if (reponse.status === 400) await journaliserRefusMcp(request, reponse);
+			return reponse;
 		},
 	},
 	authorizeEndpoint: "/authorize",
+	refreshTokenTTL: GRANT_MCP_SECONDES,
 	clientRegistrationEndpoint: "/register",
 	defaultHandler: app as any,
 	tokenEndpoint: "/token",
@@ -35,7 +57,7 @@ const fournisseur = new OAuthProvider({
 
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext) {
-		const refus = verifierOrigine(request) ?? (await limiterAuth(request, env));
+		const refus = verifierConfiguration(env) ?? verifierOrigine(request) ?? (await limiterAuth(request, env));
 		const reponse = refus ?? (await fournisseur.fetch(request, env, ctx));
 		return ajouterEnTetes(reponse, request);
 	},

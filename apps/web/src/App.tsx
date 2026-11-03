@@ -2,6 +2,8 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { MeshBackground } from "@/components/MeshBackground/MeshBackground";
 import { Accueil } from "@/pages/Accueil/Accueil";
+import { Confidentialite } from "@/pages/Legal/Confidentialite";
+import { MentionsLegales } from "@/pages/Legal/MentionsLegales";
 
 // L'app (et le SDK Anthropic qu'elle embarque) n'est chargee qu'a la premiere visite de /app
 const AppLayout = lazy(() => import("@/layouts/AppLayout").then((m) => ({ default: m.AppLayout })));
@@ -18,6 +20,8 @@ export function App() {
 			<Suspense fallback={null}>
 				<Routes>
 					<Route path="/" element={<Accueil />} />
+					<Route path="/confidentialite" element={<Confidentialite />} />
+					<Route path="/mentions-legales" element={<MentionsLegales />} />
 					<Route path="/app" element={<AppLayout />}>
 						<Route index element={<Tableau />} />
 						<Route path="historique" element={<Historique />} />

@@ -8,7 +8,7 @@ import type { Script } from "./types";
 const exemple: Script = {
 	titre: "Exemple",
 	projet: "weekli",
-	format: "portrait",
+	format: "paysage",
 	ambiance: "energique",
 	segments: [
 		{ id: "a", voix: "Ton code de la semaine, raconté sur LinkedIn.", duree: 2.5, visuel: { type: "accroche", texte: "Ton code, *raconté.*" } },
@@ -16,26 +16,20 @@ const exemple: Script = {
 	],
 };
 
-// Les deux formats du skill partagent le meme moteur : seule l'ambiance et le contenu changent
 export function Racine() {
 	return (
-		<>
-			{(["Presentation", "Histoire"] as const).map((id) => (
-				<Composition
-					key={id}
-					id={id}
-					component={VideoProjet}
-					fps={IPS}
-					width={1080}
-					height={1350}
-					durationInFrames={300}
-					defaultProps={{ script: exemple }}
-					calculateMetadata={({ props }) => ({
-						durationInFrames: dureeTotale(props.script),
-						...dimensions(props.script),
-					})}
-				/>
-			))}
-		</>
+		<Composition
+			id="Presentation"
+			component={VideoProjet}
+			fps={IPS}
+			width={1920}
+			height={1080}
+			durationInFrames={300}
+			defaultProps={{ script: exemple }}
+			calculateMetadata={({ props }: { props: { script: Script } }) => ({
+				durationInFrames: dureeTotale(props.script),
+				...dimensions(props.script),
+			})}
+		/>
 	);
 }

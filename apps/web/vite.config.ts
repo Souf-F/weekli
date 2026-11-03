@@ -12,6 +12,8 @@ export default defineConfig({
 	resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
 	server: {
 		port: 5173,
+		// Isolation cross-origin comme en production (public/_headers) : voix sur plusieurs fils
+		headers: { "Cross-Origin-Opener-Policy": "same-origin", "Cross-Origin-Embedder-Policy": "require-corp" },
 		proxy: Object.fromEntries(routesWorker.map((r) => [r, { target: cible, changeOrigin: false }])),
 	},
 });

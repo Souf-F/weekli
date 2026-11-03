@@ -1,0 +1,10 @@
+export { alea, graineDepuisTexte } from "./aleatoire";
+export { type Apercu, creerApercu } from "./apercu";
+export { assemblerAudio, FREQUENCE, genererSonTest, type SourcesAudio } from "./audio";
+export { chargerPolices, creerContexte, palettePourScript } from "./contexte";
+export { choisirFormat, exporter, type FormatExport, type ResultatExport, type StatsExport } from "./export";
+export { creerMoteur, type Moteur, nombreImages, type OptionsMoteur } from "./moteur";
+export * from "./scene";
+export { genererSrt } from "./sous-titres";
+export { DECALAGE_VOIX } from "./synchro";
+export { TRANSITIONS_PAR_DEFAUT } from "./transitions";

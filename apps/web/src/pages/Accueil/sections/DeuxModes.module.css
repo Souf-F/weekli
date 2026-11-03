@@ -1,47 +1,66 @@
 .grille {
 	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 16px;
+	grid-template-columns: 1.35fr 1fr;
+	gap: var(--espace-4);
 }
 .mode {
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
-	padding: 36px;
+	padding: var(--espace-6);
+}
+/* Le connecteur Claude est l'usage principal : fond espresso, texte platine */
+.principal {
+	background: var(--espresso);
+	border-color: var(--espresso);
+	color: var(--platine);
+}
+.principal .badge {
+	color: var(--lavande-pro);
+}
+.principal .resume {
+	color: var(--texte-sombre-doux);
+}
+.principal .points li::before {
+	background-color: var(--moka);
 }
 .badge {
-	font-family: var(--mono);
-	font-size: 0.72rem;
-	letter-spacing: 0.08em;
+	font-size: var(--t-etiquette);
+	font-weight: 500;
+	line-height: var(--lh-etiquette);
+	letter-spacing: var(--suivi-etiquette);
 	text-transform: uppercase;
-	color: var(--moka);
+	color: var(--moka-texte);
 }
 .nom {
-	margin: 14px 0 10px;
+	margin: var(--espace-3) 0 var(--espace-2);
 	font-family: var(--serif);
-	font-size: 2.6rem;
-	font-weight: 400;
+	font-size: var(--t-sous-titre);
+	line-height: var(--lh-sous-titre);
+	font-weight: 500;
 }
 .resume {
-	margin: 0 0 20px;
+	margin: 0 0 var(--espace-5);
+	max-width: var(--mesure);
 	color: var(--texte-doux);
 }
 .points {
-	margin: 0 0 28px;
+	margin: 0 0 var(--espace-6);
 	padding: 0;
 	list-style: none;
 	display: grid;
-	gap: 10px;
+	gap: var(--espace-2);
 }
 .points li {
 	display: flex;
 	align-items: center;
-	gap: 10px;
+	gap: var(--espace-2);
 }
 .points li::before {
 	content: "";
-	width: 18px;
-	height: 18px;
+	flex: none;
+	width: var(--espace-5);
+	height: var(--espace-5);
 	border-radius: 50%;
 	background: var(--espresso)
 		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e5e4e2' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12l4 4 8-8'/%3E%3C/svg%3E")

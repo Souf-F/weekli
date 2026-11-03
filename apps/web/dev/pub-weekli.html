@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="fr">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="robots" content="noindex" />
+	<title>Rendu de la pub de Weekli</title>
+	<link rel="stylesheet" href="/src/styles/fonts.css" />
+	<link rel="stylesheet" href="/dev/pub-weekli.css" />
+</head>
+<body>
+	<main>
+		<h1>Pub de Weekli (rendu, développement)</h1>
+		<canvas id="apercu" width="960" height="540" aria-label="Aperçu de la pub de Weekli"></canvas>
+		<div class="barre">
+			<button id="rendre" type="button">Rendre le MP4 et la miniature</button>
+			<a id="telecharger" class="bouton" hidden>Télécharger le MP4</a>
+		</div>
+		<p id="etat" role="status">Prêt</p>
+		<pre id="resultat"></pre>
+	</main>
+	<script type="module" src="/dev/pub-weekli.ts"></script>
+</body>
+</html>

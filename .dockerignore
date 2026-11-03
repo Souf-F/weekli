@@ -2,5 +2,6 @@
 **/dist
 **/.wrangler
 **/.dev.vars
+**/.env*
 .git
 *.log

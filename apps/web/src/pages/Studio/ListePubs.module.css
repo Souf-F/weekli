@@ -1,0 +1,77 @@
+.grille {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+	gap: var(--espace-5);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.carte {
+	display: grid;
+	gap: var(--espace-3);
+	padding: var(--espace-3) var(--espace-3) var(--espace-4);
+	border: 1px solid var(--bord-verre);
+	border-radius: var(--rayon-l);
+	background: var(--verre-fort);
+	backdrop-filter: var(--flou-verre);
+	-webkit-backdrop-filter: var(--flou-verre);
+	box-shadow: var(--ombre-carte);
+}
+.vignette {
+	display: block;
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	border-radius: var(--rayon-s);
+	background: var(--espresso);
+	overflow: hidden;
+}
+.vignette canvas {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+.attente {
+	display: grid;
+	height: 100%;
+	place-items: center;
+	font: 500 var(--t-etiquette) / 1 var(--mono);
+	letter-spacing: var(--suivi-etiquette);
+	text-transform: uppercase;
+	color: var(--texte-sombre-doux);
+}
+.corps {
+	display: grid;
+	gap: var(--espace-1);
+	padding: 0 var(--espace-2);
+}
+.corps h2 {
+	font-size: var(--t-corps-grand);
+	line-height: var(--lh-sous-titre);
+}
+.corps h2 a:hover {
+	color: var(--moka-texte);
+}
+.meta {
+	margin: 0;
+	font-size: var(--t-petit);
+	color: var(--texte-doux);
+}
+.boutons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--espace-2);
+	padding: 0 var(--espace-2);
+}
+.confirmation {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--espace-2);
+	padding: 0 var(--espace-2);
+	font-size: var(--t-petit);
+}
+.danger {
+	border-color: var(--danger);
+	background: var(--danger);
+	color: var(--blanc);
+}

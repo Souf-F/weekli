@@ -20,7 +20,7 @@ export function Installer() {
 	return (
 		<section className={s.section} id="installer">
 			<div className={`${s.panneau} ${styles.cta} revele`}>
-				<p className={s.surTitre}>Mode 1 · prêt en deux minutes</p>
+				<p className={s.surTitre}>Connecteur Claude · prêt en deux minutes</p>
 				<h2 className={styles.titre}>
 					Ajoute Weekli
 					<br />

@@ -1,0 +1,3 @@
+#!/bin/sh
+# Bloque le commit si un secret ou un fichier sensible est indexe (installe par `npm install`)
+exec node scripts/verifier-secrets.mjs

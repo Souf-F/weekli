@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="fr">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="robots" content="noindex" />
+		<title>Essai voix Kokoro</title>
+		<link rel="stylesheet" href="./essai.css" />
+		<script type="module" src="./essai.ts"></script>
+	</head>
+	<body>
+		<main>
+			<h1>Essai de la voix off</h1>
+			<p class="note">Page interne, servie uniquement par le serveur de développement. Kokoro <code>ff_siwis</code>, espeak-ng et onnxruntime-web dans un Web Worker.</p>
+
+			<form id="formulaire">
+				<label for="texte">Texte</label>
+				<textarea id="texte" rows="6"></textarea>
+
+				<div class="ligne">
+					<label for="vitesse">Vitesse</label>
+					<input id="vitesse" type="number" min="0.5" max="2" step="0.05" value="1" />
+				</div>
+
+				<div class="ligne">
+					<button type="button" id="charger">Charger le modèle</button>
+					<button type="submit" id="synthetiser" disabled>Synthétiser</button>
+					<button type="button" id="vider">Vider le cache</button>
+				</div>
+			</form>
+
+			<p id="etat" role="status" aria-live="polite">Modèle non chargé.</p>
+			<audio id="lecteur" controls hidden></audio>
+			<p><a id="telecharger" hidden download="essai-voix.wav">Télécharger le WAV</a></p>
+
+			<h2>Mesures</h2>
+			<ol id="mesures"></ol>
+
+			<h2>Phonèmes</h2>
+			<p id="phonemes" class="phonemes"></p>
+		</main>
+	</body>
+</html>

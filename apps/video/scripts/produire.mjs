@@ -1,16 +1,18 @@
 #!/usr/bin/env node
 // Produit une video a partir d'un script : voix off, musique, rendu Remotion, puis controle du fichier.
-// Usage : node scripts/produire.mjs <projet> <presentation|histoire> [--voix Thomas] [--debit 185]
+// Usage : node scripts/produire.mjs <projet> [--voix Thomas] [--debit 185]
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { exigerNom } from "./validation.mjs";
 import { genererImpact, genererMontee, genererMusique, genererTransition } from "./audio.mjs";
 
 const ici = path.dirname(fileURLToPath(import.meta.url));
 const racine = path.join(ici, "..");
-const [, , projet, type, ...options] = process.argv;
+const [, , projet, ...options] = process.argv;
+const type = "presentation";
 const option = (nom, defaut) => {
 	const i = options.indexOf(`--${nom}`);
 	return i >= 0 ? options[i + 1] : defaut;
@@ -18,11 +20,12 @@ const option = (nom, defaut) => {
 const VOIX = option("voix", "Thomas");
 const DEBIT = option("debit", "185");
 
-if (!projet || !["presentation", "histoire"].includes(type)) {
-	console.error("Usage : node scripts/produire.mjs <projet> <presentation|histoire>");
+if (!projet) {
+	console.error("Usage : node scripts/produire.mjs <projet> [--voix Thomas] [--debit 185]");
 	process.exit(1);
 }
 
+exigerNom(projet, "Projet");
 const cheminScript = path.join(racine, "projets", projet, `${type}.json`);
 const script = JSON.parse(readFileSync(cheminScript, "utf8"));
 const relatif = `projets/${projet}/${type}`; // dossier dans public/
@@ -50,7 +53,7 @@ for (const [i, s] of script.segments.entries()) {
 	const sortie = path.join(dossier, nom);
 	if (!existsSync(sortie)) {
 		const brut = path.join(dossier, "brut.aiff");
-		execFileSync("say", ["-v", VOIX, "-r", DEBIT, "-o", brut, texte]);
+		execFileSync("say", ["-v", VOIX, "-r", DEBIT, "-o", brut, "--", texte]);
 		// Normalisation du volume (-16 LUFS, la reference des plateformes) et leger adoucissement
 		executer("ffmpeg", ["-y", "-v", "error", "-i", brut, "-af", "highpass=f=70,loudnorm=I=-16:TP=-1.5:LRA=11", "-ar", "48000", "-ac", "1", sortie]);
 	}
@@ -72,7 +75,7 @@ for (const [nom, generer] of [["transition", genererTransition], ["montee", gene
 // 3. Rendu Remotion avec le script complete (durees et chemins audio)
 const props = path.join(dossier, "props.json");
 writeFileSync(props, JSON.stringify({ script }));
-const composition = type === "presentation" ? "Presentation" : "Histoire";
+const composition = "Presentation";
 const video = path.join(racine, "sorties", `${projet}-${type}.mp4`);
 console.log(`Rendu ${composition}...`);
 execFileSync("npx", ["remotion", "render", "src/index.ts", composition, video, `--props=${props}`, "--log=error"], { cwd: racine, stdio: "inherit" });

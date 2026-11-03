@@ -2,7 +2,7 @@
 	"name": "@weekli/video",
 	"version": "0.1.0",
 	"private": true,
-	"description": "Videos de projet (presentation d'une minute, histoire de A a Z) generees avec Remotion",
+	"description": "Pub video d'une minute (16:9) pour Weekli, generee avec Remotion (outil interne)",
 	"type": "module",
 	"scripts": {
 		"studio": "remotion studio src/index.ts",

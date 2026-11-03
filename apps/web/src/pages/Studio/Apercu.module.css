@@ -1,0 +1,89 @@
+/* L'apercu repose sur --espresso : on juge les couleurs de la marque sans interference avec le cafe et platine */
+.apercu {
+	display: grid;
+	gap: var(--espace-3);
+	min-width: 0;
+}
+.cadre {
+	position: relative;
+	aspect-ratio: 16 / 9;
+	border-radius: var(--rayon-m);
+	background: var(--espresso);
+	box-shadow: var(--ombre);
+	overflow: hidden;
+}
+.cadre canvas {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+.attente {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	font: 500 var(--t-etiquette) / 1 var(--mono);
+	letter-spacing: var(--suivi-etiquette);
+	text-transform: uppercase;
+	color: var(--texte-sombre-doux);
+}
+.commandes {
+	display: flex;
+	align-items: center;
+	gap: var(--espace-3);
+}
+.temps {
+	margin-left: auto;
+	font: 500 var(--t-petit) / 1 var(--mono);
+	font-variant-numeric: tabular-nums;
+	color: var(--texte-doux);
+}
+.position {
+	width: 100%;
+	accent-color: var(--moka);
+}
+.barre {
+	display: flex;
+	gap: 2px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.segment {
+	flex: var(--part) 1 0;
+	min-width: 6px;
+}
+.segment button {
+	display: block;
+	width: 100%;
+	height: 28px;
+	padding: 0;
+	border: 1px solid var(--filet);
+	border-radius: 4px;
+	background: var(--fond);
+	cursor: pointer;
+	transition: transform var(--duree-rapide) var(--ease);
+}
+.segment button:hover {
+	transform: translateY(-2px);
+}
+.segment button[aria-current="true"] {
+	outline: 2px solid var(--espresso);
+	outline-offset: 1px;
+}
+.segment button[data-masquee="true"] {
+	opacity: 0.35;
+}
+.note {
+	margin: 0;
+	font-size: var(--t-petit);
+	color: var(--texte-doux);
+}
+@media (prefers-reduced-motion: reduce) {
+	.segment button {
+		transition: none;
+	}
+	.segment button:hover {
+		transform: none;
+	}
+}

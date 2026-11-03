@@ -41,23 +41,19 @@ export function Hero() {
 	return (
 		<section className={styles.hero}>
 			<div>
-				<p className={`${styles.pastille} revele`}>
-					<span className={styles.point} />
-					Dans Claude ou sur le web
-				</p>
 				<h1 className="revele">
-					Ton code de la semaine,
+					Ton projet raconté,
 					<br />
-					<em>raconté sur LinkedIn.</em>
+					<em>pub et post compris.</em>
 				</h1>
 				<p className={`${styles.intro} revele`}>
-					Weekli lit tes commits GitHub et en tire tes meilleurs posts. Utilise-le directement dans Claude avec ton
-					abonnement, ou sur le site avec ta clé API.
+					Ajoute Weekli à Claude. Il lit tes dépôts GitHub publics, écrit les posts LinkedIn de ta semaine, puis la
+					pub vidéo de ton projet avec sa voix off et le post qui l'accompagne.
 				</p>
 				<div className={`${styles.actions} revele`}>
-					<Bouton vers="/app">Ouvrir l'app</Bouton>
-					<Bouton vers="#installer" variante="contour">
-						Ajouter à Claude
+					<Bouton vers="#installer">Ajouter à Claude</Bouton>
+					<Bouton vers="/app" variante="contour">
+						Ouvrir l'app
 					</Bouton>
 				</div>
 				<p className={`${styles.note} revele`}>Open source · Lecture seule · Aucune clé stockée</p>
@@ -73,36 +69,36 @@ export function Hero() {
 						<span className={styles.badge}>Weekli connecté</span>
 					</div>
 					<div className={styles.corps}>
-						<div className={`${styles.msg} ${styles.moi}`}>Fais mes posts LinkedIn de la semaine.</div>
+						<div className={`${styles.msg} ${styles.moi}`}>Fais la pub de scanner-ssl.</div>
 						<div className={styles.outil}>
 							<span>⌘</span>
-							<code>activite_github</code>
-							<span className={styles.resultat}>23 commits · 3 projets</span>
+							<code>preparer_pub</code>
+							<span className={styles.resultat}>README lu · 3 questions</span>
 						</div>
 						<div className={styles.outil}>
 							<span>⌘</span>
-							<code>details_commit</code>
-							<span className={styles.resultat}>scanner-ssl · a1b2c3d</span>
+							<code>sauver_pub</code>
+							<span className={styles.resultat}>9 scènes · 59 s</span>
 						</div>
 						<div className={`${styles.msg} ${styles.claude}`}>
-							<span className={styles.postTitre}>Post 1 · Retour d'expérience</span>
+							<span className={styles.postTitre}>Post du projet</span>
 							<p>
-								Cette semaine, mon scanner a appris à repérer les sous-domaines oubliés. Ceux qu'on crée pour un test,
-								puis qu'on laisse vivre des années.
+								Aujourd'hui je vous présente scanner-ssl, l'outil qui retrouve les sous-domaines que plus personne
+								n'ose regarder.
 							</p>
-							<p className={styles.suite}>Voici comment je les détecte en trois requêtes…</p>
-							<span className={styles.tags}>#cybersecurite #javascript #buildinpublic</span>
+							<p className={styles.suite}>Le script de la pub t'attend dans ton studio, voix off comprise.</p>
+							<span className={styles.tags}>#cybersecurite #buildinpublic</span>
 						</div>
 					</div>
 				</div>
 				<div className={`${styles.flottant} ${styles.f1}`} data-profondeur="40">
-					<strong>23</strong> commits analysés
+					<strong>59</strong> secondes de pub
 				</div>
 				<div className={`${styles.flottant} ${styles.f2}`} data-profondeur="-30">
-					<span className={styles.point} />3 brouillons prêts
+					<span className={styles.point} />Voix off française
 				</div>
 				<div className={`${styles.flottant} ${styles.f3}`} data-profondeur="60">
-					#buildinpublic
+					Post prêt à publier
 				</div>
 			</div>
 		</section>

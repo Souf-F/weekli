@@ -8,6 +8,7 @@ import { Hero } from "./sections/Hero";
 import { Installer } from "./sections/Installer";
 import { Navigation } from "./sections/Navigation";
 import { Pied } from "./sections/Pied";
+import { PubProjet } from "./sections/PubProjet";
 
 export function Accueil() {
 	useReveal();
@@ -18,6 +19,7 @@ export function Accueil() {
 			<main>
 				<Hero />
 				<Bandeau />
+				<PubProjet />
 				<Fonctionnalites />
 				<DeuxModes />
 				<Etapes />

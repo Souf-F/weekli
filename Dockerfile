@@ -1,15 +1,19 @@
 # Image de developpement de Weekli, partagee par les deux services de docker-compose.yml
 FROM node:22-slim AS base
 WORKDIR /app
+RUN chown node:node /app
+# Les conteneurs de dev ne tournent pas en root
+USER node
 
 # Dependances d'abord, pour profiter du cache Docker tant que les package.json ne changent pas
-COPY package.json package-lock.json ./
-COPY packages/core/package.json packages/core/
-COPY apps/server/package.json apps/server/
-COPY apps/web/package.json apps/web/
+COPY --chown=node:node package.json package-lock.json ./
+COPY --chown=node:node scripts/installer-hooks.mjs scripts/
+COPY --chown=node:node packages/core/package.json packages/core/
+COPY --chown=node:node apps/server/package.json apps/server/
+COPY --chown=node:node apps/web/package.json apps/web/
 RUN npm ci
 
-COPY . .
+COPY --chown=node:node . .
 
 # Dans le conteneur on ecoute sur 0.0.0.0 ; docker-compose ne publie les ports que sur 127.0.0.1
 

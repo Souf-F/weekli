@@ -1,0 +1,15 @@
+.formulaire {
+	display: grid;
+	gap: 0;
+}
+.compteur {
+	font: 400 var(--t-etiquette) / 1 var(--mono);
+	text-align: right;
+	color: var(--texte-doux);
+}
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--espace-3);
+	margin-bottom: var(--espace-3);
+}

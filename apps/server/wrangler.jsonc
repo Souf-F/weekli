@@ -25,15 +25,18 @@
   "browser": { "binding": "BROWSER" },
   "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "<Add-KV-ID>" }],
   // Le front React compile (apps/web/dist) est servi par le meme Worker.
-  // Les routes dynamiques passent d'abord par le Worker, le reste tombe sur la SPA.
+  // Les routes dynamiques et les chemins commencant par un point (/.env, /.git) passent d'abord par le Worker, qui
+  // repond 404 ; le reste tombe sur la SPA.
   "assets": {
     "directory": "../web/dist",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*", "/auth/*", "/mcp", "/mcp/*", "/authorize", "/token", "/register", "/callback", "/.well-known/*"]
+    "run_worker_first": ["/api/*", "/auth/*", "/mcp", "/mcp/*", "/authorize", "/token", "/register", "/callback", "/.*"]
   },
   // Adresse publique canonique du serveur (identifiant de ressource OAuth, RFC 9728).
   // En production : la remplacer par l'URL https du Worker avant de deployer.
   "vars": { "PUBLIC_URL": "http://localhost:8788" },
+  // Plafond de CPU par requete : borne le cout d'un abus (la valeur par defaut est de 30 s)
+  "limits": { "cpu_ms": 5000 },
   "observability": { "enabled": true },
   "dev": { "port": 8788 }
 }

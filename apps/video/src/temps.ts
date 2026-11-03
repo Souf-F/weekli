@@ -19,4 +19,4 @@ export const dureeTotale = (script: Script) =>
 	script.segments.reduce((t, s) => t + imagesSegment(s), 0) - TRANSITION * Math.max(script.segments.length - 1, 0);
 
 export const dimensions = (script: Script) =>
-	script.format === "paysage" ? { width: 1920, height: 1080 } : { width: 1080, height: 1350 };
+	script.format === "portrait" ? { width: 1080, height: 1350 } : { width: 1920, height: 1080 };

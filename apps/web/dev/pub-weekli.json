@@ -1,0 +1,217 @@
+{
+  "version": 1,
+  "titre": "Weekli, ton projet raconté",
+  "projet": {
+    "nom": "Weekli",
+    "repo": "weekli",
+    "lien": "https://github.com/Souf-F/weekli"
+  },
+  "reponses": {
+    "pourQui": "Les développeurs qui codent beaucoup mais dont le travail reste invisible sur LinkedIn.",
+    "probleme": "Raconter son travail prend des heures, et une vidéo de présentation des jours.",
+    "promesse": "En une phrase dans Claude, tes posts et la pub vidéo de ton projet, avec voix off."
+  },
+  "marque": {
+    "primaire": "#6f4e37",
+    "logo": "monogramme",
+    "monogramme": "W",
+    "typo": "editoriale"
+  },
+  "voix": {
+    "mode": "synthese",
+    "vitesse": 1,
+    "prononciation": {
+      "Weekli": "ouiquelie"
+    }
+  },
+  "musique": "calme",
+  "trame": "vision-manifeste",
+  "gestes": [
+    "accent",
+    "soulignement",
+    "flou"
+  ],
+  "captures": [
+    {
+      "id": "etapes",
+      "source": "importee",
+      "format": "bureau",
+      "legende": "Comment ça marche"
+    },
+    {
+      "id": "accueil",
+      "source": "importee",
+      "format": "bureau",
+      "legende": "Accueil"
+    },
+    {
+      "id": "connexion",
+      "source": "importee",
+      "format": "bureau",
+      "legende": "Connexion en lecture seule"
+    }
+  ],
+  "scenes": [
+    {
+      "id": "ouverture",
+      "type": "ouverture",
+      "voix": "Tu codes beaucoup. Personne ne le voit vraiment.",
+      "moment": "Notre idée",
+      "detail": "LinkedIn reste vide"
+    },
+    {
+      "id": "rupture",
+      "type": "rupture",
+      "voix": "Un post prend des heures. Une présentation prend des jours.",
+      "texte": {
+        "texte": "Et si raconter ton travail ne prenait plus des heures ?",
+        "accent": "plus des heures ?"
+      }
+    },
+    {
+      "id": "revelation",
+      "type": "revelation",
+      "voix": "Voici Weekli. Dans Claude, il écrit tes posts. Il monte la pub vidéo de ton projet, voix off comprise.",
+      "slogan": {
+        "texte": "Ton projet raconté, pub et post compris.",
+        "accent": "pub et post compris."
+      },
+      "signature": "Mis en scène, à ta façon."
+    },
+    {
+      "id": "transformation",
+      "type": "transformation",
+      "voix": "Ta semaine de code entre d'un côté. De l'autre, un post et une pub vidéo ressortent.",
+      "titre": {
+        "texte": "Ta semaine devient un récit.",
+        "accent": "un récit."
+      },
+      "entree": {
+        "icone": "calendrier",
+        "libelle": "Ta semaine"
+      },
+      "operateur": "Weekli",
+      "sortie": {
+        "icone": "video",
+        "libelle": "Post et pub vidéo"
+      }
+    },
+    {
+      "id": "flux",
+      "type": "flux",
+      "voix": "Tu l'ajoutes une seule fois, sans rien installer. Tu réponds à trois questions, et tout se prépare.",
+      "titre": {
+        "texte": "Deux minutes, trois gestes.",
+        "accent": "trois gestes."
+      },
+      "noeuds": [
+        {
+          "icone": "lien",
+          "libelle": "Tu l'ajoutes",
+          "detail": "Une seule fois"
+        },
+        {
+          "icone": "message",
+          "libelle": "Tu réponds",
+          "detail": "Trois questions"
+        },
+        {
+          "icone": "video",
+          "libelle": "Tu reçois",
+          "detail": "Un post, une pub"
+        }
+      ]
+    },
+    {
+      "id": "etape-controle",
+      "type": "etape",
+      "voix": "Lecture seule. Rien sans toi.",
+      "onglet": "Contrôle",
+      "filigrane": "CONTRÔLE",
+      "titre": {
+        "texte": "Lecture seule, rien sans toi.",
+        "accent": "rien sans toi."
+      },
+      "texte": "Weekli lit seulement tes projets publics.",
+      "visuel": {
+        "type": "capture",
+        "capture": "connexion",
+        "cadrage": "complet"
+      },
+      "but": "montrer"
+    },
+    {
+      "id": "avantapres",
+      "type": "avantapres",
+      "voix": "Avant, il fallait tout écrire et tout monter soi-même. Après, une phrase suffit pour commencer.",
+      "titre": {
+        "texte": "Avant, puis après.",
+        "accent": "puis après."
+      },
+      "avant": "Avant",
+      "apres": "Après",
+      "paires": [
+        {
+          "avant": "Un post à écrire",
+          "apres": "Un post prêt"
+        },
+        {
+          "avant": "Une pub à monter",
+          "apres": "Une pub prête"
+        },
+        {
+          "avant": "Une voix à enregistrer",
+          "apres": "Une voix off"
+        }
+      ]
+    },
+    {
+      "id": "preuve",
+      "type": "preuve",
+      "voix": "Weekli est gratuit et open source. Tes données sont chiffrées, et tu peux les effacer quand tu veux.",
+      "surtitre": "Nos engagements",
+      "elements": [
+        "Gratuit",
+        "Open source",
+        "Données chiffrées, effaçables"
+      ]
+    },
+    {
+      "id": "resultat",
+      "type": "resultat",
+      "voix": "Tes jours de code deviennent une histoire, prête à partager.",
+      "titre": {
+        "texte": "Enfin, ça se voit.",
+        "accent": "ça se voit."
+      },
+      "avant": "Semaine invisible",
+      "tampon": "Raconté",
+      "apres": "Post et pub prêts",
+      "chute": {
+        "texte": "Tes jours de code parlent pour toi.",
+        "accent": "pour toi."
+      }
+    },
+    {
+      "id": "appel",
+      "type": "appel",
+      "voix": "Ton travail mérite d'être vu. Ajoute Weekli à Claude et commence ce soir.",
+      "question": {
+        "texte": "Ton travail mérite d'être vu.",
+        "accent": "d'être vu."
+      },
+      "action": "Essaie.",
+      "bouton": "Ajouter à Claude"
+    },
+    {
+      "id": "fin",
+      "type": "fin",
+      "voix": "Weekli. Ton projet raconté, pub et post compris.",
+      "slogan": "Ton projet raconté.",
+      "bouton": "Essayer Weekli",
+      "liens": [
+        "github.com/Souf-F/weekli"
+      ]
+    }
+  ]
+}

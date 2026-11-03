@@ -3,7 +3,8 @@ import { Hono } from "hono";
 import { Octokit } from "octokit";
 import { creerPkce, echangerCode, urlAutorisation } from "../lib/github-oauth";
 import { pageConsentement, pageErreur } from "../lib/pages";
-import type { AppEnv, Props } from "../types";
+import { creerProps } from "../lib/props";
+import type { AppEnv } from "../types";
 
 // OAuth des clients MCP (Claude...) : Weekli est serveur d'autorisation, GitHub sert a identifier l'utilisateur.
 // Les helpers de la bibliotheque gardent la demande cote serveur, lient chaque etape au navigateur
@@ -46,7 +47,7 @@ oauthMcp.get("/authorize", async (c) => {
 		}
 		const description = await oauth.describeConsent(demande);
 		const consentement = await oauth.beginConsent(demande);
-		return pageConsentement(description, consentement.handle, consentement.headers);
+		return pageConsentement(description, consentement.handle, consentement.headers, demande.redirectUri);
 	} catch (err) {
 		return gererErreur(err);
 	}
@@ -89,17 +90,13 @@ oauthMcp.get("/callback", async (c) => {
 		});
 		const { data: user } = await new Octokit({ auth: token }).rest.users.getAuthenticated();
 
+
 		const { redirectTo } = await c.env.OAUTH_PROVIDER.completeAuthorization({
 			request: reprise.request,
 			userId: String(user.id),
 			metadata: { label: user.login },
 			scope: reprise.request.scope,
-			props: {
-				login: user.login,
-				name: user.name ?? user.login,
-				email: user.email ?? "",
-				accessToken: token,
-			} satisfies Props,
+			props: await creerProps(c.env, { id: String(user.id), login: user.login, nom: user.name ?? user.login }, token),
 		});
 		reprise.headers.set("Location", redirectTo);
 		return new Response(null, { status: 302, headers: reprise.headers });

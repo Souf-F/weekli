@@ -1,0 +1,16 @@
+:root { color-scheme: dark; font-family: ui-sans-serif, system-ui, sans-serif; }
+body { margin: 0; padding: 24px; background: #111; color: #eee; }
+main { max-width: 980px; margin: 0 auto; display: grid; gap: 16px; }
+h1 { font-size: 20px; margin: 0; }
+canvas { width: 100%; max-width: 960px; aspect-ratio: 16 / 9; background: #000; }
+.barre { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+input[type="range"] { flex: 1; min-width: 200px; }
+button, select, a.bouton { padding: 8px 14px; background: #2a2a2a; color: #eee; border: 1px solid #444; border-radius: 4px; font: inherit; cursor: pointer; text-decoration: none; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #8c95ff; outline-offset: 2px; }
+button:disabled { opacity: 0.5; cursor: default; }
+[hidden] { display: none !important; }
+#etat, #infos, #temps, table { font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+table { border-collapse: collapse; }
+th, td { padding: 4px 12px; border-bottom: 1px solid #333; text-align: right; }
+th:first-child, td:first-child { text-align: left; }
+caption { text-align: left; padding-bottom: 8px; }

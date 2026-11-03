@@ -4,4 +4,4 @@ Code partagé entre les applications, sans dépendance à un environnement d'ex�
 
 | Paquet | Rôle | Utilisé par |
 |---|---|---|
-| [`core/`](core) | Lecture GitHub, filtrage des commits, prompts, types | `server` (MCP et API), `web` (prompts et types) |
+| [`core/`](core) | Lecture GitHub, filtrage, 5 types de post, script de pub (validation, timeline, palette, guide), style, masquage des jetons, prompts | `server` (MCP et API), `web` (types, validation, prompts) |

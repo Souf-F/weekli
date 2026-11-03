@@ -1,5 +1,4 @@
 import type { Langue, OptionsGeneration, Ton } from "@weekli/core";
-import { Bouton } from "@/components/Bouton/Bouton";
 import p from "./Panneau.module.css";
 
 type Props = {
@@ -8,10 +7,7 @@ type Props = {
 	inclureDiffs: boolean;
 	surInclureDiffs: (v: boolean) => void;
 	nbSelection: number;
-	enCours: boolean;
-	sansCle: boolean;
-	surGenerer: () => void;
-	surArreter: () => void;
+	nbRepos: number;
 };
 
 const TONS: { id: Ton; nom: string }[] = [
@@ -22,13 +18,14 @@ const TONS: { id: Ton; nom: string }[] = [
 ];
 
 export function PanneauOptions(props: Props) {
-	const { options, surOptions, inclureDiffs, surInclureDiffs, nbSelection, enCours, sansCle, surGenerer, surArreter } =
-		props;
+	const { options, surOptions, inclureDiffs, surInclureDiffs, nbSelection, nbRepos } = props;
 
 	return (
 		<section className={p.panneau}>
 			<div className={p.titre}>
-				<h2>Rédaction</h2>
+				<div>
+					<h3>Rédaction</h3>
+				</div>
 			</div>
 			<label className={p.champ}>
 				Angle
@@ -40,6 +37,7 @@ export function PanneauOptions(props: Props) {
 					))}
 				</select>
 			</label>
+			<div className={p.duo}>
 			<label className={p.champ}>
 				Langue
 				<select value={options.langue} onChange={(e) => surOptions({ ...options, langue: e.target.value as Langue })}>
@@ -57,29 +55,17 @@ export function PanneauOptions(props: Props) {
 					))}
 				</select>
 			</label>
-			<label className={p.ligne} style={{ marginBottom: 20 }}>
+			</div>
+			<label className={`${p.ligne} ${p.ligneEspacee}`}>
 				<input type="checkbox" checked={inclureDiffs} onChange={(e) => surInclureDiffs(e.target.checked)} />
 				Lire les diffs des commits choisis (5 max)
 			</label>
 
-			{enCours ? (
-				<Bouton variante="contour" onClick={surArreter} style={{ width: "100%", whiteSpace: "normal" }}>
-					Arrêter
-				</Bouton>
-			) : (
-				<Bouton
-					onClick={surGenerer}
-					disabled={sansCle || nbSelection === 0}
-					style={{ width: "100%", whiteSpace: "normal" }}
-				>
-					Générer{nbSelection > 0 ? ` (${nbSelection} commit${nbSelection > 1 ? "s" : ""})` : ""}
-				</Bouton>
-			)}
-			{sansCle && (
-				<p className={p.aide} style={{ marginTop: 12 }}>
-					Ajoute ta clé API dans les réglages pour générer.
-				</p>
-			)}
+			<p className={`${p.aide} ${p.aideEspacee}`} aria-live="polite">
+				{nbSelection > 0
+					? `${nbSelection} commit${nbSelection > 1 ? "s" : ""} sur ${nbRepos} repo${nbRepos > 1 ? "s" : ""}`
+					: "Coche au moins un commit."}
+			</p>
 		</section>
 	);
 }

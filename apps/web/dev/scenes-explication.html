@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="robots" content="noindex" />
+	<title>Banc des scènes d'explication</title>
+	<link rel="stylesheet" href="/src/styles/fonts.css" />
+	<link rel="stylesheet" href="/dev/scenes-explication.css" />
+</head>
+<body>
+	<main>
+		<h1>Scènes d'explication (F15, développement)</h1>
+		<canvas id="apercu" aria-label="Aperçu des scènes transformation, flux et avant après"></canvas>
+		<div class="barre">
+			<button id="lecture" type="button" disabled>Lecture</button>
+			<input id="curseur" type="range" min="0" max="1" step="0.0333" value="0" aria-label="Position" />
+			<span id="temps">0.00 s</span>
+		</div>
+		<div class="barre">
+			<button id="mesurer" type="button" disabled>Mesurer le dessin (1920x1080)</button>
+			<label>Récepteur <input id="recepteur" type="url" value="http://127.0.0.1:5197" /></label>
+			<button id="planche" type="button" disabled>Envoyer la planche</button>
+		</div>
+		<p id="etat" role="status">Chargement des polices</p>
+		<p id="coupes">Textes coupés : aucun</p>
+	</main>
+	<script type="module" src="/dev/scenes-explication.ts"></script>
+</body>
+</html>

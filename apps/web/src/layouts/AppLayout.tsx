@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { Bouton } from "@/components/Bouton/Bouton";
 import { Logo } from "@/components/Logo/Logo";
 import { useMoi } from "@/hooks/useMoi";
@@ -10,6 +10,7 @@ export type ContexteApp = { moi: Moi };
 // Garde d'acces de l'app : affiche la connexion GitHub tant qu'il n'y a pas de session
 export function AppLayout() {
 	const { etat, deconnecter } = useMoi();
+	const { pathname, search } = useLocation();
 
 	if (etat.statut === "chargement") return <div className={styles.centre}>Chargement…</div>;
 
@@ -25,7 +26,7 @@ export function AppLayout() {
 					</h1>
 					<p>Weekli lit uniquement tes repos publics. Il ne peut rien modifier ni publier.</p>
 					{etat.statut === "erreur" && <p className={styles.erreur}>{etat.message}</p>}
-					<Bouton vers="/auth/login">Se connecter avec GitHub</Bouton>
+					<Bouton vers={`/auth/login?retour=${encodeURIComponent(pathname + search)}`}>Se connecter avec GitHub</Bouton>
 				</div>
 			</div>
 		);
@@ -43,7 +44,7 @@ export function AppLayout() {
 						Historique
 					</NavLink>
 					<NavLink to="/app/studio" className={({ isActive }) => (isActive ? styles.actif : "")}>
-						Studio vidéo
+						Studio de pub
 					</NavLink>
 					<NavLink to="/app/captures" className={({ isActive }) => (isActive ? styles.actif : "")}>
 						Captures
@@ -53,7 +54,7 @@ export function AppLayout() {
 					</NavLink>
 				</nav>
 				<div className={styles.profil}>
-					<img src={etat.moi.avatar} alt="" width={32} height={32} />
+					<img crossOrigin="anonymous" src={etat.moi.avatar} alt="" width={32} height={32} />
 					<span>{etat.moi.nom}</span>
 					<Bouton variante="contour" taille="petit" onClick={deconnecter}>
 						Déconnexion
@@ -63,6 +64,10 @@ export function AppLayout() {
 			<main className={styles.contenu}>
 				<Outlet context={{ moi: etat.moi } satisfies ContexteApp} />
 			</main>
+			<footer className={styles.pied}>
+				<Link to="/confidentialite">Confidentialité</Link>
+				<Link to="/mentions-legales">Mentions légales</Link>
+			</footer>
 		</div>
 	);
 }

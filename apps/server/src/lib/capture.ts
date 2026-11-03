@@ -1,7 +1,7 @@
 import { connectBrowser } from "agents/browser";
 import type { Domaine } from "./domaines";
 import { SCRIPT_FLOU } from "./flou";
-import { ErreurCapture } from "./url-capture";
+import { ErreurCapture, estDomaineVerifie } from "./url-capture";
 
 export { ErreurCapture, verifierUrl } from "./url-capture";
 
@@ -24,8 +24,7 @@ export async function capturer(env: Env, url: URL, format: Format, domaines: Dom
 	);
 	const vers = sonde?.headers.get("Location");
 	if (sonde && sonde.status >= 300 && sonde.status < 400 && vers) {
-		const cible = new URL(vers, url);
-		if (cible.protocol !== "https:" || !domaines.some((d) => d.hote === cible.hostname)) {
+		if (!estDomaineVerifie(new URL(vers, url).href, domaines)) {
 			throw new ErreurCapture("La page redirige vers un domaine non vérifié.");
 		}
 	}
@@ -54,18 +53,23 @@ export async function capturer(env: Env, url: URL, format: Format, domaines: Dom
 		}
 		await attendre(1500);
 
-		// Une redirection en JavaScript vers un autre domaine est refusee aussi
-		const ici = (await envoyer("Runtime.evaluate", { expression: "location.href", returnByValue: true })) as {
-			result: { value?: string };
+		// Une redirection JavaScript ou une navigation tardive hors du domaine est refusee ; on lit l'historique
+		// de navigation, qui reste fiable meme quand les scripts de la page sont coupes
+		const controlerLieu = async () => {
+			const h = (await envoyer("Page.getNavigationHistory")) as { currentIndex: number; entries: { url: string }[] };
+			if (!estDomaineVerifie(h.entries[h.currentIndex]?.url ?? "", domaines)) {
+				throw new ErreurCapture("La page a quitté le domaine vérifié.");
+			}
 		};
-		const finale = new URL(ici.result.value ?? "about:blank");
-		if (finale.protocol !== "https:" || !domaines.some((d) => d.hote === finale.hostname)) {
-			throw new ErreurCapture("La page a quitté le domaine vérifié.");
-		}
+		await controlerLieu();
 
 		await envoyer("Runtime.evaluate", { expression: SCRIPT_FLOU, returnByValue: true });
+		// Plus aucun script de la page ne peut ensuite defaire le masquage ni naviguer
+		await envoyer("Emulation.setScriptExecutionDisabled", { value: true });
 		await attendre(200);
+		await controlerLieu();
 		const image = (await envoyer("Page.captureScreenshot", { format: "jpeg", quality: 82 })) as { data: string };
+		await controlerLieu();
 		return image.data;
 	} finally {
 		if (cible) await cdp.send("Target.closeTarget", { targetId: cible }).catch(() => undefined);
