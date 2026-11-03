@@ -53,7 +53,7 @@ export function pageConsentement(d: ConsentDescription, handle: string, headers:
 			`<h1>Autoriser <strong>${echapper(d.clientName)}</strong> à utiliser Weekli ?</h1>
 <p>${origine} L'accès sera envoyé à <strong>${echapper(d.redirectHost)}</strong>.</p>
 ${local}
-<p>Weekli lira uniquement tes repos GitHub publics, en lecture seule. Rien ne sera publié.</p>
+<p>Sur GitHub, Weekli lira uniquement tes repos publics, sans rien y modifier. Dans Weekli, cette application pourra enregistrer tes brouillons, tes pubs et ton style. Rien ne sera publié.</p>
 <form method="post">
 <input type="hidden" name="handle" value="${echapper(handle)}">
 <div class="actions"><button class="non" name="decision" value="deny">Refuser</button><button class="ok" name="decision" value="approve">Autoriser</button></div>

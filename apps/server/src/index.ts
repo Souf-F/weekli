@@ -12,6 +12,19 @@ export { WeekliMCP };
 
 const serveurMcp = WeekliMCP.serve("/mcp");
 
+// Un 400 du transport MCP : motif de la bibliotheque et en-tetes de protocole, jamais le corps ni le jeton
+async function journaliserRefusMcp(request: Request, reponse: Response) {
+	const motif = await reponse
+		.clone()
+		.json<{ error?: { message?: string } }>()
+		.then((d) => d.error?.message ?? "inconnu")
+		.catch(() => "inconnu");
+	console.warn("MCP 400 :", motif, {
+		session: request.headers.has("mcp-session-id"),
+		version: request.headers.get("mcp-protocol-version")?.slice(0, 20) ?? null,
+	});
+}
+
 const fournisseur = new OAuthProvider({
 	apiRoute: "/mcp",
 	// Chaque utilisateur MCP a son propre quota d'appels d'outils
@@ -23,7 +36,10 @@ const fournisseur = new OAuthProvider({
 			const { success } = await env.LIMITE_API.limit({ key: `mcp:${id}` });
 			if (!success) return new Response("Trop de requetes", { status: 429, headers: { "Retry-After": "60" } });
 			const refus = await refuserSessionMcp(env, id, request);
-			return refus ?? serveurMcp.fetch(request, env, ctx);
+			if (refus) return refus;
+			const reponse = await serveurMcp.fetch(request, env, ctx);
+			if (reponse.status === 400) await journaliserRefusMcp(request, reponse);
+			return reponse;
 		},
 	},
 	authorizeEndpoint: "/authorize",
