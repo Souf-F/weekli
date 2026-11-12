@@ -13,19 +13,19 @@
 		"dev:docker": "wrangler dev --ip 0.0.0.0 --port 8788"
 	},
 	"dependencies": {
-		"@cloudflare/codemode": "^0.5.5",
+		"@cloudflare/codemode": "^0.5.6",
 		"@cloudflare/workers-oauth-provider": "^1.2.4",
-		"@modelcontextprotocol/client": "2.3.1",
-		"@modelcontextprotocol/sdk": "1.32.1",
-		"@modelcontextprotocol/server": "2.3.1",
+		"@modelcontextprotocol/client": "2.4.0",
+		"@modelcontextprotocol/sdk": "1.32.2",
+		"@modelcontextprotocol/server": "2.4.0",
 		"@weekli/core": "*",
-		"agents": "^0.30.0",
-		"hono": "^4.13.13",
+		"agents": "^0.33.0",
+		"hono": "^4.13.16",
 		"octokit": "^5.0.5",
 		"zod": "^4.6.6"
 	},
 	"devDependencies": {
-		"vitest": "^5.0.5",
-		"wrangler": "^4.152.0"
+		"vitest": "^5.1.0",
+		"wrangler": "^4.158.0"
 	}
 }
